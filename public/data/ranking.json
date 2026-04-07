@@ -1,0 +1,35 @@
+[
+  {
+    "category": "silhouette",
+    "title": "Silhouette Balance Deviation",
+    "ranking": [
+      { "name": "Taylor Swift", "score": 72 },
+      { "name": "Beyoncé", "score": 70 },
+      { "name": "Rihanna", "score": 68 },
+      { "name": "Zendaya", "score": 66 },
+      { "name": "Jennifer Lopez", "score": 64 }
+    ]
+  },
+  {
+    "category": "upperBody",
+    "title": "Upper Body Dominance Deviation",
+    "ranking": [
+      { "name": "Scarlett Johansson", "score": 71 },
+      { "name": "Kim Kardashian", "score": 69 },
+      { "name": "Ariana Grande", "score": 67 },
+      { "name": "Dua Lipa", "score": 65 },
+      { "name": "Billie Eilish", "score": 63 }
+    ]
+  },
+  {
+    "category": "proportion",
+    "title": "Proportion Harmony Score",
+    "ranking": [
+      { "name": "Gigi Hadid", "score": 73 },
+      { "name": "Kendall Jenner", "score": 70 },
+      { "name": "Hailey Bieber", "score": 68 },
+      { "name": "Bella Hadid", "score": 66 },
+      { "name": "Adele", "score": 64 }
+    ]
+  }
+]
