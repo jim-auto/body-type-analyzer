@@ -10,8 +10,8 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "体型バランスAI診断 | Body Type Analyzer",
-  description: "AIがあなたの体型バランスを雰囲気で診断します",
+  title: "Celebrity Body Balance Ranking",
+  description: "有名人の体型バランスを偏差値でランキング",
 };
 
 export default function RootLayout({

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npx jest:*)",
+      "Bash(node -e \"const j = require\\('jest-config'\\); console.log\\(Object.keys\\(j.defaults\\).filter\\(k => k.toLowerCase\\(\\).includes\\('setup'\\)\\)\\)\")",
+      "Bash(node -e \"const c = require\\('fs'\\).readFileSync\\('jest.config.ts','utf8'\\); const m = c.match\\(/setup\\\\w+/gi\\); console.log\\(m\\)\")",
+      "Bash(ls C:/Users/ryohe/workspace/jim_auto_ws/body-type-analyzer/components/SimilarCelebrities*)",
+      "Bash(npx next:*)",
+      "Bash(npm test:*)",
+      "Bash(git push:*)",
+      "Bash(gh run:*)",
+      "Bash(rm:*)",
+      "Bash(rm -f components/ImageUploader.tsx components/AnalysisResult.tsx components/LoadingAnimation.tsx components/DisclaimerNotes.tsx components/ShareButtons.tsx components/SafetyNotice.tsx components/SimilarCelebrities.tsx lib/analyzer.ts lib/share.ts lib/similarity.ts)",
+      "Bash(rm -f components/__tests__/ImageUploader.test.tsx components/__tests__/AnalysisResult.test.tsx components/__tests__/LoadingAnimation.test.tsx components/__tests__/DisclaimerNotes.test.tsx components/__tests__/ShareButtons.test.tsx components/__tests__/SafetyNotice.test.tsx components/__tests__/SimilarCelebrities.test.tsx lib/__tests__/analyzer.test.ts lib/__tests__/share.test.ts lib/__tests__/similarity.test.ts)"
+    ]
+  }
+}
