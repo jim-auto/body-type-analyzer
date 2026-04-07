@@ -2,25 +2,19 @@ import { render, screen } from "@testing-library/react";
 import Header from "@/components/Header";
 
 describe("Header", () => {
-  test("ロゴリンクが表示されること", () => {
+  test("ロゴテキストが 'Body Balance Ranking' であること", () => {
     render(<Header />);
-    expect(screen.getByText("体型バランスAI診断")).toBeInTheDocument();
+    expect(screen.getByText("Body Balance Ranking")).toBeInTheDocument();
   });
 
-  test("ランキングリンクが存在すること", () => {
+  test("ロゴがトップページへのリンクであること", () => {
     render(<Header />);
-    expect(screen.getByText("ランキング")).toBeInTheDocument();
-  });
-
-  test("ロゴリンク先が/であること", () => {
-    render(<Header />);
-    const logoLink = screen.getByText("体型バランスAI診断").closest("a");
+    const logoLink = screen.getByText("Body Balance Ranking").closest("a");
     expect(logoLink).toHaveAttribute("href", "/");
   });
 
-  test("ランキングリンク先が/rankingであること", () => {
+  test("ランキングリンクが存在しないこと", () => {
     render(<Header />);
-    const rankingLink = screen.getByText("ランキング").closest("a");
-    expect(rankingLink).toHaveAttribute("href", "/ranking");
+    expect(screen.queryByText("ランキング")).not.toBeInTheDocument();
   });
 });
