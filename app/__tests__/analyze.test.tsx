@@ -166,24 +166,10 @@ describe("AnalyzePage", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        formatRate(DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8)
-      )
-    ).toBeInTheDocument();
-    expect(
       screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate))
     ).toBeInTheDocument();
     expect(
       screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate))
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        formatCoverageText(
-          DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8,
-          DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0,
-          "cm"
-        )
-      )
     ).toBeInTheDocument();
     expect(
       screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`)
@@ -191,6 +177,7 @@ describe("AnalyzePage", () => {
     expect(
       screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`)
     ).toBeInTheDocument();
+    expect(screen.queryByText("身長は8割が±6cm以内")).not.toBeInTheDocument();
     expect(
       within(performanceSection).getByText((_, element) =>
         element?.tagName === "P" &&

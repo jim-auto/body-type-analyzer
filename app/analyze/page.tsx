@@ -63,21 +63,6 @@ const PERFORMANCE_HIGHLIGHTS = [
     value: formatRate(
       DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7
     ),
-    detail: formatCoverageText(
-      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8,
-      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0,
-      "cm"
-    ),
-  },
-  {
-    label: `身長は${formatCoverageText(
-      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8,
-      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0,
-      "cm"
-    )}`,
-    value: formatRate(
-      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8
-    ),
     detail: `検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`,
   },
   {
