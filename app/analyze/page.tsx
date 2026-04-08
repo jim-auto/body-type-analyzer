@@ -55,22 +55,39 @@ function formatCoverageText(
 
 const PERFORMANCE_HIGHLIGHTS = [
   {
-    label: "身長が完全一致",
-    value: formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate),
-    detail: formatCoverageText(
+    label: `身長は${formatCoverageText(
       DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7,
       DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0,
       "cm"
+    )}`,
+    value: formatRate(
+      DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7
     ),
-  },
-  {
-    label: "身長が±2cm以内",
-    value: formatRate(DIAGNOSIS_MODEL_METRICS.height.within2Rate),
     detail: formatCoverageText(
       DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8,
       DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0,
       "cm"
     ),
+  },
+  {
+    label: `身長は${formatCoverageText(
+      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8,
+      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0,
+      "cm"
+    )}`,
+    value: formatRate(
+      DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8
+    ),
+    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`,
+  },
+  {
+    label: `カップは${formatCoverageText(
+      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.rate ?? 0.7,
+      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0,
+      "カップ"
+    )}`,
+    value: formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate),
+    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`,
   },
   {
     label: "カップが完全一致",
@@ -80,11 +97,6 @@ const PERFORMANCE_HIGHLIGHTS = [
       DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0,
       "カップ"
     ),
-  },
-  {
-    label: "カップが±1以内",
-    value: formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate),
-    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`,
   },
 ] as const;
 
@@ -305,7 +317,7 @@ export default function AnalyzePage() {
               <p className="text-sm leading-6 text-slate-600 sm:text-base">
                 公開プロフィール画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚を
                 leave-one-out で検証した結果です。同系統の画像に対してどれくらい当たりやすいかを、
-                完全一致率と許容誤差内率で公開しています。
+                数cm単位・1カップ単位でどこまで収まるかを中心に公開しています。
               </p>
             </div>
 

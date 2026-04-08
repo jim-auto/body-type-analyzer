@@ -161,28 +161,43 @@ describe("AnalyzePage", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate))
+      screen.getByText(
+        formatRate(DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7)
+      )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.height.within2Rate))
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate))
+      screen.getByText(
+        formatRate(DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8)
+      )
     ).toBeInTheDocument();
     expect(
       screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate))
     ).toBeInTheDocument();
     expect(
+      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate))
+    ).toBeInTheDocument();
+    expect(
       screen.getByText(
         formatCoverageText(
-          DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7,
-          DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0,
+          DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.rate ?? 0.8,
+          DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0,
           "cm"
         )
       )
     ).toBeInTheDocument();
     expect(
+      screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`)
+    ).toBeInTheDocument();
+    expect(
       screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`)
+    ).toBeInTheDocument();
+    expect(
+      within(performanceSection).getByText((_, element) =>
+        element?.tagName === "P" &&
+        (element.textContent?.includes(
+          "数cm単位・1カップ単位でどこまで収まるかを中心に公開しています。"
+        ) ?? false)
+      )
     ).toBeInTheDocument();
   });
 
