@@ -98,9 +98,20 @@ describe("ranking.json actual profile data", () => {
     );
   });
 
-  test("各カテゴリのランキングが20人である", () => {
-    allCategories.forEach((category) => {
-      expect(category.ranking).toHaveLength(20);
+  test("各カテゴリのランキングが母集団ぶん表示される", () => {
+    femaleCategories.forEach((category) => {
+      const expectedLength =
+        category.category === "estimatedCup"
+          ? femaleProfilePool.filter(
+              (entry) => getAdjustedEstimatedCup(entry.bust, entry.cup) !== null
+            ).length
+          : femaleProfilePool.length;
+
+      expect(category.ranking).toHaveLength(expectedLength);
+    });
+
+    maleCategories.forEach((category) => {
+      expect(category.ranking).toHaveLength(maleProfilePool.length);
     });
   });
 
