@@ -13,8 +13,11 @@ describe("Header", () => {
     expect(logoLink).toHaveAttribute("href", "/");
   });
 
-  test("ランキングリンクが存在しないこと", () => {
+  test("AI診断リンクが存在すること", () => {
     render(<Header />);
-    expect(screen.queryByText("ランキング")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "AI診断" })).toHaveAttribute(
+      "href",
+      "/analyze"
+    );
   });
 });

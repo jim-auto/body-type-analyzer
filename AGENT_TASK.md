@@ -1,126 +1,187 @@
-## タスク: 日本人女性のカップ数の分布データを調査し、偏差値計算に反映
+## タスク: AI画像診断機能を追加（身長・カップサイズ推定）
 
 ### 概要
-日本人女性のカップ数の割合（分布）をWebで調査し、その分布に基づいてカップ数の偏差値を正しく計算できるようにする。
-現在のランキングの偏差値が実態の分布を反映していないので、統計データに基づいて修正する。
+画像をアップロードすると、AIっぽく身長とカップサイズを推定する診断機能を追加。
+ランキングページのヘッダーから「診断する」ボタンで遷移。
+完全にクライアントサイドで動作（画像はサーバーに送信しない）。
 
 ---
 
-### 1. 日本人女性のカップ数分布をWebで調査
+### 1. app/analyze/page.tsx を新規作成（診断ページ）
 
-「日本人 カップ数 割合」「日本人 カップサイズ 分布」「日本人 ブラジャー サイズ 統計」等で検索。
+"use client" コンポーネント
 
-トリンプやワコールなどの下着メーカーが公開している統計データや、調査会社のデータを探してください。
+#### 画面構成:
 
-一般的に知られている分布（参考）:
-- Aカップ: 約5〜8%
-- Bカップ: 約20〜25%
-- Cカップ: 約25〜28%
-- Dカップ: 約20〜24%
-- Eカップ: 約12〜16%
-- Fカップ: 約5〜8%
-- G以上: 約2〜4%
+**ステップ1: 画像アップロード**
+- ドラッグ&ドロップ対応のアップロードエリア
+- input[type="file"] accept="image/*"
+- プレビュー表示（URL.createObjectURL）
+- 注意文: "⚠ 本人の画像のみ使用してください" "結果はエンタメ目的です"
 
-Webで見つけた実際のデータを使ってください。
+**ステップ2: ネタローディング演出**
+画像選択後、以下のメッセージを1.5秒間隔で表示:
+```
+const messages = [
+  "骨格をなんとなく解析中…",
+  "AIが雰囲気で判断しています…",
+  "体型バランスを数値化中…",
+  "偏差値をフィーリングで算出中…",
+  "もっともらしい結果を生成中…",
+];
+```
+プログレスバー（偽）も表示。
 
-### 2. lib/statistics.ts にカップ数分布データと偏差値計算を追加
+**ステップ3: 結果表示**
+
+#### 結果の生成ロジック:
+
+画像からハッシュを生成し、seedベースで決定論的に結果を出す:
 
 ```typescript
-// 日本人女性のカップ数分布（Webで調査した実データを入れる）
-export const CUP_DISTRIBUTION: Record<string, number> = {
-  "A": 0.07,   // 7% ← 調査結果に合わせて修正
-  "B": 0.22,
-  "C": 0.26,
-  "D": 0.22,
-  "E": 0.13,
-  "F": 0.06,
-  "G": 0.03,
-  "H": 0.01,
+// lib/image-analyzer.ts を新規作成
+
+export async function hashFromImage(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const buffer = reader.result as ArrayBuffer;
+      const bytes = new Uint8Array(buffer);
+      let hash = 0;
+      for (let i = 0; i < bytes.length; i++) {
+        hash = (hash * 31 + bytes[i]) & 0xFFFFFFFF;
+      }
+      resolve(hash);
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+export function seededRandom(seed: number): () => number {
+  let s = seed || 1;
+  return () => {
+    s ^= s << 13;
+    s ^= s >> 17;
+    s ^= s << 5;
+    return (s >>> 0) / 0xFFFFFFFF;
+  };
+}
+
+export type DiagnosisResult = {
+  estimatedHeight: number;    // 推定身長 (cm)
+  estimatedCup: string;       // 推定カップ
+  heightDeviation: number;    // 身長偏差値
+  cupDeviation: number;       // カップ偏差値
+  silhouetteType: "X" | "I" | "A";
+  confidence: number;         // AI信頼度 (15〜45%)
+  similarCelebrity: string;   // 近い有名人
 };
 
-// カップ数から偏差値を算出
-// 累積分布を使って正規分布上の位置を算出 → 偏差値に変換
-export function calculateCupDeviation(cup: string): number {
-  const cups = ["AA", "A", "B", "C", "D", "E", "F", "G", "H", "I"];
-  const index = cups.indexOf(cup);
-  if (index === -1) return 50; // 不明なら平均
+export function diagnose(hash: number): DiagnosisResult {
+  const rand = seededRandom(hash);
   
-  // 各カップの累積確率を計算
-  let cumulative = 0;
-  for (let i = 0; i <= index; i++) {
-    cumulative += CUP_DISTRIBUTION[cups[i]] || 0;
-  }
-  // 累積確率の中間点
-  const midpoint = cumulative - (CUP_DISTRIBUTION[cup] || 0) / 2;
+  // 日本人女性の分布に沿った推定身長を生成
+  // 正規分布に従うように Box-Muller 変換
+  const u1 = rand();
+  const u2 = rand();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  const estimatedHeight = Math.round(158 + 5.4 * z); // 平均158cm, 標準偏差5.4
   
-  // 正規分布の逆関数で偏差値に変換
-  // 簡易的な近似: 偏差値 = 50 + 10 * Φ^(-1)(p)
-  // probit近似
-  const p = Math.max(0.001, Math.min(0.999, midpoint));
-  const z = probitApprox(p);
-  return Math.round(50 + 10 * z);
-}
-
-// probit関数の近似（正規分布の逆累積分布関数）
-function probitApprox(p: number): number {
-  // Abramowitz and Stegun approximation
-  const a1 = -3.969683028665376e+01;
-  const a2 = 2.209460984245205e+02;
-  const a3 = -2.759285104469687e+02;
-  const a4 = 1.383577518672690e+02;
-  const a5 = -3.066479806614716e+01;
-  const a6 = 2.506628277459239e+00;
-  const b1 = -5.447609879822406e+01;
-  const b2 = 1.615858368580409e+02;
-  const b3 = -1.556989798598866e+02;
-  const b4 = 6.680131188771972e+01;
-  const b5 = -1.328068155288572e+01;
+  // カップ数を日本人分布に沿って生成
+  // CUP_DISTRIBUTION の累積確率を使ってランダム選択
+  const cupRand = rand();
+  // ... CUP_DISTRIBUTION を使って累積確率でカップを決定
   
-  if (p < 0.5) {
-    const t = Math.sqrt(-2 * Math.log(p));
-    return -(((((a1*t+a2)*t+a3)*t+a4)*t+a5)*t+a6) / (((((b1*t+b2)*t+b3)*t+b4)*t+b5)*t+1);
-  } else {
-    const t = Math.sqrt(-2 * Math.log(1 - p));
-    return (((((a1*t+a2)*t+a3)*t+a4)*t+a5)*t+a6) / (((((b1*t+b2)*t+b3)*t+b4)*t+b5)*t+1);
-  }
+  // 偏差値計算
+  // calculateDeviation, calculateCupDeviation を使用
+  
+  // シルエットタイプ
+  const silhouetteType = rand() < 0.33 ? "X" : rand() < 0.5 ? "I" : "A";
+  
+  // AI信頼度（低めでネタ）
+  const confidence = Math.floor(rand() * 30) + 15;
+  
+  // 近い有名人（ranking.jsonから身長が近い人を選択）
+  // ...
+  
+  return { estimatedHeight, estimatedCup, heightDeviation, cupDeviation, silhouetteType, confidence, similarCelebrity };
 }
 ```
 
-### 3. lib/ranking-builder.ts を修正
+#### 結果画面の表示内容:
 
-「上半身バランス偏差値」カテゴリで、女性のscoreをカップ数偏差値で計算するように変更:
+カード形式で表示:
+- **推定身長**: 大きな数字で "163cm"、偏差値バッジ
+- **推定カップサイズ**: 大きな文字で "Dカップ"、偏差値バッジ
+- **シルエットタイプ**: X / I / A バッジ
+- **AI信頼度**: プログレスバー（低いので赤〜黄色、ネタ）
+- **あなたに近い有名人**: ランキングから1〜3人表示（名前 + 画像 + 類似度%）
 
-- cupがある場合: score = calculateCupDeviation(cup)
-- cupがnullの場合: bustがあれば bustToEstimatedCup(bust) → calculateCupDeviation
-- どちらもない場合: 身長偏差値にフォールバック
+免責表示:
+- "※ このAIは雰囲気で動いています"
+- "※ 結果はAIの気分で算出されています"
+- "※ 画像はサーバーに送信されません。全てブラウザ内で処理されます"
 
-### 4. ranking.json を再生成
+#### シェア機能:
 
-```bash
-node scripts/generate-ranking.mjs
+- 結果テキストコピーボタン
+- Xシェアボタン
+
+シェアテキスト例:
+```
+【芸能人スタイルランキング AI診断】
+推定身長: 163cm（偏差値59）
+推定カップ: Dカップ（偏差値54）
+似ている有名人: 石原さとみ
+AI信頼度: 28%（雰囲気で判定）
+
+#芸能人スタイルランキング
+https://jim-auto.github.io/body-type-analyzer/
 ```
 
-### 5. app/page.tsx にカップ数分布の表示を追加（オプション）
+### 2. components/Header.tsx に「診断する」リンク追加
 
-上半身バランス偏差値カテゴリ選択時に、日本人のカップ数分布を小さく表示すると参考になる:
+```typescript
+<Link href="/analyze" className="rounded-full bg-pink-500 text-white px-4 py-2 text-sm font-medium hover:bg-pink-600 transition">
+  AI診断
+</Link>
 ```
-日本人女性の分布: A(7%) B(22%) C(26%) D(22%) E(13%) F(6%) G(3%)
+
+### 3. ランキングページ（app/page.tsx）にもCTAを追加
+
+ランキングの上か下に:
 ```
-text-xs text-slate-400 で控えめに表示。
+「あなたのスタイルも診断してみる？」ボタン → /analyze へ
+```
 
-### 6. テスト追加
+### 4. テスト
 
-lib/__tests__/statistics.test.ts に追加:
-1. CUP_DISTRIBUTION の全値の合計が約1.0（0.95〜1.05の範囲）であること
-2. calculateCupDeviation("C") が 48〜52（平均付近）であること（Cカップが最頻値なので）
-3. calculateCupDeviation("G") が 60以上であること（大きいカップは偏差値高い）
-4. calculateCupDeviation("A") が 40以下であること（小さいカップは偏差値低い）
-5. カップが大きいほど偏差値が高いこと（A < B < C < D < E < F < G の順）
+#### lib/__tests__/image-analyzer.test.ts（新規、15テスト以上）
+1. hashFromImage: 同じファイルで同じハッシュ
+2. hashFromImage: 異なるファイルで異なるハッシュ
+3. seededRandom: 同じseedで同じ乱数列
+4. seededRandom: 異なるseedで異なる乱数列
+5. seededRandom: 返り値が0〜1の範囲
+6. diagnose: 同じhashで同じ結果（冪等性）
+7. diagnose: 異なるhashで異なる結果
+8. diagnose: estimatedHeight が 140〜190 の範囲
+9. diagnose: estimatedCup が A〜H のいずれか
+10. diagnose: heightDeviation が 20〜80 の範囲
+11. diagnose: cupDeviation が 20〜80 の範囲
+12. diagnose: confidence が 15〜44 の範囲
+13. diagnose: silhouetteType が "X" | "I" | "A" のいずれか
+14. diagnose: similarCelebrity が空文字でないこと
+15. 100個のhashでループして全て範囲内か確認
 
-app/__tests__/cup-data.test.ts に追加:
-6. 上半身バランス偏差値のスコアがカップ分布に基づいていること（Gカップの人が上位にいること等）
+#### app/__tests__/analyze.test.tsx（新規、10テスト以上）
+1. アップロードエリアが表示されること
+2. 注意文が表示されること
+3. 「AI診断」ページタイトルが表示されること
 
-### 7. 確認
+#### components/__tests__/Header.test.tsx 更新
+4. AI診断リンクが存在すること
+
+### 5. 確認
 
 - npm test で全テストパス
-- npm run build で成功
+- npm run build で成功（/analyze ページが静的エクスポートされること）

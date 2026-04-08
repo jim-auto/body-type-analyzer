@@ -90,6 +90,21 @@ describe("Home (Ranking Page)", () => {
     ).toBeInTheDocument();
   });
 
+  test("AI診断への CTA が表示される", async () => {
+    renderHome();
+    await waitForFemaleSilhouette();
+
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "あなたのスタイルも診断してみる？",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "AI診断をはじめる" })
+    ).toHaveAttribute("href", "/analyze");
+  });
+
   test("初期表示で女性のシルエットカテゴリが表示される", async () => {
     renderHome();
     await waitForFemaleSilhouette();
