@@ -7,6 +7,7 @@ import {
   getCupDifference,
   getEstimatedCupFromBust,
   getEstimatedHeight,
+  getNameSeed,
 } from "./profile-estimates.ts";
 import { femaleProfilePool, maleProfilePool } from "./source-profiles.ts";
 import { FEMALE_STATS, MALE_STATS, calculateDeviation } from "./statistics.ts";
@@ -164,6 +165,61 @@ function buildFemaleEstimatedCupRanking(): FemaleRankingEntry[] {
     .slice(0, RANKING_LIMIT);
 }
 
+function buildMaleUpperBodyRanking(): MaleRankingEntry[] {
+  return maleProfilePool
+    .map((profile) => {
+      const adjustment = (getNameSeed(profile.name) % 7) - 3;
+      const adjustedHeight = profile.actualHeight + adjustment;
+
+      return {
+        ...buildMaleBaseEntry(profile),
+        adjustedHeight,
+        score: calculateDeviation(
+          adjustedHeight,
+          MALE_STATS.height.mean,
+          MALE_STATS.height.stddev
+        ),
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.adjustedHeight - left.adjustedHeight ||
+        right.actualHeight - left.actualHeight ||
+        left.name.localeCompare(right.name, "ja")
+    )
+    .slice(0, RANKING_LIMIT)
+    .map(({ adjustedHeight: _adjustedHeight, ...entry }) => entry);
+}
+
+function buildMaleProportionRanking(): MaleRankingEntry[] {
+  return maleProfilePool
+    .map((profile) => {
+      const entry = buildMaleBaseEntry(profile);
+      const accuracy = 10 - Math.abs(entry.estimatedHeight - profile.actualHeight);
+
+      return {
+        ...entry,
+        accuracy,
+        score:
+          calculateDeviation(
+            profile.actualHeight,
+            MALE_STATS.height.mean,
+            MALE_STATS.height.stddev
+          ) + Math.round(accuracy / 2),
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.accuracy - left.accuracy ||
+        right.actualHeight - left.actualHeight ||
+        left.name.localeCompare(right.name, "ja")
+    )
+    .slice(0, RANKING_LIMIT)
+    .map(({ accuracy: _accuracy, ...entry }) => entry);
+}
+
 function buildMaleEstimatedHeightRanking(): MaleRankingEntry[] {
   return maleProfilePool
     .map((profile) => {
@@ -189,6 +245,8 @@ export function buildRankingData(): RankingData {
   const femaleEstimatedHeightRanking = buildFemaleEstimatedHeightRanking();
   const femaleEstimatedCupRanking = buildFemaleEstimatedCupRanking();
   const maleHeightRanking = buildMaleHeightRanking();
+  const maleUpperBodyRanking = buildMaleUpperBodyRanking();
+  const maleProportionRanking = buildMaleProportionRanking();
   const maleEstimatedHeightRanking = buildMaleEstimatedHeightRanking();
 
   return {
@@ -228,12 +286,12 @@ export function buildRankingData(): RankingData {
       {
         category: "upperBody",
         title: "上半身バランス偏差値",
-        ranking: cloneRanking(maleHeightRanking),
+        ranking: maleUpperBodyRanking,
       },
       {
         category: "proportion",
         title: "プロポーション調和スコア",
-        ranking: cloneRanking(maleHeightRanking),
+        ranking: maleProportionRanking,
       },
       {
         category: "estimatedHeight",

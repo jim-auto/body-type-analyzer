@@ -1,127 +1,98 @@
-## タスク: 推定身長ランキングと推定カップ数ランキングを追加
+## タスク: バグ修正 + データ差別化
 
-### 概要
-既存の3カテゴリに加えて、「AI推定」系のネタランキングを追加する:
-- 女性: 「AI推定身長ランキング」「AI推定カップ数ランキング」を追加（合計5カテゴリ）
-- 男性: 「AI推定身長ランキング」を追加（合計4カテゴリ）
+### バグ1（致命的）: bustToEstimatedCup が常にBカップを返す
 
-推定値は lib/profile-estimates.ts の getEstimatedHeight / getEstimatedCupFromBust を使う。
-実データとの乖離が面白いネタ要素になる。
-
----
-
-### 1. lib/ranking-builder.ts を修正
-
-ranking.json 生成時に新カテゴリを追加:
-
-#### 女性に2カテゴリ追加:
+lib/statistics.ts の bustToEstimatedCup 関数にバグがある:
 
 ```typescript
-// AI推定身長ランキング
-{
-  category: "estimatedHeight",
-  title: "AI推定身長ランキング",
-  ranking: [/* 推定身長が高い順にソート、上位20人 */]
-}
-
-// AI推定カップ数ランキング  
-{
-  category: "estimatedCup",
-  title: "AI推定カップ数ランキング",
-  ranking: [/* 推定カップが大きい順にソート、上位20人 */]
-}
+// 現在のコード（バグ）
+const diff = bustCm - (bustCm - 12.5); // 常に12.5 → 常にBカップ
 ```
 
-推定身長ランキングの各エントリ:
-```typescript
-{
-  name: profile.name,
-  score: getEstimatedHeight(profile.actualHeight, profile.name), // 推定身長をscoreに
-  image: profile.image,
-  cup: profile.cup,
-  actualHeight: profile.actualHeight,
-  bust: profile.bust,
-  estimatedHeight: getEstimatedHeight(profile.actualHeight, profile.name),
-  heightDiff: getEstimatedHeight(profile.actualHeight, profile.name) - profile.actualHeight
-}
-```
-scoreは推定身長の値そのまま（偏差値ではなく cm で表示）。降順ソート。
+これは意味がない。正しくはアンダーバストを推定してトップバストとの差からカップを算出すべき。
 
-推定カップ数ランキングの各エントリ:
-- bustがnullの人はスキップ
-- getEstimatedCupFromBust(bust) で推定カップを算出
-- カップの大きさ順（G>F>E>D>C>B>A）でソート
-- scoreは表示用に使わない or カップのインデックス値（A=1, B=2, ...）
-- 実際のcupとの乖離も表示したい
-
-#### 男性に1カテゴリ追加:
+修正方法: アンダーバストを推定する（バスト - 体格に応じた値）:
 
 ```typescript
-{
-  category: "estimatedHeight", 
-  title: "AI推定身長ランキング",
-  ranking: [/* 推定身長が高い順にソート、上位20人 */]
+export function bustToEstimatedCup(bustCm: number): string {
+  // アンダーバストを推定（一般的にトップバスト - アンダーバスト差でカップが決まる）
+  // 日本人女性の平均的なアンダーバストは約70cm
+  // ただしバストが大きい人ほどアンダーも大きい傾向がある
+  // アンダー推定: bust * 0.82 程度（経験的な係数）
+  const estimatedUnder = Math.round(bustCm * 0.82);
+  // 5cm刻みに丸める（65, 70, 75, 80...）
+  const under = Math.round(estimatedUnder / 5) * 5;
+  const diff = bustCm - under;
+  
+  // JIS規格: A=10, B=12.5, C=15, D=17.5, E=20, F=22.5, G=25
+  if (diff < 11.25) return "A";
+  if (diff < 13.75) return "B"; 
+  if (diff < 16.25) return "C";
+  if (diff < 18.75) return "D";
+  if (diff < 21.25) return "E";
+  if (diff < 23.75) return "F";
+  return "G";
 }
 ```
 
-### 2. app/page.tsx のUI調整
+修正後にテストで確認:
+- bust=94（原幹恵）→ Gカップ近辺が出ること
+- bust=80（佐々木希）→ Cカップ近辺が出ること
+- bust=88（綾瀬はるか）→ D〜Eカップ近辺が出ること
+- 全員同じカップにならないこと
 
-- タブが5つ（女性）/ 4つ（男性）になるので、タブを折り返し可能にする（flex-wrap で対応済みなら問題なし）
-- 推定身長ランキングの場合:
-  - scoreの表示を「{score}cm」にする（偏差値ではなくcm）
-  - 「実際: {actualHeight}cm（差: {heightDiff}cm {emoji}）」を2行目に表示
-- 推定カップ数ランキングの場合:
-  - scoreの表示を「{estimatedCup}カップ」にする
-  - 「実際: {actualCup}（差: {cupDiff}サイズ {emoji}）」を2行目に表示
+### バグ2: 男性の3カテゴリが完全に同一データ
 
-カテゴリ判定方法:
-```typescript
-const isEstimatedHeightCategory = current.category === "estimatedHeight";
-const isEstimatedCupCategory = current.category === "estimatedCup";
-```
+男性は身長しかデータがないので、3カテゴリが全て同じ順位になっている。
+差別化するために、各カテゴリで異なる計算を使う:
 
-scoreの表示を分岐:
-```typescript
-{isEstimatedHeightCategory ? `${entry.score}cm` : 
- isEstimatedCupCategory ? `${entry.estimatedCup}カップ` : 
- entry.score}
-```
+lib/ranking-builder.ts の男性スコア計算を変更:
 
-### 3. ranking.json を再生成
+- **シルエットバランス偏差値**: 身長の偏差値そのまま（現状通り）
+- **上半身バランス偏差値**: 身長に名前seedベースの微調整を加える
+  ```typescript
+  const seed = getNameSeed(name);
+  const adjustment = (seed % 7) - 3; // -3〜+3の調整
+  score = calculateDeviation(actualHeight + adjustment, 171.0, 5.8);
+  ```
+- **プロポーション調和スコア**: 身長と推定身長の差が小さいほど高スコア
+  ```typescript
+  const estimatedHeight = getEstimatedHeight(actualHeight, name);
+  const accuracy = 10 - Math.abs(estimatedHeight - actualHeight); // 推定精度
+  score = calculateDeviation(actualHeight, 171.0, 5.8) + Math.round(accuracy / 2);
+  ```
 
-lib/ranking-builder.ts を修正後、scripts/generate-ranking.mjs を実行してranking.jsonを再生成:
+これで3カテゴリの順位が変わるようになる。
 
+### 3. 推定カップ数ランキングの score 修正
+
+現在 score が全員2（Bカップのインデックス）になっている。
+bustToEstimatedCup 修正後、scoreを推定カップのインデックスに再計算:
+A=1, B=2, C=3, D=4, E=5, F=6, G=7
+
+ソートも推定カップの大きさ降順にする。
+
+### 4. ranking.json を再生成
+
+修正後に:
 ```bash
 node scripts/generate-ranking.mjs
 ```
 
-もしスクリプトが動かない場合は、直接ranking.jsonを手動で編集してもOK。
+もしスクリプトが動かなければ手動でranking.jsonを修正してもOK。
 
-### 4. エントリに推定フィールドを追加
+### 5. テスト修正・追加
 
-ranking.json の全エントリに以下のフィールドを追加（既存カテゴリも含む）:
-- estimatedHeight: getEstimatedHeight(actualHeight, name) の結果
-- heightDiff: estimatedHeight - actualHeight
+lib/__tests__/statistics.test.ts を更新:
+1. bustToEstimatedCup(94) が "E"〜"G" の範囲であること（大きいカップ）
+2. bustToEstimatedCup(80) が "B"〜"C" の範囲であること
+3. bustToEstimatedCup(88) が "C"〜"E" の範囲であること
+4. 異なるバストサイズで異なるカップが返ること
+5. bustToEstimatedCup が常に同じ値を返さないこと（複数入力で確認）
 
-女性エントリには追加で:
-- estimatedCup: getEstimatedCupFromBust(bust) の結果（bustがnullならnull）
-- cupDiff: 推定カップと実カップの差（getCupDifference）
-
-### 5. テスト追加
-
-app/__tests__/cup-data.test.ts に追加:
-1. 女性に "AI推定身長ランキング" カテゴリが存在すること
-2. 女性に "AI推定カップ数ランキング" カテゴリが存在すること
-3. 男性に "AI推定身長ランキング" カテゴリが存在すること
-4. 推定身長ランキングが推定身長の降順であること
-5. 推定カップ数ランキングがカップの大きさ降順であること
-6. 推定身長ランキングの各エントリに estimatedHeight があること
-7. 推定カップ数ランキングの各エントリに estimatedCup があること
-8. heightDiff が estimatedHeight - actualHeight と一致すること
-
-app/__tests__/page.test.tsx に追加:
-9. 推定身長タブをクリックすると cm 表示になること
-10. 推定カップタブをクリックするとカップ表示になること
+app/__tests__/cup-data.test.ts を更新:
+6. 推定カップ数ランキングの score が全員同じではないこと
+7. 男性の3カテゴリの順位が全て同じではないこと（少なくとも1つは異なる）
 
 ### 6. 確認
 
