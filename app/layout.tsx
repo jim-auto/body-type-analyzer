@@ -3,8 +3,8 @@ import Header from "@/components/Header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Celebrity Body Balance Ranking",
-  description: "有名人の体型バランスを偏差値でランキング",
+  title: "芸能人スタイルランキング | AIが偏差値で格付け",
+  description: "芸能人のスタイルをAIが偏差値で格付け！身長・カップ数の推定ランキングも",
 };
 
 export default function RootLayout({

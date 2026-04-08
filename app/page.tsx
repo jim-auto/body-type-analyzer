@@ -177,10 +177,10 @@ export default function Home() {
       <main className="w-full max-w-3xl space-y-8">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-slate-800 sm:text-4xl">
-            Celebrity Body Balance Ranking
+            芸能人スタイルランキング
           </h1>
           <p className="text-base text-slate-500 sm:text-lg">
-            有名人の体型バランスを偏差値でランキング
+            芸能人のスタイルをAIが偏差値で格付け！
           </p>
         </div>
 
