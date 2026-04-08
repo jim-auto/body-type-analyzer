@@ -18,6 +18,7 @@ import { femaleProfilePool, maleProfilePool } from "@/lib/source-profiles";
 import {
   FEMALE_STATS,
   MALE_STATS,
+  calculateCupDeviation,
   calculateDeviation,
 } from "@/lib/statistics";
 
@@ -266,6 +267,10 @@ describe("ranking.json actual profile data", () => {
   });
 
   test("score のスポットチェックが calculateDeviation と一致する", () => {
+    const noBustFemaleProfile = femaleProfilePool.find((entry) => entry.bust === null);
+
+    expect(noBustFemaleProfile).toBeDefined();
+
     expect(findFemaleEntry("silhouette", "菜々緒")?.score).toBe(
       calculateDeviation(
         172,
@@ -281,11 +286,11 @@ describe("ranking.json actual profile data", () => {
       )
     );
     expect(findFemaleEntry("upperBody", "原幹恵")?.score).toBe(
-      calculateDeviation(94, FEMALE_STATS.bust.mean, FEMALE_STATS.bust.stddev)
+      calculateCupDeviation("G")
     );
-    expect(findFemaleEntry("upperBody", "浜辺美波")?.score).toBe(
+    expect(findFemaleEntry("upperBody", noBustFemaleProfile!.name)?.score).toBe(
       calculateDeviation(
-        157,
+        noBustFemaleProfile!.actualHeight,
         FEMALE_STATS.height.mean,
         FEMALE_STATS.height.stddev
       )

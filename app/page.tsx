@@ -13,6 +13,7 @@ import {
   type RankingData,
   type RankingEntry,
 } from "@/lib/ranking";
+import { CUP_DISTRIBUTION_LABEL } from "@/lib/statistics";
 
 type Gender = "female" | "male";
 
@@ -167,6 +168,8 @@ export default function Home() {
   const current = categories[activeTab];
   const isEstimatedHeightCategory = current?.category === "estimatedHeight";
   const isEstimatedCupCategory = current?.category === "estimatedCup";
+  const showFemaleCupDistribution =
+    gender === "female" && current?.category === "upperBody";
   const activeCategoryStyle =
     gender === "female"
       ? "bg-pink-500 text-white shadow-md"
@@ -234,6 +237,11 @@ export default function Home() {
             <h2 className="text-center text-xl font-bold text-slate-700">
               {current.title}
             </h2>
+            {showFemaleCupDistribution ? (
+              <p className="text-center text-xs text-slate-400">
+                {CUP_DISTRIBUTION_LABEL}
+              </p>
+            ) : null}
             {current.ranking.map((entry, index) => {
               const femaleEntry =
                 gender === "female" && isFemaleEntry(entry) ? entry : null;

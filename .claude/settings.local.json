@@ -25,7 +25,8 @@
       "Bash(codex exec:*)",
       "Bash(ls public/images/*.jpg)",
       "Bash(curl -s --max-time 5 \"https://api.openai.com\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:x.com)"
     ]
   }
 }
