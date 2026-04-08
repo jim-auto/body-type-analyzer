@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-04-08T12:02:03.261706+00:00",
+  "generatedAt": "2026-04-08T13:15:22.434371+00:00",
   "metrics": {
     "trainingCount": 72,
     "height": {
@@ -8,6 +8,16 @@
       "mae": 3.625,
       "exactRate": 0.117647,
       "within2Rate": 0.5,
+      "coverage": [
+        {
+          "rate": 0.7,
+          "maxError": 5.0
+        },
+        {
+          "rate": 0.8,
+          "maxError": 6.0
+        }
+      ],
       "trainingCount": 68,
       "models": [
         {
@@ -29,6 +39,16 @@
       "mae": 1.018868,
       "exactRate": 0.396226,
       "within1Rate": 0.735849,
+      "coverage": [
+        {
+          "rate": 0.7,
+          "maxError": 1
+        },
+        {
+          "rate": 0.8,
+          "maxError": 2
+        }
+      ],
       "trainingCount": 53,
       "models": [
         {

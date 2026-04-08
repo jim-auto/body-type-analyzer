@@ -55,6 +55,7 @@ describe("diagnosis-model", () => {
       DIAGNOSIS_MODEL_METRICS.height.within2Rate,
       6
     );
+    expect(evaluation.height.coverage).toEqual(DIAGNOSIS_MODEL_METRICS.height.coverage);
     expect(evaluation.cup.mae).toBeCloseTo(DIAGNOSIS_MODEL_METRICS.cup.mae, 6);
     expect(evaluation.cup.exactRate).toBeCloseTo(
       DIAGNOSIS_MODEL_METRICS.cup.exactRate,
@@ -64,6 +65,7 @@ describe("diagnosis-model", () => {
       DIAGNOSIS_MODEL_METRICS.cup.within1Rate,
       6
     );
+    expect(evaluation.cup.coverage).toEqual(DIAGNOSIS_MODEL_METRICS.cup.coverage);
   });
 
   test("保存済みメトリクスは最低限の汎化閾値を満たす", () => {

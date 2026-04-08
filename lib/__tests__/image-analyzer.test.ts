@@ -48,7 +48,7 @@ describe("image-analyzer", () => {
 
   test("診断説明文はモデル概要と検証値を含む", () => {
     expect(DIAGNOSIS_MODEL_SUMMARY).toContain("学習プロフィール画像");
-    expect(DIAGNOSIS_VALIDATION_LABEL).toContain("身長MAE");
+    expect(DIAGNOSIS_VALIDATION_LABEL).toContain("身長の8割");
     expect(DIAGNOSIS_DISCLAIMERS[0]).toContain(DIAGNOSIS_MODEL_SUMMARY);
     expect(DIAGNOSIS_DISCLAIMERS[1]).toContain("leave-one-out");
   });

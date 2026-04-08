@@ -79,6 +79,10 @@ const mockRevokeObjectUrl = jest.fn();
 
 const renderPage = () => render(<AnalyzePage />);
 const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
+const formatErrorBound = (value: number) =>
+  Number.isInteger(value) ? `${value}` : value.toFixed(1);
+const formatCoverageText = (rate: number, maxError: number, unit: string) =>
+  `${Math.round(rate * 10)}割が±${formatErrorBound(maxError)}${unit}以内`;
 
 const flushPromises = async () => {
   await act(async () => {
@@ -167,6 +171,24 @@ describe("AnalyzePage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        formatCoverageText(
+          DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7,
+          DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0,
+          "cm"
+        )
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        formatCoverageText(
+          DIAGNOSIS_MODEL_METRICS.cup.coverage[1]?.rate ?? 0.8,
+          DIAGNOSIS_MODEL_METRICS.cup.coverage[1]?.maxError ?? 0,
+          "カップ"
+        )
+      )
     ).toBeInTheDocument();
   });
 

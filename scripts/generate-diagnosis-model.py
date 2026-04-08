@@ -209,6 +209,25 @@ def percentile(values: list[float], ratio: float) -> float:
     return lower + (upper - lower) * (position - lower_index)
 
 
+def error_bound_for_rate(values: list[float], ratio: float) -> float:
+    if not values:
+        return 0.0
+
+    ordered = sorted(values)
+    target_index = max(0, math.ceil(len(ordered) * ratio) - 1)
+    return ordered[target_index]
+
+
+def build_error_coverage(values: list[float], ratios: list[float]) -> list[dict[str, float]]:
+    return [
+        {
+            "rate": ratio,
+            "maxError": round(error_bound_for_rate(values, ratio), 6),
+        }
+        for ratio in ratios
+    ]
+
+
 def infer_silhouette(actual_height: float, cup: str) -> str:
     cup_value = CUP_ORDER.index(cup)
 
@@ -283,6 +302,7 @@ def evaluate_height(
         "mae": round(statistics.fmean(errors), 6),
         "exactRate": round(sum(error == 0 for error in errors) / len(errors), 6),
         "within2Rate": round(sum(error <= 2 for error in errors) / len(errors), 6),
+        "coverage": build_error_coverage(errors, [0.7, 0.8]),
         "trainingCount": len(height_indices),
         "models": [
             {
@@ -321,6 +341,7 @@ def evaluate_cup(
         "mae": round(statistics.fmean(errors), 6),
         "exactRate": round(sum(error == 0 for error in errors) / len(errors), 6),
         "within1Rate": round(sum(error <= 1 for error in errors) / len(errors), 6),
+        "coverage": build_error_coverage(errors, [0.7, 0.8]),
         "trainingCount": len(cup_indices),
         "models": [
             {

@@ -55,12 +55,18 @@ export type DistanceStats = {
   p90: number;
 };
 
+export type ErrorCoverage = {
+  rate: number;
+  maxError: number;
+};
+
 export type HeightMetrics = {
   strategy: string;
   trainingCount: number;
   mae: number;
   exactRate: number;
   within2Rate: number;
+  coverage: ErrorCoverage[];
   models: Array<{
     featureSet: keyof DiagnosisFeatures;
     k: number;
@@ -73,6 +79,7 @@ export type CupMetrics = {
   mae: number;
   exactRate: number;
   within1Rate: number;
+  coverage: ErrorCoverage[];
   models: Array<{
     featureSet: keyof DiagnosisFeatures;
     k: number;
@@ -113,8 +120,8 @@ export type DiagnosisModel = {
 
 export type DiagnosisModelEvaluation = {
   trainingCount: number;
-  height: Pick<HeightMetrics, "mae" | "exactRate" | "within2Rate">;
-  cup: Pick<CupMetrics, "mae" | "exactRate" | "within1Rate">;
+  height: Pick<HeightMetrics, "mae" | "exactRate" | "within2Rate" | "coverage">;
+  cup: Pick<CupMetrics, "mae" | "exactRate" | "within1Rate" | "coverage">;
 };
 
 type Neighbor = {
@@ -378,6 +385,15 @@ function averageDistanceScore(neighbors: Neighbor[]): number {
   return neighbors.reduce((sum, neighbor) => sum + neighbor.distanceScore, 0) / neighbors.length;
 }
 
+function buildErrorCoverage(errors: number[], rates: number[]): ErrorCoverage[] {
+  const ordered = [...errors].sort((left, right) => left - right);
+
+  return rates.map((rate) => ({
+    rate,
+    maxError: ordered[Math.max(0, Math.ceil(ordered.length * rate) - 1)] ?? 0,
+  }));
+}
+
 function computeConfidence(
   heightNeighbors: Neighbor[],
   cupNeighbors: Neighbor[],
@@ -465,11 +481,13 @@ export function evaluateDiagnosisModel(): DiagnosisModelEvaluation {
         heightErrors.filter((error) => error === 0).length / heightErrors.length,
       within2Rate:
         heightErrors.filter((error) => error <= 2).length / heightErrors.length,
+      coverage: buildErrorCoverage(heightErrors, [0.7, 0.8]),
     },
     cup: {
       mae: cupErrors.reduce((sum, error) => sum + error, 0) / cupErrors.length,
       exactRate: cupErrors.filter((error) => error === 0).length / cupErrors.length,
       within1Rate: cupErrors.filter((error) => error <= 1).length / cupErrors.length,
+      coverage: buildErrorCoverage(cupErrors, [0.7, 0.8]),
     },
   };
 }
