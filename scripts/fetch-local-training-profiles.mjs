@@ -8,6 +8,41 @@ const USER_AGENT = "body-type-analyzer/1.0 (local training fetcher)";
 const THROTTLE_MS = Number(process.env.THROTTLE_MS ?? 400);
 const ORICON_BASE_URL = "https://www.oricon.co.jp";
 const ORICON_NO_IMAGE_PATH = "/pc/img/_parts/common/ph-noimage03.png";
+const IDOLPROF_API_URL = "https://idolprof.com/wp-json/wp/v2/yada_wiki";
+const WIKIPEDIA_API_URL = "https://ja.wikipedia.org/w/api.php";
+const WIKIPEDIA_SUMMARY_API = "https://ja.wikipedia.org/api/rest_v1/page/summary";
+const WIKIPEDIA_PERSON_HINTS = [
+  "日本の",
+  "女性",
+  "女優",
+  "モデル",
+  "タレント",
+  "アイドル",
+  "グラビア",
+  "歌手",
+  "レースクイーン",
+  "インフルエンサー",
+  "YouTuber",
+];
+const EXTERNAL_LINK_BLOCKLIST = [
+  "amazon.",
+  "amazon-adsystem",
+  "rakuten.",
+  "hb.afl.",
+  "dmm.com",
+  "hatena.ne.jp/keyword",
+  "miss-flash.jp/vote",
+];
+const IMG_SRC_BLOCKLIST = [
+  "logo",
+  "icon",
+  "banner",
+  "line.gif",
+  "pdf.gif",
+  "no-image",
+  "name_",
+  "spacer",
+];
 
 const LOCAL_DATA_DIR = path.join(process.cwd(), "local-data");
 const LOCAL_IMAGES_DIR = path.join(LOCAL_DATA_DIR, "training-images");
@@ -22,6 +57,9 @@ function sleep(ms) {
 
 function decodeHtml(value) {
   return value
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) =>
+      String.fromCodePoint(Number.parseInt(code, 16))
+    )
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
     .replace(/&#038;/g, "&")
     .replace(/&amp;/g, "&")
@@ -104,6 +142,11 @@ async function fetchText(url, encoding = "utf-8") {
   return new TextDecoder(encoding).decode(buffer);
 }
 
+async function fetchJson(url) {
+  const response = await throttledFetch(url);
+  return response.json();
+}
+
 async function fetchBuffer(url) {
   const response = await throttledFetch(url);
 
@@ -126,10 +169,62 @@ function encodeShiftJisQuery(value) {
     .join("");
 }
 
+function stripParenthetical(value) {
+  return value.replace(/\([^)]*\)/g, " ").replace(/（[^）]*）/g, " ").trim();
+}
+
 function buildOriconArtistSearchUrl(name) {
   return `${ORICON_BASE_URL}/search/result.php?types=artist&search_string=${encodeShiftJisQuery(
     name
   )}`;
+}
+
+function buildWikipediaSearchUrl(query) {
+  const url = new URL(WIKIPEDIA_API_URL);
+  url.searchParams.set("action", "query");
+  url.searchParams.set("format", "json");
+  url.searchParams.set("formatversion", "2");
+  url.searchParams.set("generator", "search");
+  url.searchParams.set("redirects", "1");
+  url.searchParams.set("gsrlimit", "5");
+  url.searchParams.set("prop", "pageimages|extracts|info");
+  url.searchParams.set("piprop", "thumbnail|original");
+  url.searchParams.set("pithumbsize", "800");
+  url.searchParams.set("inprop", "url");
+  url.searchParams.set("exintro", "1");
+  url.searchParams.set("explaintext", "1");
+  url.searchParams.set("exchars", "280");
+  url.searchParams.set("gsrsearch", query);
+  return url.toString();
+}
+
+function buildWikipediaSummaryUrl(title) {
+  return `${WIKIPEDIA_SUMMARY_API}/${encodeURIComponent(title)}`;
+}
+
+function buildIdolprofLookupUrl(name) {
+  const url = new URL(IDOLPROF_API_URL);
+  url.searchParams.set("slug", name);
+  return url.toString();
+}
+
+function buildWikipediaQueries(name) {
+  const variants = [
+    name,
+    stripParenthetical(name),
+  ].filter(Boolean);
+  const queries = [];
+
+  for (const variant of variants) {
+    queries.push(variant);
+    queries.push(`"${variant}"`);
+    queries.push(`"${variant}" モデル`);
+    queries.push(`"${variant}" タレント`);
+    queries.push(`"${variant}" グラビア`);
+    queries.push(`"${variant}" 女優`);
+  }
+
+  return [...new Set(queries)];
 }
 
 function parseTalentDatabankResults(html) {
@@ -166,6 +261,185 @@ function parseOriconArtistResults(html) {
   }
 
   return results;
+}
+
+function getWikipediaImageUrl(page) {
+  return page?.original?.source ?? page?.thumbnail?.source ?? null;
+}
+
+function getWikipediaSummaryImageUrl(payload) {
+  return payload?.originalimage?.source ?? payload?.thumbnail?.source ?? null;
+}
+
+function countWikipediaHints(text) {
+  return WIKIPEDIA_PERSON_HINTS.filter((hint) => text.includes(hint)).length;
+}
+
+function scoreWikipediaCandidate(target, page) {
+  const targetName = normalizeName(stripParenthetical(target.name));
+  const titleName = normalizeName(stripParenthetical(page.title ?? ""));
+  const extract = String(page.extract ?? "");
+  const imageUrl = getWikipediaImageUrl(page);
+  const hasParentheticalTitle = /[()（）]/u.test(page.title ?? "");
+  const hintCount = countWikipediaHints(extract);
+
+  if (!targetName || !titleName || !imageUrl) {
+    return -1;
+  }
+
+  let titleScore = -1;
+
+  if (titleName === targetName) {
+    titleScore = 6;
+  } else if (titleName.startsWith(targetName) || targetName.startsWith(titleName)) {
+    titleScore = 4;
+  }
+
+  if (titleScore < 0) {
+    return -1;
+  }
+
+  if (!hasParentheticalTitle && hintCount === 0) {
+    return -1;
+  }
+
+  return titleScore + hintCount;
+}
+
+function decodeHtmlDocument(buffer, contentType) {
+  const normalizedType = (contentType ?? "").toLowerCase();
+  const fallbackText = buffer.toString("utf8");
+  const declaredEncoding =
+    /charset=([^;]+)/i.exec(normalizedType)?.[1]?.trim().toLowerCase() ??
+    (fallbackText.match(/charset=["']?([^"'>\s]+)/i)?.[1]?.trim().toLowerCase() ??
+      "utf-8");
+
+  if (declaredEncoding.includes("shift_jis") || declaredEncoding.includes("shift-jis")) {
+    return iconv.decode(buffer, "shift_jis");
+  }
+
+  return new TextDecoder("utf-8").decode(buffer);
+}
+
+async function fetchHtml(url) {
+  const response = await throttledFetch(url);
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const contentType = response.headers.get("content-type") ?? "";
+  return decodeHtmlDocument(buffer, contentType);
+}
+
+function normalizeLink(url) {
+  const decoded = decodeHtml(url).replace(/^\/\//, "https://");
+  const matches = decoded.match(/https?:\/\/[^\s"'<>]+/gu);
+  return matches ?? [];
+}
+
+function extractAnchorLinks(html) {
+  return [...html.matchAll(/<a[^>]+href="([^"]+)"/giu)]
+    .flatMap((match) => normalizeLink(match[1]));
+}
+
+function isBlockedExternalLink(url) {
+  return EXTERNAL_LINK_BLOCKLIST.some((pattern) => url.includes(pattern));
+}
+
+function buildRelevantText(html) {
+  const title =
+    html.match(/<title[^>]*>([\s\S]*?)<\/title>/iu)?.[1] ??
+    html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/iu)?.[1] ??
+    html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:title"/iu)?.[1] ??
+    "";
+  const description =
+    html.match(/<meta[^>]+name="description"[^>]+content="([^"]+)"/iu)?.[1] ??
+    html.match(/<meta[^>]+content="([^"]+)"[^>]+name="description"/iu)?.[1] ??
+    "";
+
+  return normalizeName(`${decodeHtml(title)} ${decodeHtml(description)}`);
+}
+
+function extractMetaImageUrl(html) {
+  const imageUrl =
+    html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/iu)?.[1] ??
+    html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/iu)?.[1] ??
+    html.match(/<meta[^>]+name="twitter:image"[^>]+content="([^"]+)"/iu)?.[1] ??
+    html.match(/<meta[^>]+content="([^"]+)"[^>]+name="twitter:image"/iu)?.[1] ??
+    null;
+
+  return imageUrl ? decodeHtml(imageUrl).replace(/^\/\//, "https://") : null;
+}
+
+function normalizeImageCandidate(url, baseUrl) {
+  const normalized = decodeHtml(url).replace(/^\/\//, "https://");
+
+  try {
+    return new URL(normalized, baseUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
+function extractInlineImageUrl(html, pageUrl) {
+  const candidates = [...html.matchAll(/<img[^>]+src="([^"]+)"/giu)]
+    .map((match) => normalizeImageCandidate(match[1], pageUrl))
+    .filter(Boolean)
+    .filter((url) => !IMG_SRC_BLOCKLIST.some((pattern) => url.includes(pattern)))
+    .filter((url) => /\.(?:jpe?g|png|webp)(?:[?#].*)?$/iu.test(url));
+
+  return candidates[0] ?? null;
+}
+
+async function resolveWikipediaProfileFromUrl(url) {
+  const pageTitle = decodeURIComponent(new URL(url).pathname.replace(/^\/wiki\//u, ""));
+
+  if (!pageTitle) {
+    return null;
+  }
+
+  const payload = await fetchJson(buildWikipediaSummaryUrl(pageTitle));
+  const imageUrl = getWikipediaSummaryImageUrl(payload);
+
+  if (!imageUrl) {
+    return null;
+  }
+
+  return {
+    source: "wikipedia",
+    profileUrl: url,
+    imageUrl,
+    stats: null,
+  };
+}
+
+async function resolveExternalLinkedProfile(target, url) {
+  const html = await fetchHtml(url);
+  const relevantText = buildRelevantText(html);
+  const targetName = normalizeName(stripParenthetical(target.name));
+  const hostname = new URL(url).hostname.replace(/^www\./u, "");
+  const imageUrl = extractMetaImageUrl(html) ?? extractInlineImageUrl(html, url);
+
+  if (!imageUrl || imageUrl.includes("no-image")) {
+    return null;
+  }
+
+  if (hostname === "instagram.com") {
+    return {
+      source: hostname,
+      profileUrl: url,
+      imageUrl,
+      stats: null,
+    };
+  }
+
+  if (!relevantText.includes(targetName)) {
+    return null;
+  }
+
+  return {
+    source: hostname,
+    profileUrl: url,
+    imageUrl,
+    stats: null,
+  };
 }
 
 function isOriconPlaceholderImage(imageUrl) {
@@ -244,6 +518,79 @@ async function resolveOriconProfile(target) {
   };
 }
 
+async function resolveWikipediaProfile(target) {
+  for (const query of buildWikipediaQueries(target.name)) {
+    const payload = await fetchJson(buildWikipediaSearchUrl(query));
+    const pages = payload?.query?.pages ?? [];
+    const bestMatch = pages
+      .map((page) => ({
+        page,
+        score: scoreWikipediaCandidate(target, page),
+      }))
+      .filter((candidate) => candidate.score >= 6)
+      .sort(
+        (left, right) =>
+          right.score - left.score ||
+          (left.page.index ?? Number.MAX_SAFE_INTEGER) -
+            (right.page.index ?? Number.MAX_SAFE_INTEGER)
+      )[0];
+
+    if (!bestMatch) {
+      continue;
+    }
+
+    return {
+      source: "wikipedia",
+      profileUrl:
+        bestMatch.page.fullurl ??
+        `https://ja.wikipedia.org/?curid=${bestMatch.page.pageid}`,
+      imageUrl: getWikipediaImageUrl(bestMatch.page),
+      stats: null,
+    };
+  }
+
+  return null;
+}
+
+async function resolveIdolprofProfile(target) {
+  const pages = await fetchJson(buildIdolprofLookupUrl(target.name));
+  const page = pages.find(
+    (entry) => normalizeName(entry?.title?.rendered ?? "") === normalizeName(target.name)
+  );
+
+  if (!page?.content?.rendered) {
+    return null;
+  }
+
+  const links = [...new Set(extractAnchorLinks(page.content.rendered))]
+    .filter((url) => !url.startsWith("https://idolprof.com/wiki/"))
+    .filter((url) => !isBlockedExternalLink(url));
+
+  for (const link of links) {
+    try {
+      if (link.startsWith("https://ja.wikipedia.org/wiki/")) {
+        const wikipediaProfile = await resolveWikipediaProfileFromUrl(link);
+
+        if (wikipediaProfile) {
+          return wikipediaProfile;
+        }
+
+        continue;
+      }
+
+      const externalProfile = await resolveExternalLinkedProfile(target, link);
+
+      if (externalProfile) {
+        return externalProfile;
+      }
+    } catch {
+      // Ignore broken fallbacks and continue to the next candidate link.
+    }
+  }
+
+  return null;
+}
+
 function toStoredRecord(target, resolved, localImagePath) {
   return {
     name: target.name,
@@ -276,7 +623,10 @@ async function main() {
   for (const target of targets) {
     try {
       const resolved =
-        (await resolveTalentDatabankProfile(target)) ?? (await resolveOriconProfile(target));
+        (await resolveTalentDatabankProfile(target)) ??
+        (await resolveOriconProfile(target)) ??
+        (await resolveIdolprofProfile(target)) ??
+        (await resolveWikipediaProfile(target));
 
       if (!resolved) {
         failures.push({ name: target.name, reason: "no-exact-match" });
