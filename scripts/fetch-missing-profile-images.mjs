@@ -28,10 +28,18 @@ const SEARCH_OVERRIDES = {
     jaSearch: ["Nissy", "西島隆弘"],
     enSearch: ["Nissy", "Takahiro Nishijima"],
   },
+  SHIHO: {
+    jaTitles: ["SHIHO (ファッションモデル)", "SHIHO"],
+    enTitles: ["Shiho Yano"],
+  },
   "ryuchell / りゅうちぇる": {
     jaTitles: ["りゅうちぇる", "ryuchell"],
     jaSearch: ["りゅうちぇる", "ryuchell"],
     enSearch: ["Ryuchell"],
+  },
+  "インリン・オブ・ジョイトイ": {
+    jaTitles: ["インリン", "インリン・オブ・ジョイトイ"],
+    enTitles: ["Yinling of Joytoy"],
   },
   "KAƵMA / 池田一真": {
     jaTitles: ["KAƵMA", "池田一真"],
@@ -64,6 +72,9 @@ const SEARCH_OVERRIDES = {
   JIRO: {
     jaSearch: ["JIRO GLAY", "JIRO"],
   },
+  "佐藤健": {
+    jaTitles: ["佐藤健 (俳優)", "佐藤健"],
+  },
   KURO: {
     jaSearch: ["KURO HOME MADE 家族", "KURO"],
   },
@@ -73,8 +84,20 @@ const SEARCH_OVERRIDES = {
   TERU: {
     jaSearch: ["TERU GLAY", "TERU"],
   },
+  "吉沢亮": {
+    jaTitles: ["吉沢亮"],
+  },
+  "松坂桃李": {
+    jaTitles: ["松坂桃李"],
+  },
+  "筧美和子": {
+    jaTitles: ["筧美和子"],
+  },
   tofubeats: {
     jaSearch: ["tofubeats"],
+  },
+  "西島秀俊": {
+    jaTitles: ["西島秀俊"],
   },
   YAMATO: {
     jaSearch: ["ORANGE RANGE YAMATO", "YAMATO ORANGE RANGE"],
@@ -250,6 +273,12 @@ function makeFilename(name) {
   return `jp_${hexStem}_${hash}`;
 }
 
+function shouldRefreshExistingImage(imagePath) {
+  return (
+    process.env.REFRESH_EXISTING === "1" && imagePath.startsWith("/images/jp_")
+  );
+}
+
 function buildTarget(name, gender) {
   const overrides = SEARCH_OVERRIDES[name] ?? {};
   const variants = buildNameVariants(name);
@@ -387,10 +416,18 @@ async function main() {
   await fs.mkdir(IMAGES_DIR, { recursive: true });
 
   const femaleTargets = femaleProfilePool
-    .filter((entry) => entry.image.startsWith("https://ui-avatars.com/"))
+    .filter(
+      (entry) =>
+        entry.image.startsWith("https://ui-avatars.com/") ||
+        shouldRefreshExistingImage(entry.image)
+    )
     .map((entry) => buildTarget(entry.name, "female"));
   const maleTargets = maleProfilePool
-    .filter((entry) => entry.image.startsWith("https://ui-avatars.com/"))
+    .filter(
+      (entry) =>
+        entry.image.startsWith("https://ui-avatars.com/") ||
+        shouldRefreshExistingImage(entry.image)
+    )
     .map((entry) => buildTarget(entry.name, "male"));
   const onlyNames = new Set(
     (process.env.ONLY_NAMES ?? "")

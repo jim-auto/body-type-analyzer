@@ -21,16 +21,23 @@ const TARGETS = [
   {
     name: "SHIHO",
     filename: "shiho",
+    jaTitles: ["SHIHO (ファッションモデル)", "SHIHO"],
     jaSearch: ["SHIHO モデル"],
     enTitles: ["Shiho Yano"],
+    strictTitlesOnly: true,
   },
-  { name: "筧美和子", filename: "kakei_miwako" },
+  {
+    name: "筧美和子",
+    filename: "kakei_miwako",
+    strictTitlesOnly: true,
+  },
   { name: "馬場ふみか", filename: "baba_fumika" },
   {
     name: "ケリー",
     filename: "kelly",
     jaSearch: ["ケリー モデル", "Kelly モデル"],
     enTitles: ["Kelly (fashion model)"],
+    strictTitlesOnly: true,
   },
   { name: "篠崎愛", filename: "shinozaki_ai" },
   { name: "佐野ひなこ", filename: "sano_hinako" },
@@ -45,18 +52,24 @@ const TARGETS = [
   {
     name: "インリン・オブ・ジョイトイ",
     filename: "inrin_of_joytoy",
+    jaTitles: ["インリン", "インリン・オブ・ジョイトイ"],
     enTitles: ["Yinling of Joytoy"],
+    strictTitlesOnly: true,
   },
   {
     name: "MALIA.",
     filename: "malia",
+    jaTitles: ["MALIA."],
     jaSearch: ["MALIA. モデル"],
+    strictTitlesOnly: true,
   },
   {
     name: "マギー",
     filename: "maggy",
+    jaTitles: ["マギー (モデル)", "マギー"],
     jaSearch: ["マギー モデル"],
     enTitles: ["Maggy", "Maggy (Japanese model)"],
+    strictTitlesOnly: true,
   },
   { name: "葵井えりか", filename: "aoi_erika" },
   { name: "朝比奈彩", filename: "asahina_aya" },
@@ -68,7 +81,9 @@ const TARGETS = [
   {
     name: "衛藤美彩",
     filename: "eto_misa",
+    jaTitles: ["衛藤美彩"],
     enTitles: ["Misa Eto"],
+    strictTitlesOnly: true,
   },
   {
     name: "伊原六花",
@@ -96,9 +111,15 @@ const TARGETS = [
   {
     name: "若槻千夏",
     filename: "wakatsuki_chinatsu",
+    jaTitles: ["若槻千夏"],
     enTitles: ["Chinatsu Wakatsuki"],
+    strictTitlesOnly: true,
   },
-  { name: "鎌倉美咲", filename: "kamakura_misaki" },
+  {
+    name: "鎌倉美咲",
+    filename: "kamakura_misaki",
+    strictTitlesOnly: true,
+  },
   { name: "杉野遥亮", filename: "sugino_yosuke" },
   { name: "竹内涼真", filename: "takeuchi_ryoma" },
   { name: "目黒蓮", filename: "meguro_ren" },
@@ -127,8 +148,9 @@ const TARGETS = [
   {
     name: "ROLAND",
     filename: "roland",
-    jaTitles: ["ROLAND", "ROLAND (ホスト)"],
+    jaTitles: ["ROLAND (ホスト)", "ROLAND"],
     jaSearch: ["ROLAND ホスト"],
+    strictTitlesOnly: true,
   },
   {
     name: "TAKURO(GLAY)",
@@ -272,12 +294,15 @@ async function resolveImageSource(target) {
   const jaSearch = target.jaSearch ?? [target.name];
   const enTitles = target.enTitles ?? [];
   const enSearch = target.enSearch ?? enTitles;
+  const allowSearchFallback = !target.strictTitlesOnly;
 
   return (
     (await lookupByTitles("ja", jaTitles)) ??
-    (await lookupBySearch("ja", jaSearch)) ??
+    (allowSearchFallback ? await lookupBySearch("ja", jaSearch) : null) ??
     (enTitles.length > 0 ? await lookupByTitles("en", enTitles) : null) ??
-    (enSearch.length > 0 ? await lookupBySearch("en", enSearch) : null)
+    (allowSearchFallback && enSearch.length > 0
+      ? await lookupBySearch("en", enSearch)
+      : null)
   );
 }
 
