@@ -3,10 +3,14 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import AnalyzePage from "@/app/analyze/page";
 import {
   AI_LOADING_MESSAGES,
+  DIAGNOSIS_DISCLAIMERS,
+  DIAGNOSIS_MODEL_SUMMARY,
+  DIAGNOSIS_VALIDATION_LABEL,
   buildShareText,
   buildXShareUrl,
   diagnose,
-  hashFromImage,
+  extractDiagnosisFeatures,
+  type DiagnosisFeatures,
   type DiagnosisResult,
 } from "@/lib/image-analyzer";
 
@@ -15,7 +19,7 @@ jest.mock("@/lib/image-analyzer", () => {
 
   return {
     ...actual,
-    hashFromImage: jest.fn(),
+    extractDiagnosisFeatures: jest.fn(),
     diagnose: jest.fn(),
     buildShareText: jest.fn(),
     buildXShareUrl: jest.fn(),
@@ -55,7 +59,16 @@ const mockResult: DiagnosisResult = {
   ],
 };
 
-const mockedHashFromImage = jest.mocked(hashFromImage);
+const mockFeatures: DiagnosisFeatures = {
+  heightPrimary: [0.1, 0.2, 0.3],
+  heightBalanced: [0.1, 0.2, 0.3],
+  heightWide: [0.1, 0.2, 0.3],
+  cupPrimary: [0.4, 0.5, 0.6],
+  cupSecondary: [0.4, 0.5, 0.6],
+  similarity: [0.7, 0.8, 0.9],
+};
+
+const mockedExtractDiagnosisFeatures = jest.mocked(extractDiagnosisFeatures);
 const mockedDiagnose = jest.mocked(diagnose);
 const mockedBuildShareText = jest.mocked(buildShareText);
 const mockedBuildXShareUrl = jest.mocked(buildXShareUrl);
@@ -94,7 +107,7 @@ const finishAnalysis = async () => {
 
 beforeEach(() => {
   jest.useFakeTimers();
-  mockedHashFromImage.mockResolvedValue(123456);
+  mockedExtractDiagnosisFeatures.mockResolvedValue(mockFeatures);
   mockedDiagnose.mockReturnValue(mockResult);
   mockedBuildShareText.mockReturnValue("share-text");
   mockedBuildXShareUrl.mockReturnValue(
@@ -145,7 +158,8 @@ describe("AnalyzePage", () => {
     expect(
       screen.getByText("⚠ 本人の画像のみ使用してください")
     ).toBeInTheDocument();
-    expect(screen.getByText("結果はエンタメ目的です")).toBeInTheDocument();
+    expect(screen.getByText(DIAGNOSIS_MODEL_SUMMARY)).toBeInTheDocument();
+    expect(screen.getByText(DIAGNOSIS_VALIDATION_LABEL)).toBeInTheDocument();
   });
 
   test("ファイル入力は image/* を受け付ける", () => {
@@ -162,7 +176,7 @@ describe("AnalyzePage", () => {
 
     await uploadImage();
 
-    expect(mockedHashFromImage).toHaveBeenCalledTimes(1);
+    expect(mockedExtractDiagnosisFeatures).toHaveBeenCalledTimes(1);
     expect(mockCreateObjectUrl).toHaveBeenCalledTimes(1);
     expect(
       screen.getByAltText("アップロード画像のプレビュー")
@@ -182,7 +196,7 @@ describe("AnalyzePage", () => {
 
     await flushPromises();
 
-    expect(mockedHashFromImage).toHaveBeenCalledWith(file);
+    expect(mockedExtractDiagnosisFeatures).toHaveBeenCalledWith(file);
   });
 
   test("画像アップロード直後にローディング演出が表示される", async () => {
@@ -274,11 +288,11 @@ describe("AnalyzePage", () => {
     });
 
     expect(screen.getByText("画像ファイルを選択してください。")).toBeInTheDocument();
-    expect(mockedHashFromImage).not.toHaveBeenCalled();
+    expect(mockedExtractDiagnosisFeatures).not.toHaveBeenCalled();
   });
 
-  test("hashFromImage が失敗したときは読み込み失敗を表示する", async () => {
-    mockedHashFromImage.mockRejectedValueOnce(new Error("broken image"));
+  test("extractDiagnosisFeatures が失敗したときは読み込み失敗を表示する", async () => {
+    mockedExtractDiagnosisFeatures.mockRejectedValueOnce(new Error("broken image"));
     renderPage();
 
     await uploadImage();
@@ -295,13 +309,8 @@ describe("AnalyzePage", () => {
     await finishAnalysis();
 
     expect(screen.getByText("免責表示")).toBeInTheDocument();
-    expect(
-      screen.getByText("※ このAIは雰囲気で動いています")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "※ 画像はサーバーに送信されません。全てブラウザ内で処理されます"
-      )
-    ).toBeInTheDocument();
+    DIAGNOSIS_DISCLAIMERS.forEach((disclaimer) => {
+      expect(screen.getByText(disclaimer)).toBeInTheDocument();
+    });
   });
 });
