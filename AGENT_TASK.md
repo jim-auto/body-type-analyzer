@@ -1,187 +1,66 @@
-## タスク: AI画像診断機能を追加（身長・カップサイズ推定）
+## タスク: カテゴリ統合 + 有名人データ100人×男女に拡大
 
-### 概要
-画像をアップロードすると、AIっぽく身長とカップサイズを推定する診断機能を追加。
-ランキングページのヘッダーから「診断する」ボタンで遷移。
-完全にクライアントサイドで動作（画像はサーバーに送信しない）。
+### パート1: カテゴリ統合
 
----
+現在5カテゴリ（女性）/ 4カテゴリ（男性）あるが多すぎるので統合:
 
-### 1. app/analyze/page.tsx を新規作成（診断ページ）
+**女性（3カテゴリ）:**
+- 「スタイル偏差値」(category: "style") ← silhouette + upperBody + proportion を統合。score = cupがあれば (heightDev + cupDev) / 2、なければ heightDev
+- 「AI推定身長」(category: "estimatedHeight") ← そのまま
+- 「AI推定カップ数」(category: "estimatedCup") ← そのまま
 
-"use client" コンポーネント
+**男性（2カテゴリ）:**
+- 「スタイル偏差値」(category: "style") ← 統合。score = heightDev
+- 「AI推定身長」(category: "estimatedHeight") ← そのまま
 
-#### 画面構成:
+lib/ranking-builder.ts から silhouette, upperBody, proportion カテゴリの生成を削除し、style カテゴリを追加。
 
-**ステップ1: 画像アップロード**
-- ドラッグ&ドロップ対応のアップロードエリア
-- input[type="file"] accept="image/*"
-- プレビュー表示（URL.createObjectURL）
-- 注意文: "⚠ 本人の画像のみ使用してください" "結果はエンタメ目的です"
+### パート2: データを100人×男女に拡大
 
-**ステップ2: ネタローディング演出**
-画像選択後、以下のメッセージを1.5秒間隔で表示:
-```
-const messages = [
-  "骨格をなんとなく解析中…",
-  "AIが雰囲気で判断しています…",
-  "体型バランスを数値化中…",
-  "偏差値をフィーリングで算出中…",
-  "もっともらしい結果を生成中…",
-];
-```
-プログレスバー（偽）も表示。
+lib/source-profiles.ts の femaleProfilePool を100人に、maleProfilePool を100人に拡大する。
 
-**ステップ3: 結果表示**
+各有名人のデータはWeb検索で取得:
+- 「{名前} 身長 スリーサイズ カップ」で検索
 
-#### 結果の生成ロジック:
+**重要: 女性のカップ数分布が日本人平均に近づくように人選する**
 
-画像からハッシュを生成し、seedベースで決定論的に結果を出す:
+目標分布（cup が判明している人の中で）:
+- A: ~7%, B: ~22%, C: ~26%, D: ~22%, E: ~13%, F: ~6%, G+: ~4%
 
+データ形式（既存と同じ）:
 ```typescript
-// lib/image-analyzer.ts を新規作成
-
-export async function hashFromImage(file: File): Promise<number> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const buffer = reader.result as ArrayBuffer;
-      const bytes = new Uint8Array(buffer);
-      let hash = 0;
-      for (let i = 0; i < bytes.length; i++) {
-        hash = (hash * 31 + bytes[i]) & 0xFFFFFFFF;
-      }
-      resolve(hash);
-    };
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-export function seededRandom(seed: number): () => number {
-  let s = seed || 1;
-  return () => {
-    s ^= s << 13;
-    s ^= s >> 17;
-    s ^= s << 5;
-    return (s >>> 0) / 0xFFFFFFFF;
-  };
-}
-
-export type DiagnosisResult = {
-  estimatedHeight: number;    // 推定身長 (cm)
-  estimatedCup: string;       // 推定カップ
-  heightDeviation: number;    // 身長偏差値
-  cupDeviation: number;       // カップ偏差値
-  silhouetteType: "X" | "I" | "A";
-  confidence: number;         // AI信頼度 (15〜45%)
-  similarCelebrity: string;   // 近い有名人
-};
-
-export function diagnose(hash: number): DiagnosisResult {
-  const rand = seededRandom(hash);
-  
-  // 日本人女性の分布に沿った推定身長を生成
-  // 正規分布に従うように Box-Muller 変換
-  const u1 = rand();
-  const u2 = rand();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  const estimatedHeight = Math.round(158 + 5.4 * z); // 平均158cm, 標準偏差5.4
-  
-  // カップ数を日本人分布に沿って生成
-  // CUP_DISTRIBUTION の累積確率を使ってランダム選択
-  const cupRand = rand();
-  // ... CUP_DISTRIBUTION を使って累積確率でカップを決定
-  
-  // 偏差値計算
-  // calculateDeviation, calculateCupDeviation を使用
-  
-  // シルエットタイプ
-  const silhouetteType = rand() < 0.33 ? "X" : rand() < 0.5 ? "I" : "A";
-  
-  // AI信頼度（低めでネタ）
-  const confidence = Math.floor(rand() * 30) + 15;
-  
-  // 近い有名人（ranking.jsonから身長が近い人を選択）
-  // ...
-  
-  return { estimatedHeight, estimatedCup, heightDeviation, cupDeviation, silhouetteType, confidence, similarCelebrity };
-}
+// 女性
+{ name: "名前", image: "https://ui-avatars.com/api/?name=名前&size=300&background=random&color=fff&bold=true", actualHeight: 163, bust: 86, cup: "E" }
+// 男性
+{ name: "名前", image: "https://ui-avatars.com/api/?name=名前&size=300&background=random&color=fff&bold=true", actualHeight: 179 }
 ```
 
-#### 結果画面の表示内容:
+※ 既存の人（public/imagesに画像がある人）のimageパスは変更しないこと
 
-カード形式で表示:
-- **推定身長**: 大きな数字で "163cm"、偏差値バッジ
-- **推定カップサイズ**: 大きな文字で "Dカップ"、偏差値バッジ
-- **シルエットタイプ**: X / I / A バッジ
-- **AI信頼度**: プログレスバー（低いので赤〜黄色、ネタ）
-- **あなたに近い有名人**: ランキングから1〜3人表示（名前 + 画像 + 類似度%）
+女性の追加候補（全部入れる必要なし、100人になればOK）:
+桐谷美玲、河北麻友子、トリンドル玲奈、滝沢カレン、堀北真希、戸田恵梨香、水川あさみ、二階堂ふみ、石田ゆり子、松嶋菜々子、仲間由紀恵、常盤貴子、山本美月、高畑充希、波瑠、多部未華子、宮崎あおい、上戸彩、蒼井優、黒木華、吉高由里子、満島ひかり、長谷川潤、ローラ、道端ジェシカ、水原希子、紗栄子、真木よう子、天海祐希、米倉涼子、柴咲コウ、松本まりか、木村文乃、新木優子、広瀬アリス、馬場ふみか、小倉優子、若槻千夏、優木まおみ、久松郁実、佐野ひなこ、小池栄子、杉本彩、井上和香、篠崎愛、叶美香、叶恭子、板野友美、前田敦子、大島優子、渡辺麻友、生田絵梨花、与田祐希、遠藤さくら、山下美月、梅澤美波、平手友梨奈、長濱ねる
 
-免責表示:
-- "※ このAIは雰囲気で動いています"
-- "※ 結果はAIの気分で算出されています"
-- "※ 画像はサーバーに送信されません。全てブラウザ内で処理されます"
+男性の追加候補:
+大谷翔平、ダルビッシュ有、速水もこみち、阿部寛、要潤、伊藤英明、反町隆史、東出昌大、藤木直人、谷原章介、渡辺謙、坂口健太郎、竹内涼真、福士蒼汰、山下智久、松田翔太、瑛太、藤原竜也、綾野剛、長谷川博己、堺雅人、唐沢寿明、松本潤、櫻井翔、赤西仁、星野源、ムロツヨシ、神木隆之介、千葉雄大、大泉洋、香川照之、中井貴一、堤真一、濱田岳、池松壮亮、大野智、藤ヶ谷太輔、増田貴久、中島健人、道枝駿佑、目黒蓮、Snow Man ラウール、King & Prince 永瀬廉、なにわ男子 大西流星、平野紫耀、町田啓太、鹿賀丈史、佐藤浩市、役所広司、妻夫木聡、オダギリジョー、浅野忠信、加瀬亮、森田剛、松山ケンイチ、山田裕貴、杉野遥亮、鈴木伸之、間宮祥太朗、白濱亜嵐、片寄涼太、中条あやみ
 
-#### シェア機能:
+### パート3: ranking.json 再生成
 
-- 結果テキストコピーボタン
-- Xシェアボタン
-
-シェアテキスト例:
-```
-【芸能人スタイルランキング AI診断】
-推定身長: 163cm（偏差値59）
-推定カップ: Dカップ（偏差値54）
-似ている有名人: 石原さとみ
-AI信頼度: 28%（雰囲気で判定）
-
-#芸能人スタイルランキング
-https://jim-auto.github.io/body-type-analyzer/
+```bash
+node scripts/generate-ranking.mjs
 ```
 
-### 2. components/Header.tsx に「診断する」リンク追加
+### パート4: テスト更新
 
-```typescript
-<Link href="/analyze" className="rounded-full bg-pink-500 text-white px-4 py-2 text-sm font-medium hover:bg-pink-600 transition">
-  AI診断
-</Link>
-```
+app/__tests__/cup-data.test.ts:
+1. 女性カテゴリが3つ（style, estimatedHeight, estimatedCup）であること
+2. 男性カテゴリが2つ（style, estimatedHeight）であること
+3. 女性のユニーク人数が90人以上
+4. 男性のユニーク人数が90人以上
+5. silhouette/upperBody/proportionカテゴリが存在しないこと
 
-### 3. ランキングページ（app/page.tsx）にもCTAを追加
+app/__tests__/page.test.tsx のモックデータも新カテゴリ構造に更新。
 
-ランキングの上か下に:
-```
-「あなたのスタイルも診断してみる？」ボタン → /analyze へ
-```
-
-### 4. テスト
-
-#### lib/__tests__/image-analyzer.test.ts（新規、15テスト以上）
-1. hashFromImage: 同じファイルで同じハッシュ
-2. hashFromImage: 異なるファイルで異なるハッシュ
-3. seededRandom: 同じseedで同じ乱数列
-4. seededRandom: 異なるseedで異なる乱数列
-5. seededRandom: 返り値が0〜1の範囲
-6. diagnose: 同じhashで同じ結果（冪等性）
-7. diagnose: 異なるhashで異なる結果
-8. diagnose: estimatedHeight が 140〜190 の範囲
-9. diagnose: estimatedCup が A〜H のいずれか
-10. diagnose: heightDeviation が 20〜80 の範囲
-11. diagnose: cupDeviation が 20〜80 の範囲
-12. diagnose: confidence が 15〜44 の範囲
-13. diagnose: silhouetteType が "X" | "I" | "A" のいずれか
-14. diagnose: similarCelebrity が空文字でないこと
-15. 100個のhashでループして全て範囲内か確認
-
-#### app/__tests__/analyze.test.tsx（新規、10テスト以上）
-1. アップロードエリアが表示されること
-2. 注意文が表示されること
-3. 「AI診断」ページタイトルが表示されること
-
-#### components/__tests__/Header.test.tsx 更新
-4. AI診断リンクが存在すること
-
-### 5. 確認
+### パート5: 確認
 
 - npm test で全テストパス
-- npm run build で成功（/analyze ページが静的エクスポートされること）
+- npm run build で成功
