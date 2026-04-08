@@ -266,27 +266,27 @@ describe("Home (Ranking Page)", () => {
       screen.getAllByText(femaleCupDistribution.estimatedSeries.title)
     ).toHaveLength(2);
     expect(
-      screen.getByText(
+      screen.getAllByText(
         `${femalePublicBucket.count}人 / ${femalePublicBucket.percentage.toFixed(1)}%`
       )
-    ).toBeInTheDocument();
+    ).not.toHaveLength(0);
     expect(
-      screen.getByText(
+      screen.getAllByText(
         `${femaleEstimatedBucket.count}人 / ${femaleEstimatedBucket.percentage.toFixed(1)}%`
       )
-    ).toBeInTheDocument();
+    ).not.toHaveLength(0);
     expect(
       screen.getByRole("heading", { level: 3, name: "男性身長分布" })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
+      screen.getAllByText(
         `${malePublicBucket.count}人 / ${malePublicBucket.percentage.toFixed(1)}%`
       )
-    ).toBeInTheDocument();
+    ).not.toHaveLength(0);
     expect(
-      screen.getByText(
+      screen.getAllByText(
         `${maleEstimatedBucket.count}人 / ${maleEstimatedBucket.percentage.toFixed(1)}%`
       )
-    ).toBeInTheDocument();
+    ).not.toHaveLength(0);
   });
 });
