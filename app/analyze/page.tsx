@@ -84,11 +84,7 @@ const PERFORMANCE_HIGHLIGHTS = [
   {
     label: "カップが±1以内",
     value: formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate),
-    detail: formatCoverageText(
-      DIAGNOSIS_MODEL_METRICS.cup.coverage[1]?.rate ?? 0.8,
-      DIAGNOSIS_MODEL_METRICS.cup.coverage[1]?.maxError ?? 0,
-      "カップ"
-    ),
+    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`,
   },
 ] as const;
 

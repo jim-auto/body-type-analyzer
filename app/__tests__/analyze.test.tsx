@@ -182,13 +182,7 @@ describe("AnalyzePage", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        formatCoverageText(
-          DIAGNOSIS_MODEL_METRICS.cup.coverage[1]?.rate ?? 0.8,
-          DIAGNOSIS_MODEL_METRICS.cup.coverage[1]?.maxError ?? 0,
-          "カップ"
-        )
-      )
+      screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`)
     ).toBeInTheDocument();
   });
 
