@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP } from "next/font/google";
 import Header from "@/components/Header";
 import "./globals.css";
-
-const notoSansJP = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Celebrity Body Balance Ranking",
@@ -20,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${notoSansJP.variable} antialiased`}>
-      <body className="min-h-screen font-[family-name:var(--font-noto-sans-jp)]">
+    <html lang="ja" className="antialiased">
+      <body className="min-h-screen">
         <Header />
         {children}
         <footer className="text-xs text-slate-400 text-center py-8 mt-16 border-t border-slate-200">

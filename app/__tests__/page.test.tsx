@@ -11,7 +11,7 @@ const mockRankingData = rankingData;
 const renderHome = () => render(<Home />);
 
 const waitForFemaleSilhouette = async () => {
-  expect(await screen.findByText("新垣結衣")).toBeInTheDocument();
+  expect(await screen.findByText("菜々緒")).toBeInTheDocument();
 };
 
 const clickGenderTab = (label: "女性" | "男性") => {
@@ -81,24 +81,24 @@ describe("Home (Ranking Page)", () => {
         name: "シルエットバランス偏差値",
       })
     ).toBeInTheDocument();
-    expect(screen.getByText("佐々木希")).toBeInTheDocument();
-    expect(screen.getByText("綾瀬はるか")).toBeInTheDocument();
+    expect(screen.getByText("新垣結衣")).toBeInTheDocument();
+    expect(screen.getByText("長澤まさみ")).toBeInTheDocument();
   });
 
   test("女性ランキングでカップ数と身長が表示される", async () => {
     renderHome();
     await waitForFemaleSilhouette();
 
-    expect(screen.getByText("Eカップ")).toBeInTheDocument();
-    expect(screen.getByText("163cm")).toBeInTheDocument();
-    expect(screen.getByText("偏差値59")).toBeInTheDocument();
+    expect(screen.getByText("Bカップ")).toBeInTheDocument();
+    expect(screen.getByText("172cm")).toBeInTheDocument();
+    expect(screen.getByText("偏差値76")).toBeInTheDocument();
   });
 
   test("女性ランキングでAI推定カップ表示がされる", async () => {
     renderHome();
     await waitForFemaleSilhouette();
 
-    expect(screen.getAllByText(/^AI推定:/)).toHaveLength(5);
+    expect(screen.getAllByText(/^AI推定:/)).toHaveLength(20);
     expect(screen.getAllByText(/AI推定: Bカップ/).length).toBeGreaterThan(0);
   });
 
@@ -108,9 +108,9 @@ describe("Home (Ranking Page)", () => {
 
     clickCategoryTab("上半身バランス偏差値");
 
-    expect(await screen.findByText("長澤まさみ")).toBeInTheDocument();
-    expect(screen.getByText("152cm")).toBeInTheDocument();
-    expect(screen.getByText("偏差値50")).toBeInTheDocument();
+    expect(await screen.findByText("原幹恵")).toBeInTheDocument();
+    expect(screen.getAllByText("163cm").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("偏差値72").length).toBeGreaterThan(0);
   });
 
   test("男性に切り替えると男性ランキングの身長が表示される", async () => {
@@ -119,9 +119,9 @@ describe("Home (Ranking Page)", () => {
 
     clickGenderTab("男性");
 
-    expect(await screen.findByText("斎藤工")).toBeInTheDocument();
-    expect(screen.getByText("184cm")).toBeInTheDocument();
-    expect(screen.getByText("偏差値72")).toBeInTheDocument();
+    expect(await screen.findByText("鈴木亮平")).toBeInTheDocument();
+    expect(screen.getByText("186cm")).toBeInTheDocument();
+    expect(screen.getByText("偏差値76")).toBeInTheDocument();
   });
 
   test("男性ランキングではカップ数が表示されないがAI推定身長は表示される", async () => {
@@ -130,21 +130,21 @@ describe("Home (Ranking Page)", () => {
 
     clickGenderTab("男性");
 
-    expect(await screen.findByText("斎藤工")).toBeInTheDocument();
+    expect(await screen.findByText("鈴木亮平")).toBeInTheDocument();
     expect(screen.queryByText(/カップ$/)).not.toBeInTheDocument();
-    expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(5);
+    expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(20);
   });
 
   test("男女切り替え時にカテゴリタブが最初に戻る", async () => {
     renderHome();
     await waitForFemaleSilhouette();
 
-    clickCategoryTab("プロポーション調和スコア");
-    expect(await screen.findByText("森星")).toBeInTheDocument();
+    clickCategoryTab("上半身バランス偏差値");
+    expect(await screen.findByText("原幹恵")).toBeInTheDocument();
 
     clickGenderTab("男性");
 
-    expect(await screen.findByText("斎藤工")).toBeInTheDocument();
+    expect(await screen.findByText("鈴木亮平")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 2,
@@ -164,10 +164,7 @@ describe("Home (Ranking Page)", () => {
       );
     });
 
-    const image = await screen.findByAltText("新垣結衣");
-    expect(image).toHaveAttribute(
-      "src",
-      "/body-type-analyzer/images/aragaki_yui.jpg"
-    );
+    const image = await screen.findByAltText("菜々緒");
+    expect(image).toHaveAttribute("src", "/body-type-analyzer/images/nanao.jpg");
   });
 });

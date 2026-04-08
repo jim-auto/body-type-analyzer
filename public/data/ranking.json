@@ -5,44 +5,164 @@
       "title": "シルエットバランス偏差値",
       "ranking": [
         {
+          "name": "菜々緒",
+          "image": "/images/nanao.jpg",
+          "actualHeight": 172,
+          "bust": 80,
+          "cup": "B",
+          "score": 76
+        },
+        {
           "name": "新垣結衣",
-          "score": 70,
           "image": "/images/aragaki_yui.jpg",
-          "cup": null,
           "actualHeight": 169,
-          "bust": null
+          "bust": null,
+          "cup": null,
+          "score": 70
+        },
+        {
+          "name": "池田エライザ",
+          "image": "https://ui-avatars.com/api/?name=池田エライザ&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 169,
+          "bust": 85,
+          "cup": null,
+          "score": 70
+        },
+        {
+          "name": "中条あやみ",
+          "image": "/images/nakajo_ayami.jpg",
+          "actualHeight": 169,
+          "bust": 79,
+          "cup": null,
+          "score": 70
+        },
+        {
+          "name": "長澤まさみ",
+          "image": "/images/nagasawa_masami.jpg",
+          "actualHeight": 169,
+          "bust": 84,
+          "cup": "F",
+          "score": 70
         },
         {
           "name": "佐々木希",
-          "score": 69,
           "image": "/images/sasaki_nozomi.jpg",
-          "cup": "C",
           "actualHeight": 168,
-          "bust": 80
+          "bust": 80,
+          "cup": "C",
+          "score": 69
+        },
+        {
+          "name": "藤田ニコル",
+          "image": "/images/fujita_nicole.jpg",
+          "actualHeight": 167,
+          "bust": 78,
+          "cup": null,
+          "score": 67
+        },
+        {
+          "name": "川口春奈",
+          "image": "https://ui-avatars.com/api/?name=川口春奈&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 75,
+          "cup": null,
+          "score": 65
+        },
+        {
+          "name": "泉里香",
+          "image": "https://ui-avatars.com/api/?name=泉里香&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 81,
+          "cup": "F",
+          "score": 65
+        },
+        {
+          "name": "本田翼",
+          "image": "https://ui-avatars.com/api/?name=本田翼&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 84,
+          "cup": null,
+          "score": 65
         },
         {
           "name": "綾瀬はるか",
-          "score": 63,
           "image": "/images/ayase_haruka.jpg",
-          "cup": "F",
           "actualHeight": 165,
-          "bust": 88
+          "bust": 88,
+          "cup": "F",
+          "score": 63
+        },
+        {
+          "name": "小嶋陽菜",
+          "image": "https://ui-avatars.com/api/?name=小嶋陽菜&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 164,
+          "bust": 80,
+          "cup": null,
+          "score": 61
+        },
+        {
+          "name": "柏木由紀",
+          "image": "https://ui-avatars.com/api/?name=柏木由紀&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 164,
+          "bust": 75,
+          "cup": "C",
+          "score": 61
+        },
+        {
+          "name": "永野芽郁",
+          "image": "https://ui-avatars.com/api/?name=永野芽郁&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 163,
+          "bust": 76,
+          "cup": null,
+          "score": 59
+        },
+        {
+          "name": "桐谷美玲",
+          "image": "https://ui-avatars.com/api/?name=桐谷美玲&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 163,
+          "bust": 78,
+          "cup": null,
+          "score": 59
+        },
+        {
+          "name": "原幹恵",
+          "image": "https://ui-avatars.com/api/?name=原幹恵&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 163,
+          "bust": 94,
+          "cup": "G",
+          "score": 59
         },
         {
           "name": "深田恭子",
-          "score": 59,
           "image": "/images/fukada_kyoko.jpg",
-          "cup": "E",
           "actualHeight": 163,
-          "bust": 86
+          "bust": 86,
+          "cup": "E",
+          "score": 59
         },
         {
-          "name": "石原さとみ",
-          "score": 48,
-          "image": "/images/ishihara_satomi.jpg",
-          "cup": "D",
-          "actualHeight": 157,
-          "bust": 82
+          "name": "白石麻衣",
+          "image": "https://ui-avatars.com/api/?name=白石麻衣&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 162,
+          "bust": 81,
+          "cup": null,
+          "score": 57
+        },
+        {
+          "name": "ダレノガレ明美",
+          "image": "https://ui-avatars.com/api/?name=ダレノガレ明美&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 161,
+          "bust": 83,
+          "cup": "E",
+          "score": 56
+        },
+        {
+          "name": "中村アン",
+          "image": "https://ui-avatars.com/api/?name=中村アン&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 161,
+          "bust": 82,
+          "cup": "E",
+          "score": 56
         }
       ]
     },
@@ -51,44 +171,164 @@
       "title": "上半身バランス偏差値",
       "ranking": [
         {
-          "name": "長澤まさみ",
-          "score": 50,
-          "image": "/images/nagasawa_masami.jpg",
-          "cup": "F",
+          "name": "原幹恵",
+          "image": "https://ui-avatars.com/api/?name=原幹恵&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 163,
+          "bust": 94,
+          "cup": "G",
+          "score": 72
+        },
+        {
+          "name": "MEGUMI",
+          "image": "https://ui-avatars.com/api/?name=MEGUMI&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 158,
+          "bust": 94,
+          "cup": "H",
+          "score": 72
+        },
+        {
+          "name": "新垣結衣",
+          "image": "/images/aragaki_yui.jpg",
           "actualHeight": 169,
-          "bust": 84
+          "bust": null,
+          "cup": null,
+          "score": 70
+        },
+        {
+          "name": "杉原杏璃",
+          "image": "https://ui-avatars.com/api/?name=杉原杏璃&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 157,
+          "bust": 89,
+          "cup": "G",
+          "score": 61
+        },
+        {
+          "name": "綾瀬はるか",
+          "image": "/images/ayase_haruka.jpg",
+          "actualHeight": 165,
+          "bust": 88,
+          "cup": "F",
+          "score": 59
+        },
+        {
+          "name": "磯山さやか",
+          "image": "https://ui-avatars.com/api/?name=磯山さやか&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 155,
+          "bust": 88,
+          "cup": "F",
+          "score": 59
+        },
+        {
+          "name": "深田恭子",
+          "image": "/images/fukada_kyoko.jpg",
+          "actualHeight": 163,
+          "bust": 86,
+          "cup": "E",
+          "score": 54
+        },
+        {
+          "name": "今田美桜",
+          "image": "/images/imada_mio.jpg",
+          "actualHeight": 157,
+          "bust": 86,
+          "cup": "F",
+          "score": 54
+        },
+        {
+          "name": "池田エライザ",
+          "image": "https://ui-avatars.com/api/?name=池田エライザ&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 169,
+          "bust": 85,
+          "cup": null,
+          "score": 52
+        },
+        {
+          "name": "安めぐみ",
+          "image": "https://ui-avatars.com/api/?name=安めぐみ&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 160,
+          "bust": 85,
+          "cup": "D",
+          "score": 52
+        },
+        {
+          "name": "壇蜜",
+          "image": "https://ui-avatars.com/api/?name=壇蜜&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 158,
+          "bust": 85,
+          "cup": "E",
+          "score": 52
+        },
+        {
+          "name": "長澤まさみ",
+          "image": "/images/nagasawa_masami.jpg",
+          "actualHeight": 169,
+          "bust": 84,
+          "cup": "F",
+          "score": 50
+        },
+        {
+          "name": "本田翼",
+          "image": "https://ui-avatars.com/api/?name=本田翼&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 84,
+          "cup": null,
+          "score": 50
         },
         {
           "name": "浜辺美波",
-          "score": 48,
           "image": "/images/hamabe_minami.jpg",
-          "cup": null,
           "actualHeight": 157,
-          "bust": null
+          "bust": null,
+          "cup": null,
+          "score": 48
         },
         {
-          "name": "橋本環奈",
-          "score": 41,
-          "image": "/images/hashimoto_kanna.jpg",
-          "cup": null,
-          "actualHeight": 152,
-          "bust": 80
+          "name": "ダレノガレ明美",
+          "image": "https://ui-avatars.com/api/?name=ダレノガレ明美&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 161,
+          "bust": 83,
+          "cup": "E",
+          "score": 48
         },
         {
-          "name": "広瀬すず",
-          "score": 34,
-          "image": "/images/hirose_suzu.jpg",
-          "cup": null,
-          "actualHeight": 159,
-          "bust": 77
+          "name": "中村アン",
+          "image": "https://ui-avatars.com/api/?name=中村アン&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 161,
+          "bust": 82,
+          "cup": "E",
+          "score": 45
         },
         {
-          "name": "北川景子",
-          "score": 30,
-          "image": "/images/kitagawa_keiko.jpg",
+          "name": "吉岡里帆",
+          "image": "https://ui-avatars.com/api/?name=吉岡里帆&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 158,
+          "bust": 82,
           "cup": null,
-          "actualHeight": 160,
-          "bust": 75
+          "score": 45
+        },
+        {
+          "name": "石原さとみ",
+          "image": "/images/ishihara_satomi.jpg",
+          "actualHeight": 157,
+          "bust": 82,
+          "cup": "D",
+          "score": 45
+        },
+        {
+          "name": "泉里香",
+          "image": "https://ui-avatars.com/api/?name=泉里香&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 81,
+          "cup": "F",
+          "score": 43
+        },
+        {
+          "name": "白石麻衣",
+          "image": "https://ui-avatars.com/api/?name=白石麻衣&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 162,
+          "bust": 81,
+          "cup": null,
+          "score": 43
         }
       ]
     },
@@ -97,44 +337,164 @@
       "title": "プロポーション調和スコア",
       "ranking": [
         {
-          "name": "森星",
-          "score": 81,
-          "image": "/images/mori_hikari.jpg",
-          "cup": "C",
-          "actualHeight": 175,
-          "bust": 82
+          "name": "菜々緒",
+          "image": "/images/nanao.jpg",
+          "actualHeight": 172,
+          "bust": 80,
+          "cup": "B",
+          "score": 76
         },
         {
-          "name": "菜々緒",
-          "score": 76,
-          "image": "/images/nanao.jpg",
-          "cup": "B",
-          "actualHeight": 172,
-          "bust": 80
+          "name": "新垣結衣",
+          "image": "/images/aragaki_yui.jpg",
+          "actualHeight": 169,
+          "bust": null,
+          "cup": null,
+          "score": 70
+        },
+        {
+          "name": "池田エライザ",
+          "image": "https://ui-avatars.com/api/?name=池田エライザ&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 169,
+          "bust": 85,
+          "cup": null,
+          "score": 70
         },
         {
           "name": "中条あやみ",
-          "score": 70,
           "image": "/images/nakajo_ayami.jpg",
-          "cup": null,
           "actualHeight": 169,
-          "bust": 79
+          "bust": 79,
+          "cup": null,
+          "score": 70
+        },
+        {
+          "name": "長澤まさみ",
+          "image": "/images/nagasawa_masami.jpg",
+          "actualHeight": 169,
+          "bust": 84,
+          "cup": "F",
+          "score": 70
+        },
+        {
+          "name": "佐々木希",
+          "image": "/images/sasaki_nozomi.jpg",
+          "actualHeight": 168,
+          "bust": 80,
+          "cup": "C",
+          "score": 69
         },
         {
           "name": "藤田ニコル",
-          "score": 67,
           "image": "/images/fujita_nicole.jpg",
-          "cup": null,
           "actualHeight": 167,
-          "bust": 78
+          "bust": 78,
+          "cup": null,
+          "score": 67
         },
         {
-          "name": "今田美桜",
-          "score": 48,
-          "image": "/images/imada_mio.jpg",
+          "name": "川口春奈",
+          "image": "https://ui-avatars.com/api/?name=川口春奈&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 75,
+          "cup": null,
+          "score": 65
+        },
+        {
+          "name": "泉里香",
+          "image": "https://ui-avatars.com/api/?name=泉里香&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 81,
           "cup": "F",
-          "actualHeight": 157,
-          "bust": 86
+          "score": 65
+        },
+        {
+          "name": "本田翼",
+          "image": "https://ui-avatars.com/api/?name=本田翼&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 166,
+          "bust": 84,
+          "cup": null,
+          "score": 65
+        },
+        {
+          "name": "綾瀬はるか",
+          "image": "/images/ayase_haruka.jpg",
+          "actualHeight": 165,
+          "bust": 88,
+          "cup": "F",
+          "score": 63
+        },
+        {
+          "name": "小嶋陽菜",
+          "image": "https://ui-avatars.com/api/?name=小嶋陽菜&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 164,
+          "bust": 80,
+          "cup": null,
+          "score": 61
+        },
+        {
+          "name": "柏木由紀",
+          "image": "https://ui-avatars.com/api/?name=柏木由紀&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 164,
+          "bust": 75,
+          "cup": "C",
+          "score": 61
+        },
+        {
+          "name": "永野芽郁",
+          "image": "https://ui-avatars.com/api/?name=永野芽郁&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 163,
+          "bust": 76,
+          "cup": null,
+          "score": 59
+        },
+        {
+          "name": "桐谷美玲",
+          "image": "https://ui-avatars.com/api/?name=桐谷美玲&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 163,
+          "bust": 78,
+          "cup": null,
+          "score": 59
+        },
+        {
+          "name": "原幹恵",
+          "image": "https://ui-avatars.com/api/?name=原幹恵&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 163,
+          "bust": 94,
+          "cup": "G",
+          "score": 59
+        },
+        {
+          "name": "深田恭子",
+          "image": "/images/fukada_kyoko.jpg",
+          "actualHeight": 163,
+          "bust": 86,
+          "cup": "E",
+          "score": 59
+        },
+        {
+          "name": "白石麻衣",
+          "image": "https://ui-avatars.com/api/?name=白石麻衣&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 162,
+          "bust": 81,
+          "cup": null,
+          "score": 57
+        },
+        {
+          "name": "ダレノガレ明美",
+          "image": "https://ui-avatars.com/api/?name=ダレノガレ明美&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 161,
+          "bust": 83,
+          "cup": "E",
+          "score": 56
+        },
+        {
+          "name": "中村アン",
+          "image": "https://ui-avatars.com/api/?name=中村アン&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 161,
+          "bust": 82,
+          "cup": "E",
+          "score": 56
         }
       ]
     }
@@ -145,34 +505,124 @@
       "title": "シルエットバランス偏差値",
       "ranking": [
         {
+          "name": "鈴木亮平",
+          "image": "/images/suzuki_redactedi.jpg",
+          "actualHeight": 186,
+          "score": 76
+        },
+        {
           "name": "斎藤工",
-          "score": 72,
           "image": "/images/saito_takumi.jpg",
-          "actualHeight": 184
+          "actualHeight": 184,
+          "score": 72
+        },
+        {
+          "name": "小栗旬",
+          "image": "https://ui-avatars.com/api/?name=小栗旬&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 184,
+          "score": 72
+        },
+        {
+          "name": "松坂桃李",
+          "image": "/images/matsuzaka_tori.jpg",
+          "actualHeight": 183,
+          "score": 71
+        },
+        {
+          "name": "成田凌",
+          "image": "https://ui-avatars.com/api/?name=成田凌&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 183,
+          "score": 71
         },
         {
           "name": "向井理",
-          "score": 69,
           "image": "/images/mukai_osamu.jpg",
-          "actualHeight": 182
+          "actualHeight": 182,
+          "score": 69
+        },
+        {
+          "name": "長瀬智也",
+          "image": "https://ui-avatars.com/api/?name=長瀬智也&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 182,
+          "score": 69
         },
         {
           "name": "福山雅治",
-          "score": 67,
           "image": "/images/fukuyama_masaharu.jpg",
-          "actualHeight": 181
+          "actualHeight": 181,
+          "score": 67
         },
         {
           "name": "玉木宏",
-          "score": 66,
           "image": "/images/tamaki_hiroshi.jpg",
-          "actualHeight": 180
+          "actualHeight": 180,
+          "score": 66
+        },
+        {
+          "name": "賀来賢人",
+          "image": "https://ui-avatars.com/api/?name=賀来賢人&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "三浦春馬",
+          "image": "https://ui-avatars.com/api/?name=三浦春馬&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 179,
+          "score": 64
         },
         {
           "name": "竹野内豊",
-          "score": 64,
           "image": "/images/takenouchi_yutaka.jpg",
-          "actualHeight": 179
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "山崎賢人",
+          "image": "https://ui-avatars.com/api/?name=山崎賢人&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
+          "name": "志尊淳",
+          "image": "https://ui-avatars.com/api/?name=志尊淳&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
+          "name": "西島秀俊",
+          "image": "/images/nishijima_hidetoshi.jpg",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
+          "name": "田中圭",
+          "image": "/images/tanaka_kei.jpg",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
+          "name": "新田真剣佑",
+          "image": "https://ui-avatars.com/api/?name=新田真剣佑&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 177,
+          "score": 60
+        },
+        {
+          "name": "北村匠海",
+          "image": "https://ui-avatars.com/api/?name=北村匠海&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 177,
+          "score": 60
+        },
+        {
+          "name": "菅田将暉",
+          "image": "https://ui-avatars.com/api/?name=菅田将暉&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 176,
+          "score": 59
+        },
+        {
+          "name": "木村拓哉",
+          "image": "https://ui-avatars.com/api/?name=木村拓哉&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 176,
+          "score": 59
         }
       ]
     },
@@ -182,33 +632,123 @@
       "ranking": [
         {
           "name": "鈴木亮平",
-          "score": 76,
           "image": "/images/suzuki_redactedi.jpg",
-          "actualHeight": 186
+          "actualHeight": 186,
+          "score": 76
+        },
+        {
+          "name": "斎藤工",
+          "image": "/images/saito_takumi.jpg",
+          "actualHeight": 184,
+          "score": 72
+        },
+        {
+          "name": "小栗旬",
+          "image": "https://ui-avatars.com/api/?name=小栗旬&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 184,
+          "score": 72
         },
         {
           "name": "松坂桃李",
-          "score": 71,
           "image": "/images/matsuzaka_tori.jpg",
-          "actualHeight": 183
+          "actualHeight": 183,
+          "score": 71
+        },
+        {
+          "name": "成田凌",
+          "image": "https://ui-avatars.com/api/?name=成田凌&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 183,
+          "score": 71
+        },
+        {
+          "name": "向井理",
+          "image": "/images/mukai_osamu.jpg",
+          "actualHeight": 182,
+          "score": 69
+        },
+        {
+          "name": "長瀬智也",
+          "image": "https://ui-avatars.com/api/?name=長瀬智也&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 182,
+          "score": 69
+        },
+        {
+          "name": "福山雅治",
+          "image": "/images/fukuyama_masaharu.jpg",
+          "actualHeight": 181,
+          "score": 67
+        },
+        {
+          "name": "玉木宏",
+          "image": "/images/tamaki_hiroshi.jpg",
+          "actualHeight": 180,
+          "score": 66
+        },
+        {
+          "name": "賀来賢人",
+          "image": "https://ui-avatars.com/api/?name=賀来賢人&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "三浦春馬",
+          "image": "https://ui-avatars.com/api/?name=三浦春馬&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "竹野内豊",
+          "image": "/images/takenouchi_yutaka.jpg",
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "山崎賢人",
+          "image": "https://ui-avatars.com/api/?name=山崎賢人&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
+          "name": "志尊淳",
+          "image": "https://ui-avatars.com/api/?name=志尊淳&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 178,
+          "score": 62
         },
         {
           "name": "西島秀俊",
-          "score": 62,
           "image": "/images/nishijima_hidetoshi.jpg",
-          "actualHeight": 178
+          "actualHeight": 178,
+          "score": 62
         },
         {
-          "name": "佐藤健",
-          "score": 48,
-          "image": "/images/sato_takeru.jpg",
-          "actualHeight": 170
+          "name": "田中圭",
+          "image": "/images/tanaka_kei.jpg",
+          "actualHeight": 178,
+          "score": 62
         },
         {
-          "name": "山田孝之",
-          "score": 47,
-          "image": "/images/yamada_takayuki.jpg",
-          "actualHeight": 169
+          "name": "新田真剣佑",
+          "image": "https://ui-avatars.com/api/?name=新田真剣佑&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 177,
+          "score": 60
+        },
+        {
+          "name": "北村匠海",
+          "image": "https://ui-avatars.com/api/?name=北村匠海&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 177,
+          "score": 60
+        },
+        {
+          "name": "菅田将暉",
+          "image": "https://ui-avatars.com/api/?name=菅田将暉&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 176,
+          "score": 59
+        },
+        {
+          "name": "木村拓哉",
+          "image": "https://ui-avatars.com/api/?name=木村拓哉&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 176,
+          "score": 59
         }
       ]
     },
@@ -217,34 +757,124 @@
       "title": "プロポーション調和スコア",
       "ranking": [
         {
+          "name": "鈴木亮平",
+          "image": "/images/suzuki_redactedi.jpg",
+          "actualHeight": 186,
+          "score": 76
+        },
+        {
+          "name": "斎藤工",
+          "image": "/images/saito_takumi.jpg",
+          "actualHeight": 184,
+          "score": 72
+        },
+        {
+          "name": "小栗旬",
+          "image": "https://ui-avatars.com/api/?name=小栗旬&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 184,
+          "score": 72
+        },
+        {
+          "name": "松坂桃李",
+          "image": "/images/matsuzaka_tori.jpg",
+          "actualHeight": 183,
+          "score": 71
+        },
+        {
+          "name": "成田凌",
+          "image": "https://ui-avatars.com/api/?name=成田凌&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 183,
+          "score": 71
+        },
+        {
+          "name": "向井理",
+          "image": "/images/mukai_osamu.jpg",
+          "actualHeight": 182,
+          "score": 69
+        },
+        {
+          "name": "長瀬智也",
+          "image": "https://ui-avatars.com/api/?name=長瀬智也&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 182,
+          "score": 69
+        },
+        {
+          "name": "福山雅治",
+          "image": "/images/fukuyama_masaharu.jpg",
+          "actualHeight": 181,
+          "score": 67
+        },
+        {
+          "name": "玉木宏",
+          "image": "/images/tamaki_hiroshi.jpg",
+          "actualHeight": 180,
+          "score": 66
+        },
+        {
+          "name": "賀来賢人",
+          "image": "https://ui-avatars.com/api/?name=賀来賢人&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "三浦春馬",
+          "image": "https://ui-avatars.com/api/?name=三浦春馬&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "竹野内豊",
+          "image": "/images/takenouchi_yutaka.jpg",
+          "actualHeight": 179,
+          "score": 64
+        },
+        {
+          "name": "山崎賢人",
+          "image": "https://ui-avatars.com/api/?name=山崎賢人&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
+          "name": "志尊淳",
+          "image": "https://ui-avatars.com/api/?name=志尊淳&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
+          "name": "西島秀俊",
+          "image": "/images/nishijima_hidetoshi.jpg",
+          "actualHeight": 178,
+          "score": 62
+        },
+        {
           "name": "田中圭",
-          "score": 62,
           "image": "/images/tanaka_kei.jpg",
-          "actualHeight": 178
+          "actualHeight": 178,
+          "score": 62
         },
         {
-          "name": "岩田剛典",
-          "score": 55,
-          "image": "/images/iwata_takanori.jpg",
-          "actualHeight": 174
+          "name": "新田真剣佑",
+          "image": "https://ui-avatars.com/api/?name=新田真剣佑&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 177,
+          "score": 60
         },
         {
-          "name": "横浜流星",
-          "score": 55,
-          "image": "/images/yokohama_ryusei.jpg",
-          "actualHeight": 174
+          "name": "北村匠海",
+          "image": "https://ui-avatars.com/api/?name=北村匠海&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 177,
+          "score": 60
         },
         {
-          "name": "吉沢亮",
-          "score": 50,
-          "image": "/images/yoshizawa_ryo.jpg",
-          "actualHeight": 171
+          "name": "菅田将暉",
+          "image": "https://ui-avatars.com/api/?name=菅田将暉&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 176,
+          "score": 59
         },
         {
-          "name": "中村倫也",
-          "score": 48,
-          "image": "/images/nakamura_tomoya.jpg",
-          "actualHeight": 170
+          "name": "木村拓哉",
+          "image": "https://ui-avatars.com/api/?name=木村拓哉&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 176,
+          "score": 59
         }
       ]
     }

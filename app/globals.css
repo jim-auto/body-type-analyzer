@@ -2,6 +2,7 @@
 
 @layer base {
   body {
+    font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
     @apply bg-slate-50 text-slate-900;
   }
 }

@@ -53,6 +53,10 @@ const medalBorder: Record<number, string> = {
   2: "ring-2 ring-amber-600",
 };
 
+const defaultRankBadge = "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
+const defaultAvatarRing = "ring-1 ring-slate-200";
+const defaultScoreBadge = "bg-slate-100 text-slate-700";
+
 const genderButtonStyles: Record<Gender, { active: string; inactive: string }> =
   {
     female: {
@@ -183,8 +187,8 @@ export default function Home() {
       : "bg-blue-600 text-white shadow-md";
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-50 to-white px-4 py-12">
-      <main className="w-full max-w-2xl space-y-8">
+    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-50 to-white px-4 py-8 sm:py-12">
+      <main className="w-full max-w-3xl space-y-8">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-slate-800 sm:text-4xl">
             Celebrity Body Balance Ranking
@@ -240,7 +244,7 @@ export default function Home() {
         </div>
 
         {current ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <h2 className="text-center text-xl font-bold text-slate-700">
               {current.title}
             </h2>
@@ -254,12 +258,12 @@ export default function Home() {
               return (
                 <div
                   key={`${gender}-${entry.name}`}
-                  className="flex items-start justify-between rounded-2xl bg-white p-4 shadow-md transition-shadow hover:shadow-lg"
+                  className="flex items-start justify-between rounded-2xl bg-white/95 p-3.5 shadow-sm ring-1 ring-slate-100 transition-shadow hover:shadow-md sm:p-4"
                 >
                   <div className="flex min-w-0 items-start gap-4">
                     <span
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                        medalColors[index] ?? "bg-slate-400 text-white"
+                        medalColors[index] ?? defaultRankBadge
                       }`}
                     >
                       {index + 1}
@@ -268,7 +272,7 @@ export default function Home() {
                       src={resolveImageSrc(entry.image)}
                       alt={entry.name}
                       className={`h-12 w-12 shrink-0 rounded-full object-cover ${
-                        medalBorder[index] ?? ""
+                        medalBorder[index] ?? defaultAvatarRing
                       }`}
                     />
                     <div className="min-w-0 space-y-1">
@@ -290,7 +294,7 @@ export default function Home() {
                   </div>
                   <span
                     className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${
-                      medalColors[index] ?? "bg-slate-100 text-slate-600"
+                      medalColors[index] ?? defaultScoreBadge
                     }`}
                   >
                     偏差値{entry.score}
