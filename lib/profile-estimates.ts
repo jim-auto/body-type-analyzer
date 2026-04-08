@@ -1,4 +1,4 @@
-import { bustToEstimatedCup } from "@/lib/statistics";
+import { bustToEstimatedCup } from "./statistics.ts";
 
 const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G"] as const;
 

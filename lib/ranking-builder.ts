@@ -3,10 +3,16 @@ import {
   type MaleRankingEntry,
   type RankingData,
 } from "./ranking.ts";
+import {
+  getCupDifference,
+  getEstimatedCupFromBust,
+  getEstimatedHeight,
+} from "./profile-estimates.ts";
 import { femaleProfilePool, maleProfilePool } from "./source-profiles.ts";
 import { FEMALE_STATS, MALE_STATS, calculateDeviation } from "./statistics.ts";
 
 const RANKING_LIMIT = 20;
+const ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G"] as const;
 
 function cloneRanking<T extends FemaleRankingEntry | MaleRankingEntry>(
   entries: T[]
@@ -14,10 +20,37 @@ function cloneRanking<T extends FemaleRankingEntry | MaleRankingEntry>(
   return entries.map((entry) => ({ ...entry }));
 }
 
+function buildFemaleBaseEntry(
+  profile: (typeof femaleProfilePool)[number]
+): Omit<FemaleRankingEntry, "score"> {
+  const estimatedHeight = getEstimatedHeight(profile.actualHeight, profile.name);
+  const estimatedCup = getEstimatedCupFromBust(profile.bust);
+
+  return {
+    ...profile,
+    estimatedHeight,
+    heightDiff: estimatedHeight - profile.actualHeight,
+    estimatedCup,
+    cupDiff: getCupDifference(profile.cup, estimatedCup),
+  };
+}
+
+function buildMaleBaseEntry(
+  profile: (typeof maleProfilePool)[number]
+): Omit<MaleRankingEntry, "score"> {
+  const estimatedHeight = getEstimatedHeight(profile.actualHeight, profile.name);
+
+  return {
+    ...profile,
+    estimatedHeight,
+    heightDiff: estimatedHeight - profile.actualHeight,
+  };
+}
+
 function buildFemaleHeightRanking(): FemaleRankingEntry[] {
   return femaleProfilePool
     .map((profile) => ({
-      ...profile,
+      ...buildFemaleBaseEntry(profile),
       score: calculateDeviation(
         profile.actualHeight,
         FEMALE_STATS.height.mean,
@@ -51,7 +84,7 @@ function buildFemaleUpperBodyRanking(): FemaleRankingEntry[] {
             );
 
       return {
-        ...profile,
+        ...buildFemaleBaseEntry(profile),
         metric,
         score,
       };
@@ -70,7 +103,7 @@ function buildFemaleUpperBodyRanking(): FemaleRankingEntry[] {
 function buildMaleHeightRanking(): MaleRankingEntry[] {
   return maleProfilePool
     .map((profile) => ({
-      ...profile,
+      ...buildMaleBaseEntry(profile),
       score: calculateDeviation(
         profile.actualHeight,
         MALE_STATS.height.mean,
@@ -86,10 +119,77 @@ function buildMaleHeightRanking(): MaleRankingEntry[] {
     .slice(0, RANKING_LIMIT);
 }
 
+function buildFemaleEstimatedHeightRanking(): FemaleRankingEntry[] {
+  return femaleProfilePool
+    .map((profile) => {
+      const entry = buildFemaleBaseEntry(profile);
+
+      return {
+        ...entry,
+        score: entry.estimatedHeight,
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.actualHeight - left.actualHeight ||
+        left.name.localeCompare(right.name, "ja")
+    )
+    .slice(0, RANKING_LIMIT);
+}
+
+function buildFemaleEstimatedCupRanking(): FemaleRankingEntry[] {
+  return femaleProfilePool
+    .map((profile) => buildFemaleBaseEntry(profile))
+    .filter(
+      (
+        entry
+      ): entry is Omit<FemaleRankingEntry, "score"> & { estimatedCup: string } =>
+        entry.estimatedCup !== null
+    )
+    .map((entry) => ({
+      ...entry,
+      score:
+        ESTIMATED_CUP_ORDER.indexOf(
+          entry.estimatedCup as (typeof ESTIMATED_CUP_ORDER)[number]
+        ) + 1,
+    }))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        (right.bust ?? 0) - (left.bust ?? 0) ||
+        right.actualHeight - left.actualHeight ||
+        left.name.localeCompare(right.name, "ja")
+    )
+    .slice(0, RANKING_LIMIT);
+}
+
+function buildMaleEstimatedHeightRanking(): MaleRankingEntry[] {
+  return maleProfilePool
+    .map((profile) => {
+      const entry = buildMaleBaseEntry(profile);
+
+      return {
+        ...entry,
+        score: entry.estimatedHeight,
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.actualHeight - left.actualHeight ||
+        left.name.localeCompare(right.name, "ja")
+    )
+    .slice(0, RANKING_LIMIT);
+}
+
 export function buildRankingData(): RankingData {
   const femaleHeightRanking = buildFemaleHeightRanking();
   const femaleUpperBodyRanking = buildFemaleUpperBodyRanking();
+  const femaleEstimatedHeightRanking = buildFemaleEstimatedHeightRanking();
+  const femaleEstimatedCupRanking = buildFemaleEstimatedCupRanking();
   const maleHeightRanking = buildMaleHeightRanking();
+  const maleEstimatedHeightRanking = buildMaleEstimatedHeightRanking();
 
   return {
     female: [
@@ -108,6 +208,16 @@ export function buildRankingData(): RankingData {
         title: "プロポーション調和スコア",
         ranking: cloneRanking(femaleHeightRanking),
       },
+      {
+        category: "estimatedHeight",
+        title: "AI推定身長ランキング",
+        ranking: femaleEstimatedHeightRanking,
+      },
+      {
+        category: "estimatedCup",
+        title: "AI推定カップ数ランキング",
+        ranking: femaleEstimatedCupRanking,
+      },
     ],
     male: [
       {
@@ -124,6 +234,11 @@ export function buildRankingData(): RankingData {
         category: "proportion",
         title: "プロポーション調和スコア",
         ranking: cloneRanking(maleHeightRanking),
+      },
+      {
+        category: "estimatedHeight",
+        title: "AI推定身長ランキング",
+        ranking: maleEstimatedHeightRanking,
       },
     ],
   };
