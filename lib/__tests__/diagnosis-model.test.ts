@@ -80,8 +80,12 @@ describe("diagnosis-model", () => {
     expect(sampleEntry.featureSets.heightPrimary.length).toBe(100);
     expect(sampleEntry.featureSets.heightBalanced.length).toBe(108);
     expect(sampleEntry.featureSets.heightWide.length).toBe(196);
+    expect(sampleEntry.featureSets.heightCenter.length).toBe(128);
+    expect(sampleEntry.featureSets.heightProfile.length).toBe(44);
     expect(sampleEntry.featureSets.cupPrimary.length).toBe(208);
     expect(sampleEntry.featureSets.cupSecondary.length).toBe(100);
+    expect(sampleEntry.featureSets.cupCenter.length).toBe(164);
+    expect(sampleEntry.featureSets.cupProfile.length).toBe(44);
     expect(sampleEntry.featureSets.similarity.length).toBe(128);
   });
 

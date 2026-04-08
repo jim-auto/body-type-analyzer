@@ -1,4 +1,4 @@
-import diagnosisModelJson from "../public/data/diagnosis-model.json";
+import diagnosisModelJson from "../public/data/diagnosis-model.json" with { type: "json" };
 
 import {
   FEMALE_STATS,
@@ -23,8 +23,12 @@ export type DiagnosisFeatures = {
   heightPrimary: number[];
   heightBalanced: number[];
   heightWide: number[];
+  heightCenter: number[];
+  heightProfile: number[];
   cupPrimary: number[];
   cupSecondary: number[];
+  cupCenter: number[];
+  cupProfile: number[];
   similarity: number[];
 };
 

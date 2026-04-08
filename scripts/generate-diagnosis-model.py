@@ -17,18 +17,26 @@ LOCAL_TRAINING_DATA_PATH = REPO_ROOT / "local-data" / "training-profiles.json"
 
 CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"]
 REGIONS = {
-    "full": (0.0, 1.0),
-    "top": (0.0, 0.45),
-    "mid": (0.25, 0.75),
-    "low": (0.45, 1.0),
+    "full": (0.0, 0.0, 1.0, 1.0),
+    "top": (0.0, 0.0, 1.0, 0.45),
+    "mid": (0.0, 0.25, 1.0, 0.75),
+    "low": (0.0, 0.45, 1.0, 1.0),
+    "fullCenter": (0.16, 0.0, 0.84, 1.0),
+    "topCenter": (0.18, 0.02, 0.82, 0.55),
+    "torsoCenter": (0.18, 0.16, 0.82, 0.72),
+    "lowCenter": (0.16, 0.45, 0.84, 1.0),
 }
 FEATURE_SETS = {
-    "heightPrimary": [("full", 6), ("full", 8)],
-    "heightBalanced": [("full", 6), ("top", 6), ("low", 6)],
-    "heightWide": [("full", 14)],
-    "cupPrimary": [("top", 8), ("top", 12)],
-    "cupSecondary": [("top", 8), ("mid", 6)],
-    "similarity": [("full", 8), ("top", 8)],
+    "heightPrimary": [("full", 6, "gray"), ("full", 8, "gray")],
+    "heightBalanced": [("full", 6, "gray"), ("top", 6, "gray"), ("low", 6, "gray")],
+    "heightWide": [("full", 14, "gray")],
+    "heightCenter": [("fullCenter", 8, "gray"), ("lowCenter", 8, "gray")],
+    "heightProfile": [("fullCenter", 12, "profile"), ("lowCenter", 10, "profile")],
+    "cupPrimary": [("top", 8, "gray"), ("top", 12, "gray")],
+    "cupSecondary": [("top", 8, "gray"), ("mid", 6, "gray")],
+    "cupCenter": [("topCenter", 10, "gray"), ("torsoCenter", 8, "gray")],
+    "cupProfile": [("topCenter", 12, "profile"), ("torsoCenter", 10, "profile")],
+    "similarity": [("full", 8, "gray"), ("top", 8, "gray")],
 }
 ORICON_HEIGHT_ALLOWLIST = {
     "そちお",
@@ -39,9 +47,21 @@ ORICON_HEIGHT_ALLOWLIST = {
     "若槻千夏",
     "小倉優子",
 }
-HEIGHT_FEATURE_CANDIDATES = ("heightPrimary", "heightBalanced", "heightWide")
-CUP_FEATURE_CANDIDATES = ("cupPrimary", "cupSecondary")
+HEIGHT_FEATURE_CANDIDATES = (
+    "heightPrimary",
+    "heightBalanced",
+    "heightWide",
+    "heightCenter",
+    "heightProfile",
+)
+CUP_FEATURE_CANDIDATES = (
+    "cupPrimary",
+    "cupSecondary",
+    "cupCenter",
+    "cupProfile",
+)
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
+MAX_ENSEMBLE_SIZE = 3
 
 
 @dataclass(frozen=True)
@@ -128,20 +148,46 @@ def resolve_image_path(image_path: str) -> Path:
 
 
 def crop_and_resize(gray_image: Image.Image, region_name: str, size: int) -> list[float]:
-    top_ratio, bottom_ratio = REGIONS[region_name]
+    left_ratio, top_ratio, right_ratio, bottom_ratio = REGIONS[region_name]
+    left = int(gray_image.width * left_ratio)
     top = int(gray_image.height * top_ratio)
+    right = max(left + 1, int(gray_image.width * right_ratio))
     bottom = max(top + 1, int(gray_image.height * bottom_ratio))
-    cropped = gray_image.crop((0, top, gray_image.width, bottom))
+    cropped = gray_image.crop((left, top, right, bottom))
     resized = cropped.resize((size, size), Image.Resampling.BILINEAR)
 
     return [round(pixel / 255, 4) for pixel in resized.get_flattened_data()]
 
 
-def extract_features(gray_image: Image.Image, specs: list[tuple[str, int]]) -> list[float]:
+def to_grid(values: list[float], size: int) -> list[list[float]]:
+    return [values[index * size : (index + 1) * size] for index in range(size)]
+
+
+def profile_features(values: list[float], size: int) -> list[float]:
+    grid = to_grid(values, size)
+    rows = [round(statistics.fmean(row), 4) for row in grid]
+    columns = [
+        round(statistics.fmean([grid[row_index][column_index] for row_index in range(size)]), 4)
+        for column_index in range(size)
+    ]
+
+    return rows + columns
+
+
+def extract_feature_block(gray_image: Image.Image, region_name: str, size: int, mode: str) -> list[float]:
+    values = crop_and_resize(gray_image, region_name, size)
+
+    if mode == "profile":
+        return profile_features(values, size)
+
+    return values
+
+
+def extract_features(gray_image: Image.Image, specs: list[tuple[str, int, str]]) -> list[float]:
     features: list[float] = []
 
-    for region_name, size in specs:
-        features.extend(crop_and_resize(gray_image, region_name, size))
+    for region_name, size, mode in specs:
+        features.extend(extract_feature_block(gray_image, region_name, size, mode))
 
     return features
 
@@ -376,7 +422,7 @@ def select_height_models(
     best_metrics: dict[str, float] | None = None
     best_score: tuple[float, float, float, float] | None = None
 
-    for size in range(1, len(HEIGHT_FEATURE_CANDIDATES) + 1):
+    for size in range(1, min(len(HEIGHT_FEATURE_CANDIDATES), MAX_ENSEMBLE_SIZE) + 1):
         for feature_names in combinations(HEIGHT_FEATURE_CANDIDATES, size):
             for ks in product(K_CANDIDATES, repeat=size):
                 models = tuple(zip(feature_names, ks, strict=True))
@@ -420,7 +466,7 @@ def select_cup_models(
     best_metrics: dict[str, float] | None = None
     best_score: tuple[float, float, float, float] | None = None
 
-    for size in range(1, len(CUP_FEATURE_CANDIDATES) + 1):
+    for size in range(1, min(len(CUP_FEATURE_CANDIDATES), MAX_ENSEMBLE_SIZE) + 1):
         for feature_names in combinations(CUP_FEATURE_CANDIDATES, size):
             for ks in product(K_CANDIDATES, repeat=size):
                 models = tuple(zip(feature_names, ks, strict=True))

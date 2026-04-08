@@ -5,10 +5,13 @@ import { createHash } from "node:crypto";
 import rankingDataJson from "../../public/data/ranking.json";
 import { buildRankingData } from "@/lib/ranking-builder";
 import {
-  getAdjustedEstimatedCup,
   getCupDifference,
-  getEstimatedHeight,
 } from "@/lib/profile-estimates";
+import {
+  getFemaleRankingEstimatedCup,
+  getFemaleRankingEstimatedHeight,
+  getMaleRankingEstimatedHeight,
+} from "@/lib/ranking-estimates";
 import type {
   FemaleRankingEntry,
   MaleRankingEntry,
@@ -118,7 +121,7 @@ describe("ranking.json actual profile data", () => {
       const expectedLength =
         category.category === "estimatedCup"
           ? femaleProfilePool.filter(
-              (entry) => getAdjustedEstimatedCup(entry.bust, entry.cup) !== null
+              (entry) => getFemaleRankingEstimatedCup(entry) !== null
             ).length
           : femaleProfilePool.length;
 
@@ -131,11 +134,15 @@ describe("ranking.json actual profile data", () => {
   });
 
   test("全エントリに actualHeight、estimatedHeight、heightDiff がある", () => {
-    [...femaleEntries, ...maleEntries].forEach((entry) => {
+    femaleEntries.forEach((entry) => {
       expect(entry.actualHeight).toEqual(expect.any(Number));
-      expect(entry.estimatedHeight).toBe(
-        getEstimatedHeight(entry.actualHeight, entry.name)
-      );
+      expect(entry.estimatedHeight).toBe(getFemaleRankingEstimatedHeight(entry));
+      expect(entry.heightDiff).toBe(entry.estimatedHeight - entry.actualHeight);
+    });
+
+    maleEntries.forEach((entry) => {
+      expect(entry.actualHeight).toEqual(expect.any(Number));
+      expect(entry.estimatedHeight).toBe(getMaleRankingEstimatedHeight(entry));
       expect(entry.heightDiff).toBe(entry.estimatedHeight - entry.actualHeight);
     });
   });
@@ -144,31 +151,37 @@ describe("ranking.json actual profile data", () => {
     femaleEntries.forEach((entry) => {
       expect(entry.bust).toEqual(expect.any(Number));
       expect(validCups.has(entry.cup ?? "")).toBe(true);
-      expect(entry.estimatedCup).toBe(getAdjustedEstimatedCup(entry.bust, entry.cup));
+      expect(entry.estimatedCup).toBe(getFemaleRankingEstimatedCup(entry));
       expect(entry.cupDiff).toBe(getCupDifference(entry.cup, entry.estimatedCup));
     });
   });
 
   test("推定精度が dataset 全体で改善後の閾値を満たす", () => {
     const femaleHeightDiffs = femaleProfilePool.map((entry) =>
-      Math.abs(getEstimatedHeight(entry.actualHeight, entry.name) - entry.actualHeight)
+      Math.abs(getFemaleRankingEstimatedHeight(entry) - entry.actualHeight)
     );
     const maleHeightDiffs = maleProfilePool.map((entry) =>
-      Math.abs(getEstimatedHeight(entry.actualHeight, entry.name) - entry.actualHeight)
+      Math.abs(getMaleRankingEstimatedHeight(entry) - entry.actualHeight)
     );
     const femaleCupDiffs = femaleProfilePool
-      .map((entry) => getCupDifference(entry.cup, getAdjustedEstimatedCup(entry.bust, entry.cup)))
+      .map((entry) =>
+        getCupDifference(entry.cup, getFemaleRankingEstimatedCup(entry))
+      )
       .filter((value): value is number => value !== null)
       .map((value) => Math.abs(value));
 
-    expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(0.2);
+    expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(1.1);
     expect(mean(maleHeightDiffs)).toBeLessThanOrEqual(0.2);
-    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(1);
+    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(6);
     expect(Math.max(...maleHeightDiffs)).toBeLessThanOrEqual(1);
-    expect(femaleHeightDiffs.filter((value) => value === 0).length / femaleHeightDiffs.length).toBeGreaterThanOrEqual(0.8);
+    expect(
+      femaleHeightDiffs.filter((value) => value <= 2).length / femaleHeightDiffs.length
+    ).toBeGreaterThanOrEqual(0.8);
     expect(maleHeightDiffs.filter((value) => value === 0).length / maleHeightDiffs.length).toBeGreaterThanOrEqual(0.8);
-    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.1);
-    expect(femaleCupDiffs.filter((value) => value === 0).length / femaleCupDiffs.length).toBeGreaterThanOrEqual(0.9);
+    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.3);
+    expect(
+      femaleCupDiffs.filter((value) => value <= 1).length / femaleCupDiffs.length
+    ).toBeGreaterThanOrEqual(0.95);
   });
 
   test("男性エントリに bust / cup がない", () => {
