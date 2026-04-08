@@ -79,10 +79,10 @@ describe("Home (Ranking Page)", () => {
     await waitForFemaleSilhouette();
 
     expect(
-      screen.getByText("Celebrity Body Balance Ranking")
+      screen.getByText("芸能人スタイルランキング")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("有名人の体型バランスを偏差値でランキング")
+      screen.getByText("芸能人のスタイルをAIが偏差値で格付け！")
     ).toBeInTheDocument();
   });
 
