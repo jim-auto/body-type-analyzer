@@ -49,11 +49,11 @@ export const AI_LOADING_MESSAGES = [
 ] as const;
 
 export const DIAGNOSIS_MODEL_SUMMARY = `学習プロフィール画像${DIAGNOSIS_MODEL_METRICS.trainingCount}枚の近傍比較モデル`;
-export const DIAGNOSIS_VALIDATION_LABEL = `検証: 身長MAE ${DIAGNOSIS_MODEL_METRICS.height.mae.toFixed(1)}cm / カップMAE ${DIAGNOSIS_MODEL_METRICS.cup.mae.toFixed(1)}サイズ`;
+export const DIAGNOSIS_VALIDATION_LABEL = `検証: 身長の8割が±${DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0}cm以内 / カップの7割が±${DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0}カップ以内`;
 
 export const DIAGNOSIS_DISCLAIMERS = [
   `※ ${DIAGNOSIS_MODEL_SUMMARY}です`,
-  `※ leave-one-out検証: 身長MAE ${DIAGNOSIS_MODEL_METRICS.height.mae.toFixed(1)}cm / カップMAE ${DIAGNOSIS_MODEL_METRICS.cup.mae.toFixed(1)}サイズ`,
+  `※ leave-one-out検証: 身長の8割が±${DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0}cm以内 / カップの7割が±${DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0}カップ以内`,
   "※ 未知データへの精度保証はありません。結果は参考・エンタメ用途です",
   "※ 画像はサーバーに送信されません。全てブラウザ内で処理されます",
 ] as const;
