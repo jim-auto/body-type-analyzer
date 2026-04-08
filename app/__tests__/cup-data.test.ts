@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 
 import rankingDataJson from "../../public/data/ranking.json";
 import { buildRankingData } from "@/lib/ranking-builder";
@@ -32,6 +33,17 @@ const validCups = new Set(["A", "B", "C", "D", "E", "F", "G", "H"]);
 const estimatedCupOrder = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 const uiAvatarPattern =
   /^https:\/\/ui-avatars\.com\/api\/\?name=.+&size=300&background=random&color=fff&bold=true$/;
+const knownAmbiguousImageNames = [
+  "ROLAND",
+  "MALIA.",
+  "衛藤美彩",
+  "鎌倉美咲",
+  "ケリー",
+  "マギー",
+  "若槻千夏",
+  "向井理",
+  "中村倫也",
+] as const;
 
 const getCategory = <TEntry extends FemaleRankingEntry | MaleRankingEntry>(
   categories: RankingCategory<TEntry>[],
@@ -151,6 +163,37 @@ describe("ranking.json actual profile data", () => {
 
       expect(entry.image).toMatch(uiAvatarPattern);
     });
+  });
+
+  test("曖昧な名前のプロフィールは安全のため ui-avatars を使う", () => {
+    knownAmbiguousImageNames.forEach((name) => {
+      const entry = [...femaleProfilePool, ...maleProfilePool].find(
+        (profile) => profile.name === name
+      );
+
+      expect(entry).toBeDefined();
+      expect(entry?.image).toMatch(uiAvatarPattern);
+    });
+  });
+
+  test("別人に同じローカル画像が使い回されていない", () => {
+    const imageToNames = new Map<string, string[]>();
+
+    [...femaleProfilePool, ...maleProfilePool].forEach((entry) => {
+      if (!entry.image.startsWith("/images/")) {
+        return;
+      }
+
+      const imagePath = path.join(process.cwd(), "public", entry.image.slice(1));
+      const hash = createHash("sha1").update(fs.readFileSync(imagePath)).digest("hex");
+      const names = imageToNames.get(hash) ?? [];
+      names.push(entry.name);
+      imageToNames.set(hash, names);
+    });
+
+    const duplicates = [...imageToNames.values()].filter((names) => names.length > 1);
+
+    expect(duplicates).toEqual([]);
   });
 
   test("全カテゴリのスコアは降順である", () => {
