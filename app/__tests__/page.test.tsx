@@ -24,6 +24,9 @@ const femaleStyleCategory = rankingData.female.find(
 const maleStyleCategory = rankingData.male.find(
   (entry) => entry.category === "style"
 )!;
+const femaleEstimatedCupCategory = rankingData.female.find(
+  (entry) => entry.category === "estimatedCup"
+)!;
 const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
   entry.image.startsWith("/")
 )!;
@@ -104,7 +107,9 @@ describe("Home (Ranking Page)", () => {
   test("女性 style ランキングでAI推定表示がされる", () => {
     renderHome();
 
-    expect(screen.getAllByText(/^AI推定:/)).toHaveLength(20);
+    expect(screen.getAllByText(/^AI推定:/)).toHaveLength(
+      femaleStyleCategory.ranking.length
+    );
   });
 
   test("カテゴリタブ数が女性3つ・男性2つになっている", () => {
@@ -134,7 +139,9 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(`偏差値${topMaleEntry.score}`).length).toBeGreaterThan(
       0
     );
-    expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(20);
+    expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(
+      maleStyleCategory.ranking.length
+    );
   });
 
   test("男女切り替え時にカテゴリタブが最初に戻る", () => {
@@ -190,8 +197,7 @@ describe("Home (Ranking Page)", () => {
   });
 
   test("推定カップタブをクリックするとカップ表示になる", () => {
-    const estimatedCupCategory = getFemaleCategory("estimatedCup");
-    const topEntry = estimatedCupCategory.ranking[0];
+    const topEntry = femaleEstimatedCupCategory.ranking[0];
     const cupDiffLabel =
       topEntry.cupDiff === null
         ? "不明 🤔"
@@ -214,10 +220,16 @@ describe("Home (Ranking Page)", () => {
   });
 
   test("分布セクションに女性カップ分布と男性身長分布が表示される", () => {
-    const femaleBucket = femaleCupDistribution.buckets.find(
+    const femalePublicBucket = femaleCupDistribution.publicSeries.buckets.find(
       (bucket) => bucket.cup === "C"
     )!;
-    const maleBucket = maleHeightDistribution.buckets.find(
+    const femaleEstimatedBucket = femaleCupDistribution.estimatedSeries.buckets.find(
+      (bucket) => bucket.cup === "C"
+    )!;
+    const malePublicBucket = maleHeightDistribution.publicSeries.buckets.find(
+      (bucket) => bucket.label === "175-179cm"
+    )!;
+    const maleEstimatedBucket = maleHeightDistribution.estimatedSeries.buckets.find(
       (bucket) => bucket.label === "175-179cm"
     )!;
 
@@ -229,14 +241,34 @@ describe("Home (Ranking Page)", () => {
     expect(
       screen.getByRole("heading", { level: 3, name: "女性カップ分布" })
     ).toBeInTheDocument();
+    expect(screen.getAllByText(femaleCupDistribution.publicSeries.title)).toHaveLength(
+      2
+    );
     expect(
-      screen.getByText(`${femaleBucket.count}人 / ${femaleBucket.percentage.toFixed(1)}%`)
+      screen.getAllByText(femaleCupDistribution.estimatedSeries.title)
+    ).toHaveLength(2);
+    expect(
+      screen.getByText(
+        `${femalePublicBucket.count}人 / ${femalePublicBucket.percentage.toFixed(1)}%`
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `${femaleEstimatedBucket.count}人 / ${femaleEstimatedBucket.percentage.toFixed(1)}%`
+      )
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { level: 3, name: "男性身長分布" })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(`${maleBucket.count}人 / ${maleBucket.percentage.toFixed(1)}%`)
+      screen.getByText(
+        `${malePublicBucket.count}人 / ${malePublicBucket.percentage.toFixed(1)}%`
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `${maleEstimatedBucket.count}人 / ${maleEstimatedBucket.percentage.toFixed(1)}%`
+      )
     ).toBeInTheDocument();
   });
 });

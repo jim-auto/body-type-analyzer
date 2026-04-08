@@ -17,7 +17,6 @@ import {
   getCupSortValue,
 } from "./statistics.ts";
 
-const RANKING_LIMIT = 20;
 const ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
 function buildFemaleBaseEntry(
@@ -89,7 +88,6 @@ function buildFemaleStyleRanking(): FemaleRankingEntry[] {
         right.actualHeight - left.actualHeight ||
         left.name.localeCompare(right.name, "ja")
     )
-    .slice(0, RANKING_LIMIT)
     .map(({ cupSortValue: _cupSortValue, ...entry }) => entry);
 }
 
@@ -104,8 +102,7 @@ function buildMaleStyleRanking(): MaleRankingEntry[] {
         right.score - left.score ||
         right.actualHeight - left.actualHeight ||
         left.name.localeCompare(right.name, "ja")
-    )
-    .slice(0, RANKING_LIMIT);
+    );
 }
 
 function buildFemaleEstimatedHeightRanking(): FemaleRankingEntry[] {
@@ -123,8 +120,7 @@ function buildFemaleEstimatedHeightRanking(): FemaleRankingEntry[] {
         right.score - left.score ||
         right.actualHeight - left.actualHeight ||
         left.name.localeCompare(right.name, "ja")
-    )
-    .slice(0, RANKING_LIMIT);
+    );
 }
 
 function buildFemaleEstimatedCupRanking(): FemaleRankingEntry[] {
@@ -149,8 +145,7 @@ function buildFemaleEstimatedCupRanking(): FemaleRankingEntry[] {
         (right.bust ?? 0) - (left.bust ?? 0) ||
         right.actualHeight - left.actualHeight ||
         left.name.localeCompare(right.name, "ja")
-    )
-    .slice(0, RANKING_LIMIT);
+    );
 }
 
 function buildMaleEstimatedHeightRanking(): MaleRankingEntry[] {
@@ -168,8 +163,7 @@ function buildMaleEstimatedHeightRanking(): MaleRankingEntry[] {
         right.score - left.score ||
         right.actualHeight - left.actualHeight ||
         left.name.localeCompare(right.name, "ja")
-    )
-    .slice(0, RANKING_LIMIT);
+    );
 }
 
 export function buildRankingData(): RankingData {

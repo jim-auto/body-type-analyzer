@@ -27,6 +27,12 @@ type HomePageClientProps = {
   maleHeightDistribution: MaleHeightDistributionSummary;
 };
 
+type DistributionBucket = {
+  label: string;
+  count: number;
+  percentage: number;
+};
+
 const medalColors: Record<number, string> = {
   0: "bg-yellow-400 text-yellow-900",
   1: "bg-gray-300 text-gray-800",
@@ -108,6 +114,61 @@ function getEstimatedCupDetail(entry: FemaleRankingEntry): string {
     entry.cupDiff,
     "サイズ"
   )} ${emoji}）`;
+}
+
+function DistributionSeriesCard({
+  title,
+  buckets,
+  tone,
+  referencePrefix,
+}: {
+  title: string;
+  buckets: DistributionBucket[];
+  tone: "rose" | "sky";
+  referencePrefix?: (label: string) => string | null;
+}) {
+  const containerClass =
+    tone === "rose" ? "bg-rose-50/70" : "bg-sky-50/80";
+  const trackClass = tone === "rose" ? "bg-rose-100" : "bg-sky-100";
+  const barClass =
+    tone === "rose"
+      ? "bg-gradient-to-r from-pink-500 to-rose-300"
+      : "bg-gradient-to-r from-sky-500 to-cyan-300";
+
+  return (
+    <section className="space-y-3 rounded-[1.4rem] border border-slate-100 bg-slate-50/70 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h4 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-700">
+          {title}
+        </h4>
+        <span className="text-xs text-slate-400">100人ベース</span>
+      </div>
+
+      <div className="space-y-3">
+        {buckets.map((bucket) => (
+          <div key={`${title}-${bucket.label}`} className={`rounded-2xl px-4 py-3 ${containerClass}`}>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold text-slate-700">{bucket.label}</span>
+              <span className="text-slate-500">
+                {bucket.count}人 / {bucket.percentage.toFixed(1)}%
+              </span>
+            </div>
+            <div className={`mt-2 h-2.5 overflow-hidden rounded-full ${trackClass}`}>
+              <div
+                className={`h-full rounded-full ${barClass}`}
+                style={{ width: `${bucket.percentage}%` }}
+              />
+            </div>
+            {referencePrefix ? (
+              <p className="mt-2 text-xs text-slate-400">
+                {referencePrefix(bucket.label)}
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export default function HomePageClient({
@@ -293,7 +354,7 @@ export default function HomePageClient({
             </p>
             <h2 className="text-2xl font-bold text-slate-900">分布セクション</h2>
             <p className="text-sm leading-6 text-slate-500 sm:text-base">
-              ランキングとは別に、公開データ100人ベースの分布もまとめています。
+              ランキングとは別に、公開データと推定データの分布を並べています。
             </p>
           </div>
 
@@ -302,39 +363,36 @@ export default function HomePageClient({
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-slate-900">女性カップ分布</h3>
                 <p className="text-sm leading-6 text-slate-500">
-                  公開データ {femaleCupDistribution.total}人。
+                  対象は {femaleCupDistribution.total}人。
                   参考値は {femaleCupDistribution.referencePublisher}{" "}
                   {femaleCupDistribution.referenceYear}年の公開分布です。
                 </p>
               </div>
 
-              <div className="mt-5 space-y-3">
-                {femaleCupDistribution.buckets.map((bucket) => (
-                  <div
-                    key={bucket.cup}
-                    className="rounded-2xl bg-rose-50/70 px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-semibold text-slate-700">
-                        {bucket.label}
-                      </span>
-                      <span className="text-slate-500">
-                        {bucket.count}人 / {bucket.percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-rose-100">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-pink-500 to-rose-300"
-                        style={{ width: `${bucket.percentage}%` }}
-                      />
-                    </div>
-                    <p className="mt-2 text-xs text-slate-400">
-                      {bucket.referencePercentage === null
-                        ? "参考分布: 公開比率の対象外"
-                        : `参考分布: ${bucket.referencePercentage.toFixed(1)}%`}
-                    </p>
-                  </div>
-                ))}
+              <div className="mt-5 grid gap-4 xl:grid-cols-2">
+                <DistributionSeriesCard
+                  title={femaleCupDistribution.publicSeries.title}
+                  buckets={femaleCupDistribution.publicSeries.buckets}
+                  tone="rose"
+                  referencePrefix={(label) => {
+                    const bucket = femaleCupDistribution.publicSeries.buckets.find(
+                      (entry) => entry.label === label
+                    );
+
+                    if (!bucket) {
+                      return null;
+                    }
+
+                    return bucket.referencePercentage === null
+                      ? "参考分布: 公開比率の対象外"
+                      : `参考分布: ${bucket.referencePercentage.toFixed(1)}%`;
+                  }}
+                />
+                <DistributionSeriesCard
+                  title={femaleCupDistribution.estimatedSeries.title}
+                  buckets={femaleCupDistribution.estimatedSeries.buckets}
+                  tone="rose"
+                />
               </div>
             </article>
 
@@ -342,34 +400,23 @@ export default function HomePageClient({
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-slate-900">男性身長分布</h3>
                 <p className="text-sm leading-6 text-slate-500">
-                  公開データ {maleHeightDistribution.total}人。参考統計は平均{" "}
+                  対象は {maleHeightDistribution.total}人。参考統計は平均{" "}
                   {maleHeightDistribution.mean.toFixed(1)}cm / 標準偏差{" "}
                   {maleHeightDistribution.stddev.toFixed(1)} です。
                 </p>
               </div>
 
-              <div className="mt-5 space-y-3">
-                {maleHeightDistribution.buckets.map((bucket) => (
-                  <div
-                    key={bucket.label}
-                    className="rounded-2xl bg-sky-50/80 px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-semibold text-slate-700">
-                        {bucket.label}
-                      </span>
-                      <span className="text-slate-500">
-                        {bucket.count}人 / {bucket.percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-sky-100">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-300"
-                        style={{ width: `${bucket.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+              <div className="mt-5 grid gap-4 xl:grid-cols-2">
+                <DistributionSeriesCard
+                  title={maleHeightDistribution.publicSeries.title}
+                  buckets={maleHeightDistribution.publicSeries.buckets}
+                  tone="sky"
+                />
+                <DistributionSeriesCard
+                  title={maleHeightDistribution.estimatedSeries.title}
+                  buckets={maleHeightDistribution.estimatedSeries.buckets}
+                  tone="sky"
+                />
               </div>
             </article>
           </div>
