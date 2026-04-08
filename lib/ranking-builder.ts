@@ -10,7 +10,13 @@ import {
   getNameSeed,
 } from "./profile-estimates.ts";
 import { femaleProfilePool, maleProfilePool } from "./source-profiles.ts";
-import { FEMALE_STATS, MALE_STATS, calculateDeviation } from "./statistics.ts";
+import {
+  FEMALE_STATS,
+  MALE_STATS,
+  calculateCupDeviation,
+  calculateDeviation,
+  getCupSortValue,
+} from "./statistics.ts";
 
 const RANKING_LIMIT = 20;
 const ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G"] as const;
@@ -70,35 +76,35 @@ function buildFemaleHeightRanking(): FemaleRankingEntry[] {
 function buildFemaleUpperBodyRanking(): FemaleRankingEntry[] {
   return femaleProfilePool
     .map((profile) => {
+      const entry = buildFemaleBaseEntry(profile);
+      const cupForRanking = profile.cup ?? entry.estimatedCup;
       const metric = profile.bust ?? profile.actualHeight;
-      const score =
-        profile.bust === null
-          ? calculateDeviation(
-              profile.actualHeight,
-              FEMALE_STATS.height.mean,
-              FEMALE_STATS.height.stddev
-            )
-          : calculateDeviation(
-              profile.bust,
-              FEMALE_STATS.bust.mean,
-              FEMALE_STATS.bust.stddev
-            );
+      const cupSortValue = getCupSortValue(cupForRanking);
+      const score = cupForRanking
+        ? calculateCupDeviation(cupForRanking)
+        : calculateDeviation(
+            profile.actualHeight,
+            FEMALE_STATS.height.mean,
+            FEMALE_STATS.height.stddev
+          );
 
       return {
-        ...buildFemaleBaseEntry(profile),
+        ...entry,
         metric,
+        cupSortValue,
         score,
       };
     })
     .sort(
       (left, right) =>
         right.score - left.score ||
+        right.cupSortValue - left.cupSortValue ||
         right.metric - left.metric ||
         right.actualHeight - left.actualHeight ||
         left.name.localeCompare(right.name, "ja")
     )
     .slice(0, RANKING_LIMIT)
-    .map(({ metric: _metric, ...entry }) => entry);
+    .map(({ metric: _metric, cupSortValue: _cupSortValue, ...entry }) => entry);
 }
 
 function buildMaleHeightRanking(): MaleRankingEntry[] {

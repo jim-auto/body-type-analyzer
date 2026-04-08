@@ -6,6 +6,10 @@ import {
   getMismatchEmoji,
 } from "@/lib/profile-estimates";
 import type { RankingData } from "@/lib/ranking";
+import {
+  CUP_DISTRIBUTION_LABEL,
+  calculateCupDeviation,
+} from "@/lib/statistics";
 import rankingData from "../../public/data/ranking.json";
 
 const originalNodeEnv = process.env.NODE_ENV;
@@ -125,7 +129,10 @@ describe("Home (Ranking Page)", () => {
 
     expect(await screen.findByText("原幹恵")).toBeInTheDocument();
     expect(screen.getAllByText("163cm").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("偏差値72").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(`偏差値${calculateCupDeviation("G")}`).length
+    ).toBeGreaterThan(0);
+    expect(screen.getByText(CUP_DISTRIBUTION_LABEL)).toBeInTheDocument();
   });
 
   test("男性に切り替えると男性ランキングの身長が表示される", async () => {
