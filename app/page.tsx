@@ -3,43 +3,18 @@
 import { useEffect, useState } from "react";
 
 import {
-  getCupDifference,
-  getDeterministicHeightDelta,
-  getEstimatedCupFromBust,
-  getEstimatedHeight,
+  formatSignedDifference,
   getMismatchEmoji,
 } from "@/lib/profile-estimates";
+import {
+  isFemaleEntry,
+  type FemaleRankingEntry,
+  type MaleRankingEntry,
+  type RankingData,
+  type RankingEntry,
+} from "@/lib/ranking";
 
 type Gender = "female" | "male";
-
-type FemaleRankingEntry = {
-  name: string;
-  score: number;
-  image: string;
-  cup: string | null;
-  actualHeight: number;
-  bust: number | null;
-};
-
-type MaleRankingEntry = {
-  name: string;
-  score: number;
-  image: string;
-  actualHeight: number;
-};
-
-type RankingEntry = FemaleRankingEntry | MaleRankingEntry;
-
-type RankingCategory = {
-  category: string;
-  title: string;
-  ranking: RankingEntry[];
-};
-
-type RankingData = {
-  female: RankingCategory[];
-  male: RankingCategory[];
-};
 
 const medalColors: Record<number, string> = {
   0: "bg-yellow-400 text-yellow-900",
@@ -71,48 +46,57 @@ const genderButtonStyles: Record<Gender, { active: string; inactive: string }> =
     },
   };
 
-function isFemaleEntry(entry: RankingEntry): entry is FemaleRankingEntry {
-  return "bust" in entry;
-}
-
-function formatDiff(diff: number, unit: string): string {
-  if (diff === 0) {
-    return "一致";
-  }
-
-  return `${diff > 0 ? "+" : ""}${diff}${unit}`;
-}
-
 function getFemalePredictionText(entry: FemaleRankingEntry): string {
-  const estimatedCup = getEstimatedCupFromBust(entry.bust);
-
-  if (!estimatedCup) {
+  if (!entry.estimatedCup) {
     return "AI推定: 実バスト非公表";
   }
 
   if (!entry.cup) {
-    return `AI推定: ${estimatedCup}カップ（実カップ非公表 🤔）`;
+    return `AI推定: ${entry.estimatedCup}カップ（実カップ非公表 🤔）`;
   }
 
-  const cupDiff = getCupDifference(entry.cup, estimatedCup);
-
-  if (cupDiff === null) {
-    return `AI推定: ${estimatedCup}カップ`;
+  if (entry.cupDiff === null) {
+    return `AI推定: ${entry.estimatedCup}カップ`;
   }
 
-  const emoji = getMismatchEmoji(cupDiff);
-  return `AI推定: ${estimatedCup}カップ（${formatDiff(
-    cupDiff,
+  const emoji = getMismatchEmoji(entry.cupDiff);
+  return `AI推定: ${entry.estimatedCup}カップ（${formatSignedDifference(
+    entry.cupDiff,
     "サイズ"
   )} ${emoji}）`;
 }
 
 function getMalePredictionText(entry: MaleRankingEntry): string {
-  const estimatedHeight = getEstimatedHeight(entry.actualHeight, entry.name);
-  const diff = getDeterministicHeightDelta(entry.name);
-  const emoji = getMismatchEmoji(diff);
+  const emoji = getMismatchEmoji(entry.heightDiff);
 
-  return `AI推定: ${estimatedHeight}cm（${formatDiff(diff, "cm")} ${emoji}）`;
+  return `AI推定: ${entry.estimatedHeight}cm（${formatSignedDifference(
+    entry.heightDiff,
+    "cm"
+  )} ${emoji}）`;
+}
+
+function getEstimatedHeightDetail(entry: RankingEntry): string {
+  const emoji = getMismatchEmoji(entry.heightDiff);
+
+  return `実際: ${entry.actualHeight}cm（差: ${formatSignedDifference(
+    entry.heightDiff,
+    "cm"
+  )} ${emoji}）`;
+}
+
+function getEstimatedCupDetail(entry: FemaleRankingEntry): string {
+  const actualCupText = entry.cup ? `${entry.cup}カップ` : "非公表";
+
+  if (entry.cupDiff === null) {
+    return `実際: ${actualCupText}（差: 不明 🤔）`;
+  }
+
+  const emoji = getMismatchEmoji(entry.cupDiff);
+
+  return `実際: ${actualCupText}（差: ${formatSignedDifference(
+    entry.cupDiff,
+    "サイズ"
+  )} ${emoji}）`;
 }
 
 export default function Home() {
@@ -181,6 +165,8 @@ export default function Home() {
 
   const categories = data ? data[gender] : [];
   const current = categories[activeTab];
+  const isEstimatedHeightCategory = current?.category === "estimatedHeight";
+  const isEstimatedCupCategory = current?.category === "estimatedCup";
   const activeCategoryStyle =
     gender === "female"
       ? "bg-pink-500 text-white shadow-md"
@@ -251,9 +237,18 @@ export default function Home() {
             {current.ranking.map((entry, index) => {
               const femaleEntry =
                 gender === "female" && isFemaleEntry(entry) ? entry : null;
-              const predictionText = femaleEntry
-                ? getFemalePredictionText(femaleEntry)
-                : getMalePredictionText(entry as MaleRankingEntry);
+              const predictionText = isEstimatedHeightCategory
+                ? getEstimatedHeightDetail(entry)
+                : isEstimatedCupCategory && femaleEntry
+                  ? getEstimatedCupDetail(femaleEntry)
+                  : femaleEntry
+                    ? getFemalePredictionText(femaleEntry)
+                    : getMalePredictionText(entry as MaleRankingEntry);
+              const scoreLabel = isEstimatedHeightCategory
+                ? `${entry.score}cm`
+                : isEstimatedCupCategory && femaleEntry?.estimatedCup
+                  ? `${femaleEntry.estimatedCup}カップ`
+                  : `偏差値${entry.score}`;
 
               return (
                 <div
@@ -297,7 +292,7 @@ export default function Home() {
                       medalColors[index] ?? defaultScoreBadge
                     }`}
                   >
-                    偏差値{entry.score}
+                    {scoreLabel}
                   </span>
                 </div>
               );

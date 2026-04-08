@@ -1,12 +1,18 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import Home from "@/app/page";
+import {
+  formatSignedDifference,
+  getMismatchEmoji,
+} from "@/lib/profile-estimates";
+import type { RankingData } from "@/lib/ranking";
 import rankingData from "../../public/data/ranking.json";
 
 const originalNodeEnv = process.env.NODE_ENV;
 const originalFetch = global.fetch;
 
-const mockRankingData = rankingData;
+const mockRankingData = rankingData as RankingData;
+const mutableEnv = process.env as Record<string, string | undefined>;
 
 const renderHome = () => render(<Home />);
 
@@ -22,8 +28,17 @@ const clickCategoryTab = (label: string) => {
   fireEvent.click(screen.getByRole("button", { name: label }));
 };
 
+const getFemaleCategory = (categoryKey: string) => {
+  const category = mockRankingData.female.find(
+    (entry) => entry.category === categoryKey
+  );
+
+  expect(category).toBeDefined();
+  return category!;
+};
+
 beforeEach(() => {
-  process.env.NODE_ENV = "test";
+  mutableEnv.NODE_ENV = "test";
   global.fetch = jest.fn(() =>
     Promise.resolve({
       json: () => Promise.resolve(mockRankingData),
@@ -32,7 +47,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  process.env.NODE_ENV = originalNodeEnv;
+  mutableEnv.NODE_ENV = originalNodeEnv;
   global.fetch = originalFetch;
   jest.restoreAllMocks();
 });
@@ -154,7 +169,7 @@ describe("Home (Ranking Page)", () => {
   });
 
   test("productionではfetchと画像にbasePathが付与される", async () => {
-    process.env.NODE_ENV = "production";
+    mutableEnv.NODE_ENV = "production";
 
     renderHome();
 
@@ -166,5 +181,50 @@ describe("Home (Ranking Page)", () => {
 
     const image = await screen.findByAltText("菜々緒");
     expect(image).toHaveAttribute("src", "/body-type-analyzer/images/nanao.jpg");
+  });
+
+  test("推定身長タブをクリックすると cm 表示になる", async () => {
+    const estimatedHeightCategory = getFemaleCategory("estimatedHeight");
+    const topEntry = estimatedHeightCategory.ranking[0];
+
+    renderHome();
+    await waitForFemaleSilhouette();
+
+    clickCategoryTab("AI推定身長ランキング");
+
+    expect(await screen.findByText(topEntry.name)).toBeInTheDocument();
+    expect(screen.getAllByText(`${topEntry.score}cm`).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        `実際: ${topEntry.actualHeight}cm（差: ${formatSignedDifference(
+          topEntry.heightDiff,
+          "cm"
+        )} ${getMismatchEmoji(topEntry.heightDiff)}）`
+      )
+    ).toBeInTheDocument();
+  });
+
+  test("推定カップタブをクリックするとカップ表示になる", async () => {
+    const estimatedCupCategory = getFemaleCategory("estimatedCup");
+    const topEntry = estimatedCupCategory.ranking[0];
+    const cupDiffLabel =
+      topEntry.cupDiff === null
+        ? "不明 🤔"
+        : `${formatSignedDifference(topEntry.cupDiff, "サイズ")} ${getMismatchEmoji(
+            topEntry.cupDiff
+          )}`;
+
+    renderHome();
+    await waitForFemaleSilhouette();
+
+    clickCategoryTab("AI推定カップ数ランキング");
+
+    expect(await screen.findByText(topEntry.name)).toBeInTheDocument();
+    expect(screen.getAllByText(`${topEntry.estimatedCup}カップ`).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(
+        `実際: ${topEntry.cup ? `${topEntry.cup}カップ` : "非公表"}（差: ${cupDiffLabel}）`
+      ).length
+    ).toBeGreaterThan(0);
   });
 });

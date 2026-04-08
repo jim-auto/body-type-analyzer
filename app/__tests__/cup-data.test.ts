@@ -3,6 +3,16 @@ import path from "node:path";
 
 import rankingData from "../../public/data/ranking.json";
 import { buildRankingData } from "@/lib/ranking-builder";
+import {
+  getCupDifference,
+  getEstimatedCupFromBust,
+  getEstimatedHeight,
+} from "@/lib/profile-estimates";
+import type {
+  FemaleRankingEntry,
+  MaleRankingEntry,
+  RankingData,
+} from "@/lib/ranking";
 import { femaleProfilePool, maleProfilePool } from "@/lib/source-profiles";
 import {
   FEMALE_STATS,
@@ -10,40 +20,17 @@ import {
   calculateDeviation,
 } from "@/lib/statistics";
 
-type FemaleRankingEntry = {
-  name: string;
-  score: number;
-  image: string;
-  cup: string | null;
-  actualHeight: number;
-  bust: number | null;
-};
-
-type MaleRankingEntry = {
-  name: string;
-  score: number;
-  image: string;
-  actualHeight: number;
-};
-
-type FemaleCategory = {
-  category: string;
-  title: string;
-  ranking: FemaleRankingEntry[];
-};
-
-type MaleCategory = {
-  category: string;
-  title: string;
-  ranking: MaleRankingEntry[];
-};
-
 const validCups = new Set(["A", "B", "C", "D", "E", "F", "G", "H"]);
+const estimatedCupOrder = ["A", "B", "C", "D", "E", "F", "G"] as const;
 const expectedRankingData = buildRankingData();
 
-const femaleCategories = rankingData.female as FemaleCategory[];
-const maleCategories = rankingData.male as MaleCategory[];
+const femaleCategories = rankingData.female as RankingData["female"];
+const maleCategories = rankingData.male as RankingData["male"];
 const allCategories = [...femaleCategories, ...maleCategories];
+const standardCategories = allCategories.filter(
+  (category) =>
+    category.category !== "estimatedHeight" && category.category !== "estimatedCup"
+);
 
 const femaleEntries = femaleCategories.flatMap((category) => category.ranking);
 const maleEntries = maleCategories.flatMap((category) => category.ranking);
@@ -91,9 +78,36 @@ const findMaleEntry = (categoryKey: string, name: string) =>
     ?.ranking.find((entry) => entry.name === name);
 
 describe("ranking.json actual profile data", () => {
-  test("女性カテゴリが3つ、男性カテゴリが3つである", () => {
-    expect(femaleCategories).toHaveLength(3);
-    expect(maleCategories).toHaveLength(3);
+  test("女性カテゴリが5つ、男性カテゴリが4つである", () => {
+    expect(femaleCategories).toHaveLength(5);
+    expect(maleCategories).toHaveLength(4);
+  });
+
+  test('女性に "AI推定身長ランキング" カテゴリが存在する', () => {
+    expect(
+      femaleCategories.find((category) => category.category === "estimatedHeight")
+    ).toMatchObject({
+      category: "estimatedHeight",
+      title: "AI推定身長ランキング",
+    });
+  });
+
+  test('女性に "AI推定カップ数ランキング" カテゴリが存在する', () => {
+    expect(
+      femaleCategories.find((category) => category.category === "estimatedCup")
+    ).toMatchObject({
+      category: "estimatedCup",
+      title: "AI推定カップ数ランキング",
+    });
+  });
+
+  test('男性に "AI推定身長ランキング" カテゴリが存在する', () => {
+    expect(
+      maleCategories.find((category) => category.category === "estimatedHeight")
+    ).toMatchObject({
+      category: "estimatedHeight",
+      title: "AI推定身長ランキング",
+    });
   });
 
   test("女性・男性のソース母集団が35人以上ある", () => {
@@ -119,11 +133,22 @@ describe("ranking.json actual profile data", () => {
     });
   });
 
+  test("全エントリに estimatedHeight と heightDiff がある", () => {
+    [...femaleEntries, ...maleEntries].forEach((entry) => {
+      expect(entry.estimatedHeight).toBe(
+        getEstimatedHeight(entry.actualHeight, entry.name)
+      );
+      expect(entry.heightDiff).toBe(entry.estimatedHeight - entry.actualHeight);
+    });
+  });
+
   test("女性エントリのbustとcupが妥当な形式である", () => {
     femaleEntries.forEach((entry) => {
       expect(entry).toHaveProperty("bust");
       expect(entry.bust === null || typeof entry.bust === "number").toBe(true);
       expect(entry.cup === null || validCups.has(entry.cup)).toBe(true);
+      expect(entry.estimatedCup).toBe(getEstimatedCupFromBust(entry.bust));
+      expect(entry.cupDiff).toBe(getCupDifference(entry.cup, entry.estimatedCup));
     });
   });
 
@@ -160,6 +185,63 @@ describe("ranking.json actual profile data", () => {
     allCategories.forEach((category) => {
       const scores = category.ranking.map((entry) => entry.score);
       expect(scores).toEqual([...scores].sort((left, right) => right - left));
+    });
+  });
+
+  test("推定身長ランキングが推定身長の降順である", () => {
+    [femaleCategories, maleCategories].forEach((categories) => {
+      const ranking = categories.find(
+        (category) => category.category === "estimatedHeight"
+      )?.ranking;
+
+      expect(ranking).toBeDefined();
+      expect(ranking?.map((entry) => entry.estimatedHeight)).toEqual(
+        [...(ranking ?? [])]
+          .map((entry) => entry.estimatedHeight)
+          .sort((left, right) => right - left)
+      );
+    });
+  });
+
+  test("推定カップ数ランキングがカップの大きさ降順である", () => {
+    const ranking =
+      femaleCategories.find((category) => category.category === "estimatedCup")
+        ?.ranking ?? [];
+
+    const cupIndexes = ranking.map((entry) =>
+      estimatedCupOrder.indexOf(
+        entry.estimatedCup as (typeof estimatedCupOrder)[number]
+      )
+    );
+
+    expect(cupIndexes).toEqual([...cupIndexes].sort((left, right) => right - left));
+  });
+
+  test("推定身長ランキングの各エントリに estimatedHeight がある", () => {
+    [femaleCategories, maleCategories].forEach((categories) => {
+      categories
+        .find((category) => category.category === "estimatedHeight")
+        ?.ranking.forEach((entry) => {
+          expect(entry.estimatedHeight).toEqual(expect.any(Number));
+        });
+    });
+  });
+
+  test("推定カップ数ランキングの各エントリに estimatedCup がある", () => {
+    femaleCategories
+      .find((category) => category.category === "estimatedCup")
+      ?.ranking.forEach((entry) => {
+        expect(entry.estimatedCup).toEqual(expect.any(String));
+      });
+  });
+
+  test("heightDiff が estimatedHeight - actualHeight と一致する", () => {
+    [femaleCategories, maleCategories].forEach((categories) => {
+      categories
+        .find((category) => category.category === "estimatedHeight")
+        ?.ranking.forEach((entry) => {
+          expect(entry.heightDiff).toBe(entry.estimatedHeight - entry.actualHeight);
+        });
     });
   });
 
@@ -201,7 +283,7 @@ describe("ranking.json actual profile data", () => {
   });
 
   test("偏差値の分布が30〜80の範囲に収まる", () => {
-    [...femaleEntries, ...maleEntries].forEach((entry) => {
+    standardCategories.flatMap((category) => category.ranking).forEach((entry) => {
       expect(entry.score).toBeGreaterThanOrEqual(30);
       expect(entry.score).toBeLessThanOrEqual(80);
     });
