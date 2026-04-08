@@ -31,10 +31,13 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const basePath =
+    process.env.NODE_ENV === "production" ? "/body-type-analyzer" : "";
+
+  const resolveImageSrc = (src: string) =>
+    src.startsWith("/") ? `${basePath}${src}` : src;
 
   useEffect(() => {
-    const basePath =
-      process.env.NODE_ENV === "production" ? "/body-type-analyzer" : "";
     fetch(`${basePath}/data/ranking.json`)
       .then((res) => res.json())
       .then((data: RankingCategory[]) => {
@@ -121,7 +124,7 @@ export default function Home() {
                   </span>
                   {/* Avatar */}
                   <img
-                    src={entry.image}
+                    src={resolveImageSrc(entry.image)}
                     alt={entry.name}
                     className={`w-12 h-12 rounded-full object-cover ${
                       medalBorder[i] ?? ""
