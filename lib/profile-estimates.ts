@@ -1,6 +1,38 @@
 import { bustToEstimatedCup } from "./statistics.ts";
 
-const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G"] as const;
+const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+const HEIGHT_DELTA_SEQUENCE = [
+  0,
+  1,
+  -1,
+  0,
+  2,
+  -2,
+  1,
+  -1,
+  0,
+  3,
+  -3,
+  2,
+  -2,
+  4,
+  -4,
+] as const;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getCupIndex(cup: string | null | undefined): number | null {
+  if (!cup) {
+    return null;
+  }
+
+  const normalizedCup = cup.trim().toUpperCase();
+  const index = CUP_ORDER.indexOf(normalizedCup as (typeof CUP_ORDER)[number]);
+
+  return index === -1 ? null : index;
+}
 
 export function getNameSeed(name: string): number {
   return Array.from(name).reduce((total, character) => {
@@ -10,14 +42,8 @@ export function getNameSeed(name: string): number {
 
 export function getDeterministicHeightDelta(name: string): number {
   const seed = getNameSeed(name);
-  const magnitude = (seed % 8) + 1;
-  const selector = Math.floor(seed / 8) % 6;
 
-  if (selector === 0) {
-    return 0;
-  }
-
-  return selector % 2 === 0 ? magnitude : -magnitude;
+  return HEIGHT_DELTA_SEQUENCE[seed % HEIGHT_DELTA_SEQUENCE.length];
 }
 
 export function getEstimatedHeight(actualHeight: number, name: string): number {
@@ -58,20 +84,46 @@ export function getEstimatedCupFromBust(bust: number | null): string | null {
   return bustToEstimatedCup(bust);
 }
 
+export function getAdjustedEstimatedCup(
+  bust: number | null,
+  actualCup: string | null | undefined
+): string | null {
+  const estimatedCup = getEstimatedCupFromBust(bust);
+
+  if (!estimatedCup || !actualCup) {
+    return estimatedCup;
+  }
+
+  const actualIndex = getCupIndex(actualCup);
+  const estimatedIndex = getCupIndex(estimatedCup);
+
+  if (actualIndex === null || estimatedIndex === null) {
+    return estimatedCup;
+  }
+
+  const difference = estimatedIndex - actualIndex;
+
+  if (Math.abs(difference) <= 1) {
+    return estimatedCup;
+  }
+
+  if (Math.abs(difference) === 2) {
+    return CUP_ORDER[
+      clamp(actualIndex + Math.sign(difference), 0, CUP_ORDER.length - 1)
+    ];
+  }
+
+  return CUP_ORDER[actualIndex];
+}
+
 export function getCupDifference(
   actualCup: string | null | undefined,
   estimatedCup: string | null
 ): number | null {
-  if (!actualCup || !estimatedCup) {
-    return null;
-  }
+  const actualIndex = getCupIndex(actualCup);
+  const estimatedIndex = getCupIndex(estimatedCup);
 
-  const actualIndex = CUP_ORDER.indexOf(actualCup as (typeof CUP_ORDER)[number]);
-  const estimatedIndex = CUP_ORDER.indexOf(
-    estimatedCup as (typeof CUP_ORDER)[number]
-  );
-
-  if (actualIndex === -1 || estimatedIndex === -1) {
+  if (actualIndex === null || estimatedIndex === null) {
     return null;
   }
 

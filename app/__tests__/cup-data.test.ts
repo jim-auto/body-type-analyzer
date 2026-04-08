@@ -4,8 +4,8 @@ import path from "node:path";
 import rankingDataJson from "../../public/data/ranking.json";
 import { buildRankingData } from "@/lib/ranking-builder";
 import {
+  getAdjustedEstimatedCup,
   getCupDifference,
-  getEstimatedCupFromBust,
   getEstimatedHeight,
 } from "@/lib/profile-estimates";
 import type {
@@ -29,7 +29,7 @@ const allCategories = [...femaleCategories, ...maleCategories];
 const femaleEntries = femaleCategories.flatMap((category) => category.ranking);
 const maleEntries = maleCategories.flatMap((category) => category.ranking);
 const validCups = new Set(["A", "B", "C", "D", "E", "F", "G", "H"]);
-const estimatedCupOrder = ["A", "B", "C", "D", "E", "F", "G"] as const;
+const estimatedCupOrder = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 const uiAvatarPattern =
   /^https:\/\/ui-avatars\.com\/api\/\?name=.+&size=300&background=random&color=fff&bold=true$/;
 
@@ -118,7 +118,7 @@ describe("ranking.json actual profile data", () => {
     femaleEntries.forEach((entry) => {
       expect(entry.bust).toEqual(expect.any(Number));
       expect(validCups.has(entry.cup ?? "")).toBe(true);
-      expect(entry.estimatedCup).toBe(getEstimatedCupFromBust(entry.bust));
+      expect(entry.estimatedCup).toBe(getAdjustedEstimatedCup(entry.bust, entry.cup));
       expect(entry.cupDiff).toBe(getCupDifference(entry.cup, entry.estimatedCup));
     });
   });

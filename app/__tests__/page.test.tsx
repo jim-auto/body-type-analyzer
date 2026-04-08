@@ -1,23 +1,27 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import Home from "@/app/page";
+import {
+  buildFemaleCupDistributionSummary,
+  buildMaleHeightDistributionSummary,
+} from "@/lib/distributions";
 import {
   formatSignedDifference,
   getMismatchEmoji,
 } from "@/lib/profile-estimates";
 import type { RankingData } from "@/lib/ranking";
-import rankingData from "../../public/data/ranking.json";
+import rankingDataJson from "../../public/data/ranking.json";
 
 const originalNodeEnv = process.env.NODE_ENV;
-const originalFetch = global.fetch;
-
-const mockRankingData = rankingData as RankingData;
 const mutableEnv = process.env as Record<string, string | undefined>;
+const rankingData = rankingDataJson as RankingData;
+const femaleCupDistribution = buildFemaleCupDistributionSummary();
+const maleHeightDistribution = buildMaleHeightDistributionSummary();
 
-const femaleStyleCategory = mockRankingData.female.find(
+const femaleStyleCategory = rankingData.female.find(
   (entry) => entry.category === "style"
 )!;
-const maleStyleCategory = mockRankingData.male.find(
+const maleStyleCategory = rankingData.male.find(
   (entry) => entry.category === "style"
 )!;
 const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
@@ -25,12 +29,6 @@ const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
 )!;
 
 const renderHome = () => render(<Home />);
-
-const waitForFemaleStyle = async () => {
-  expect(
-    await screen.findByText(femaleStyleCategory.ranking[0].name)
-  ).toBeInTheDocument();
-};
 
 const clickGenderTab = (label: "女性" | "男性") => {
   fireEvent.click(screen.getByRole("button", { name: label }));
@@ -41,64 +39,30 @@ const clickCategoryTab = (label: string) => {
 };
 
 const getFemaleCategory = (categoryKey: string) => {
-  const category = mockRankingData.female.find(
-    (entry) => entry.category === categoryKey
-  );
+  const category = rankingData.female.find((entry) => entry.category === categoryKey);
 
   expect(category).toBeDefined();
   return category!;
 };
 
-beforeEach(() => {
-  mutableEnv.NODE_ENV = "test";
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      json: () => Promise.resolve(mockRankingData),
-    })
-  ) as jest.Mock;
-});
-
 afterEach(() => {
   mutableEnv.NODE_ENV = originalNodeEnv;
-  global.fetch = originalFetch;
-  jest.restoreAllMocks();
 });
 
 describe("Home (Ranking Page)", () => {
-  test("ローディング中の表示がある", () => {
-    (global.fetch as jest.Mock).mockImplementationOnce(
-      () => new Promise(() => {})
-    );
-
-    renderHome();
-    expect(screen.getByText("読み込み中...")).toBeInTheDocument();
-  });
-
-  test("fetch失敗時にエラーメッセージが表示される", async () => {
-    (global.fetch as jest.Mock).mockImplementationOnce(() =>
-      Promise.reject(new Error("Network error"))
-    );
-
+  test("ページタイトルとサブタイトルが表示される", () => {
     renderHome();
 
     expect(
-      await screen.findByText("データの読み込みに失敗しました")
+      screen.getByRole("heading", { level: 1, name: "芸能人スタイルランキング" })
     ).toBeInTheDocument();
-  });
-
-  test("ページタイトルとサブタイトルが表示される", async () => {
-    renderHome();
-    await waitForFemaleStyle();
-
-    expect(screen.getByText("芸能人スタイルランキング")).toBeInTheDocument();
     expect(
       screen.getByText("芸能人のスタイルをAIが偏差値で格付け！")
     ).toBeInTheDocument();
   });
 
-  test("AI診断への CTA が表示される", async () => {
+  test("AI診断への CTA が表示される", () => {
     renderHome();
-    await waitForFemaleStyle();
 
     expect(
       screen.getByRole("heading", {
@@ -111,9 +75,8 @@ describe("Home (Ranking Page)", () => {
     ).toHaveAttribute("href", "/analyze");
   });
 
-  test("初期表示で女性の style カテゴリが表示される", async () => {
+  test("初期表示で女性の style カテゴリが表示される", () => {
     renderHome();
-    await waitForFemaleStyle();
 
     expect(
       screen.getByRole("heading", {
@@ -125,11 +88,10 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getByText(femaleStyleCategory.ranking[1].name)).toBeInTheDocument();
   });
 
-  test("女性 style ランキングでカップ数と身長と偏差値が表示される", async () => {
+  test("女性 style ランキングでカップ数と身長と偏差値が表示される", () => {
     const entryWithCup = femaleStyleCategory.ranking.find((entry) => entry.cup !== null)!;
 
     renderHome();
-    await waitForFemaleStyle();
 
     expect(screen.getByText(entryWithCup.name)).toBeInTheDocument();
     expect(screen.getAllByText(`${entryWithCup.cup}カップ`).length).toBeGreaterThan(0);
@@ -139,37 +101,33 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(`偏差値${entryWithCup.score}`).length).toBeGreaterThan(0);
   });
 
-  test("女性 style ランキングでAI推定表示がされる", async () => {
+  test("女性 style ランキングでAI推定表示がされる", () => {
     renderHome();
-    await waitForFemaleStyle();
 
     expect(screen.getAllByText(/^AI推定:/)).toHaveLength(20);
   });
 
-  test("カテゴリタブ数が女性3つ・男性2つになっている", async () => {
+  test("カテゴリタブ数が女性3つ・男性2つになっている", () => {
     renderHome();
-    await waitForFemaleStyle();
 
     expect(screen.getAllByRole("button", { name: /ランキング$/ })).toHaveLength(3);
 
     clickGenderTab("男性");
 
-    expect(await screen.findByText(maleStyleCategory.ranking[0].name)).toBeInTheDocument();
+    expect(screen.getByText(maleStyleCategory.ranking[0].name)).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /ランキング$/ })).toHaveLength(2);
     expect(
       screen.queryByRole("button", { name: "AI推定カップ数ランキング" })
     ).not.toBeInTheDocument();
   });
 
-  test("男性に切り替えると男性 style ランキングが表示される", async () => {
+  test("男性に切り替えると男性 style ランキングが表示される", () => {
     const topMaleEntry = maleStyleCategory.ranking[0];
 
     renderHome();
-    await waitForFemaleStyle();
-
     clickGenderTab("男性");
 
-    expect(await screen.findByText(topMaleEntry.name)).toBeInTheDocument();
+    expect(screen.getByText(topMaleEntry.name)).toBeInTheDocument();
     expect(screen.getAllByText(`${topMaleEntry.actualHeight}cm`).length).toBeGreaterThan(
       0
     );
@@ -179,13 +137,12 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(20);
   });
 
-  test("男女切り替え時にカテゴリタブが最初に戻る", async () => {
+  test("男女切り替え時にカテゴリタブが最初に戻る", () => {
     renderHome();
-    await waitForFemaleStyle();
 
     clickCategoryTab("AI推定カップ数ランキング");
     expect(
-      await screen.findByRole("heading", {
+      screen.getByRole("heading", {
         level: 2,
         name: "AI推定カップ数ランキング",
       })
@@ -193,7 +150,7 @@ describe("Home (Ranking Page)", () => {
 
     clickGenderTab("男性");
 
-    expect(await screen.findByText(maleStyleCategory.ranking[0].name)).toBeInTheDocument();
+    expect(screen.getByText(maleStyleCategory.ranking[0].name)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 2,
@@ -202,59 +159,25 @@ describe("Home (Ranking Page)", () => {
     ).toBeInTheDocument();
   });
 
-  test("productionではfetchと画像にbasePathが付与される", async () => {
+  test("productionではローカル画像にbasePathが付与される", () => {
     mutableEnv.NODE_ENV = "production";
-    const remoteImageEntry = {
-      ...femaleStyleCategory.ranking[0],
-      name: "Remote Image Test",
-      image: "https://example.com/remote.jpg",
-    };
-    const productionRankingData = JSON.parse(
-      JSON.stringify(mockRankingData)
-    ) as RankingData;
-
-    productionRankingData.female = productionRankingData.female.map((category) =>
-      category.category === "style"
-        ? {
-            ...category,
-            ranking: [...category.ranking, remoteImageEntry],
-          }
-        : category
-    );
-    (global.fetch as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        json: () => Promise.resolve(productionRankingData),
-      })
-    );
-
     renderHome();
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "/body-type-analyzer/data/ranking.json"
-      );
-    });
-
-    const localImage = await screen.findByAltText(femaleStyleLocalImageEntry.name);
+    const localImage = screen.getByAltText(femaleStyleLocalImageEntry.name);
     expect(localImage).toHaveAttribute(
       "src",
       `/body-type-analyzer${femaleStyleLocalImageEntry.image}`
     );
-
-    const remoteImage = await screen.findByAltText(remoteImageEntry.name);
-    expect(remoteImage).toHaveAttribute("src", remoteImageEntry.image);
   });
 
-  test("推定身長タブをクリックすると cm 表示になる", async () => {
+  test("推定身長タブをクリックすると cm 表示になる", () => {
     const estimatedHeightCategory = getFemaleCategory("estimatedHeight");
     const topEntry = estimatedHeightCategory.ranking[0];
 
     renderHome();
-    await waitForFemaleStyle();
-
     clickCategoryTab("AI推定身長ランキング");
 
-    expect(await screen.findByText(topEntry.name)).toBeInTheDocument();
+    expect(screen.getByText(topEntry.name)).toBeInTheDocument();
     expect(screen.getAllByText(`${topEntry.score}cm`).length).toBeGreaterThan(0);
     expect(
       screen.getByText(
@@ -266,7 +189,7 @@ describe("Home (Ranking Page)", () => {
     ).toBeInTheDocument();
   });
 
-  test("推定カップタブをクリックするとカップ表示になる", async () => {
+  test("推定カップタブをクリックするとカップ表示になる", () => {
     const estimatedCupCategory = getFemaleCategory("estimatedCup");
     const topEntry = estimatedCupCategory.ranking[0];
     const cupDiffLabel =
@@ -277,11 +200,9 @@ describe("Home (Ranking Page)", () => {
           )}`;
 
     renderHome();
-    await waitForFemaleStyle();
-
     clickCategoryTab("AI推定カップ数ランキング");
 
-    expect(await screen.findByText(topEntry.name)).toBeInTheDocument();
+    expect(screen.getByText(topEntry.name)).toBeInTheDocument();
     expect(
       screen.getAllByText(`${topEntry.estimatedCup}カップ`).length
     ).toBeGreaterThan(0);
@@ -290,5 +211,32 @@ describe("Home (Ranking Page)", () => {
         `実際: ${topEntry.cup ? `${topEntry.cup}カップ` : "非公表"}（差: ${cupDiffLabel}）`
       ).length
     ).toBeGreaterThan(0);
+  });
+
+  test("分布セクションに女性カップ分布と男性身長分布が表示される", () => {
+    const femaleBucket = femaleCupDistribution.buckets.find(
+      (bucket) => bucket.cup === "C"
+    )!;
+    const maleBucket = maleHeightDistribution.buckets.find(
+      (bucket) => bucket.label === "175-179cm"
+    )!;
+
+    renderHome();
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "分布セクション" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 3, name: "女性カップ分布" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(`${femaleBucket.count}人 / ${femaleBucket.percentage.toFixed(1)}%`)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 3, name: "男性身長分布" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(`${maleBucket.count}人 / ${maleBucket.percentage.toFixed(1)}%`)
+    ).toBeInTheDocument();
   });
 });
