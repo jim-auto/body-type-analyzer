@@ -2,143 +2,200 @@ import fs from "node:fs";
 import path from "node:path";
 
 import rankingData from "../../public/data/ranking.json";
+import {
+  FEMALE_STATS,
+  MALE_STATS,
+  calculateDeviation,
+} from "@/lib/statistics";
 
-type RankingEntry = {
+type FemaleRankingEntry = {
   name: string;
   score: number;
   image: string;
-  cup?: string;
+  cup: string | null;
+  actualHeight: number;
+  bust: number | null;
 };
 
-type RankingCategory = {
+type MaleRankingEntry = {
+  name: string;
+  score: number;
+  image: string;
+  actualHeight: number;
+};
+
+type FemaleCategory = {
   category: string;
   title: string;
-  ranking: RankingEntry[];
+  ranking: FemaleRankingEntry[];
 };
 
-const validCups = new Set([
-  "A",
-  "B",
-  "C",
-  "D",
-  "E",
-  "F",
-  "G",
-  "H",
-  "I",
-  "J",
-  "K",
-  "非公表",
-]);
+type MaleCategory = {
+  category: string;
+  title: string;
+  ranking: MaleRankingEntry[];
+};
 
-const femaleCategories = rankingData.female as RankingCategory[];
-const maleCategories = rankingData.male as RankingCategory[];
+const validCups = new Set(["A", "B", "C", "D", "E", "F", "G"]);
+
+const femaleCategories = rankingData.female as FemaleCategory[];
+const maleCategories = rankingData.male as MaleCategory[];
 const femaleEntries = femaleCategories.flatMap((category) => category.ranking);
 const maleEntries = maleCategories.flatMap((category) => category.ranking);
 
-const findEntry = (name: string) => {
-  const entry = [...femaleEntries, ...maleEntries].find((item) => item.name === name);
-
-  if (!entry) {
-    throw new Error(`Entry not found: ${name}`);
-  }
-
-  return entry;
-};
-
-describe("ranking.json cup data", () => {
-  test("女性の全エントリにcupフィールドが存在すること", () => {
-    femaleEntries.forEach((entry) => {
-      expect(entry).toHaveProperty("cup");
-      expect(typeof entry.cup).toBe("string");
-    });
-  });
-
-  test("cupの値がA〜Kまたは非公表であること", () => {
-    femaleEntries.forEach((entry) => {
-      expect(validCups.has(entry.cup as string)).toBe(true);
-    });
-  });
-
-  test("男性の全エントリにcupフィールドが存在しないこと", () => {
-    maleEntries.forEach((entry) => {
-      expect(entry).not.toHaveProperty("cup");
-    });
-  });
-
-  test("女性カテゴリが3つ、男性カテゴリが3つであること", () => {
+describe("ranking.json actual profile data", () => {
+  test("女性カテゴリが3つ、男性カテゴリが3つである", () => {
     expect(femaleCategories).toHaveLength(3);
     expect(maleCategories).toHaveLength(3);
   });
 
-  test("各カテゴリのランキングが5人であること", () => {
+  test("各カテゴリのランキングが5人である", () => {
     [...femaleCategories, ...maleCategories].forEach((category) => {
       expect(category.ranking).toHaveLength(5);
     });
   });
 
-  test("各カテゴリのスコアが降順であること", () => {
+  test("女性エントリにactualHeightがある", () => {
+    femaleEntries.forEach((entry) => {
+      expect(entry.actualHeight).toEqual(expect.any(Number));
+    });
+  });
+
+  test("女性エントリにbustがありnullまたは数値である", () => {
+    femaleEntries.forEach((entry) => {
+      expect(entry).toHaveProperty("bust");
+      expect(entry.bust === null || typeof entry.bust === "number").toBe(true);
+    });
+  });
+
+  test("actualHeightは140〜190の範囲内である", () => {
+    [...femaleEntries, ...maleEntries].forEach((entry) => {
+      expect(entry.actualHeight).toBeGreaterThanOrEqual(140);
+      expect(entry.actualHeight).toBeLessThanOrEqual(190);
+    });
+  });
+
+  test("bustはnullまたは70〜110の範囲内である", () => {
+    femaleEntries.forEach((entry) => {
+      if (entry.bust === null) {
+        expect(entry.bust).toBeNull();
+        return;
+      }
+
+      expect(entry.bust).toBeGreaterThanOrEqual(70);
+      expect(entry.bust).toBeLessThanOrEqual(110);
+    });
+  });
+
+  test("女性のcupはnullまたはA〜Gである", () => {
+    femaleEntries.forEach((entry) => {
+      expect(entry.cup === null || validCups.has(entry.cup)).toBe(true);
+    });
+  });
+
+  test("男性エントリにactualHeightがある", () => {
+    maleEntries.forEach((entry) => {
+      expect(entry.actualHeight).toEqual(expect.any(Number));
+    });
+  });
+
+  test("男性エントリにbust/cupがない", () => {
+    maleEntries.forEach((entry) => {
+      expect(entry).not.toHaveProperty("bust");
+      expect(entry).not.toHaveProperty("cup");
+    });
+  });
+
+  test("画像パスが/images/で始まりファイルが存在する", () => {
+    [...femaleEntries, ...maleEntries].forEach((entry) => {
+      expect(entry.image.startsWith("/images/")).toBe(true);
+
+      const imagePath = path.join(process.cwd(), "public", entry.image.slice(1));
+      expect(fs.existsSync(imagePath)).toBe(true);
+    });
+  });
+
+  test("全カテゴリのスコアは降順である", () => {
     [...femaleCategories, ...maleCategories].forEach((category) => {
       const scores = category.ranking.map((entry) => entry.score);
       expect(scores).toEqual([...scores].sort((a, b) => b - a));
     });
   });
 
-  test("全エントリのスコアが30〜80の範囲内であること", () => {
-    [...femaleEntries, ...maleEntries].forEach((entry) => {
-      expect(entry.score).toBeGreaterThanOrEqual(30);
-      expect(entry.score).toBeLessThanOrEqual(80);
+  test("女性シルエットカテゴリのscoreは身長偏差値で計算されている", () => {
+    const silhouette = femaleCategories.find(
+      (category) => category.category === "silhouette"
+    );
+
+    expect(silhouette).toBeDefined();
+    silhouette?.ranking.forEach((entry) => {
+      expect(entry.score).toBe(
+        calculateDeviation(
+          entry.actualHeight,
+          FEMALE_STATS.height.mean,
+          FEMALE_STATS.height.stddev
+        )
+      );
     });
   });
 
-  test("全エントリにname, score, imageフィールドが存在すること", () => {
-    [...femaleEntries, ...maleEntries].forEach((entry) => {
-      expect(entry.name).toBeTruthy();
-      expect(typeof entry.score).toBe("number");
-      expect(entry.image).toBeTruthy();
+  test("女性上半身カテゴリのscoreはbustがあればバスト偏差値、なければ身長偏差値である", () => {
+    const upperBody = femaleCategories.find(
+      (category) => category.category === "upperBody"
+    );
+
+    expect(upperBody).toBeDefined();
+    upperBody?.ranking.forEach((entry) => {
+      const expectedScore =
+        entry.bust === null
+          ? calculateDeviation(
+              entry.actualHeight,
+              FEMALE_STATS.height.mean,
+              FEMALE_STATS.height.stddev
+            )
+          : calculateDeviation(
+              entry.bust,
+              FEMALE_STATS.bust.mean,
+              FEMALE_STATS.bust.stddev
+            );
+
+      expect(entry.score).toBe(expectedScore);
     });
   });
 
-  test("画像パスが/images/で始まり、対応ファイルが存在すること", () => {
-    [...femaleEntries, ...maleEntries].forEach((entry) => {
-      expect(entry.image.startsWith("/images/")).toBe(true);
+  test("女性プロポーションカテゴリのscoreは身長偏差値で計算されている", () => {
+    const proportion = femaleCategories.find(
+      (category) => category.category === "proportion"
+    );
 
-      const imagePath = path.join(process.cwd(), "public", entry.image.replace(/^\//, ""));
-      expect(fs.existsSync(imagePath)).toBe(true);
+    expect(proportion).toBeDefined();
+    proportion?.ranking.forEach((entry) => {
+      expect(entry.score).toBe(
+        calculateDeviation(
+          entry.actualHeight,
+          FEMALE_STATS.height.mean,
+          FEMALE_STATS.height.stddev
+        )
+      );
     });
   });
 
-  test("名前が空文字でないこと", () => {
-    [...femaleEntries, ...maleEntries].forEach((entry) => {
-      expect(entry.name.trim()).not.toBe("");
+  test("男性全カテゴリのscoreは身長偏差値で計算されている", () => {
+    maleCategories.forEach((category) => {
+      category.ranking.forEach((entry) => {
+        expect(entry.score).toBe(
+          calculateDeviation(
+            entry.actualHeight,
+            MALE_STATS.height.mean,
+            MALE_STATS.height.stddev
+          )
+        );
+      });
     });
   });
 
-  test("深田恭子のカップ数が正しいこと", () => {
-    expect(findEntry("深田恭子").cup).toBe("E");
-  });
-
-  test("石原さとみのカップ数が正しいこと", () => {
-    expect(findEntry("石原さとみ").cup).toBe("D");
-  });
-
-  test("新垣結衣のカップ数が正しいこと", () => {
-    expect(findEntry("新垣結衣").cup).toBe("B");
-  });
-
-  test("綾瀬はるかのカップ数が正しいこと", () => {
-    expect(findEntry("綾瀬はるか").cup).toBe("F");
-  });
-
-  test("長澤まさみのカップ数が正しいこと", () => {
-    expect(findEntry("長澤まさみ").cup).toBe("F");
-  });
-
-  test("菜々緒のカップ数が正しいこと", () => {
-    expect(findEntry("菜々緒").cup).toBe("B");
-  });
-
-  test("今田美桜のカップ数が正しいこと", () => {
-    expect(findEntry("今田美桜").cup).toBe("F");
+  test("女性・男性ともに重複しない15人ずつで構成されている", () => {
+    expect(new Set(femaleEntries.map((entry) => entry.name)).size).toBe(15);
+    expect(new Set(maleEntries.map((entry) => entry.name)).size).toBe(15);
   });
 });
