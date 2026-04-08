@@ -5,7 +5,7 @@ import {
 } from "./ranking.ts";
 import {
   getCupDifference,
-  getEstimatedCupFromBust,
+  getAdjustedEstimatedCup,
   getEstimatedHeight,
 } from "./profile-estimates.ts";
 import { femaleProfilePool, maleProfilePool } from "./source-profiles.ts";
@@ -18,13 +18,13 @@ import {
 } from "./statistics.ts";
 
 const RANKING_LIMIT = 20;
-const ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G"] as const;
+const ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
 function buildFemaleBaseEntry(
   profile: (typeof femaleProfilePool)[number]
 ): Omit<FemaleRankingEntry, "score"> {
   const estimatedHeight = getEstimatedHeight(profile.actualHeight, profile.name);
-  const estimatedCup = getEstimatedCupFromBust(profile.bust);
+  const estimatedCup = getAdjustedEstimatedCup(profile.bust, profile.cup);
 
   return {
     ...profile,
