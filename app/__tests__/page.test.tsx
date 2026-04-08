@@ -6,183 +6,12 @@ import {
   within,
 } from "@testing-library/react";
 import Home from "@/app/page";
+import rankingData from "../../public/data/ranking.json";
 
 const originalNodeEnv = process.env.NODE_ENV;
 const originalFetch = global.fetch;
 
-const mockRankingData = {
-  female: [
-    {
-      category: "silhouette",
-      title: "シルエットバランス偏差値",
-      ranking: [
-        {
-          name: "深田恭子",
-          score: 73,
-          image: "/images/fukada_kyoko.jpg",
-          cup: "F",
-        },
-        {
-          name: "石原さとみ",
-          score: 71,
-          image: "/images/ishihara_satomi.jpg",
-          cup: "D",
-        },
-        {
-          name: "佐々木希",
-          score: 69,
-          image: "/images/sasaki_nozomi.jpg",
-          cup: "C",
-        },
-        {
-          name: "新垣結衣",
-          score: 67,
-          image: "/images/aragaki_yui.jpg",
-          cup: "C",
-        },
-        {
-          name: "綾瀬はるか",
-          score: 65,
-          image: "/images/ayase_haruka.jpg",
-          cup: "G",
-        },
-      ],
-    },
-    {
-      category: "upperBody",
-      title: "上半身バランス偏差値",
-      ranking: [
-        {
-          name: "長澤まさみ",
-          score: 72,
-          image: "/images/nagasawa_masami.jpg",
-          cup: "D",
-        },
-        {
-          name: "北川景子",
-          score: 70,
-          image: "/images/kitagawa_keiko.jpg",
-          cup: "C",
-        },
-        {
-          name: "広瀬すず",
-          score: 68,
-          image: "/images/hirose_suzu.jpg",
-          cup: "D",
-        },
-        {
-          name: "橋本環奈",
-          score: 66,
-          image: "/images/hashimoto_kanna.jpg",
-          cup: "E",
-        },
-        {
-          name: "浜辺美波",
-          score: 64,
-          image: "/images/hamabe_minami.jpg",
-          cup: "C",
-        },
-      ],
-    },
-    {
-      category: "proportion",
-      title: "プロポーション調和スコア",
-      ranking: [
-        { name: "菜々緒", score: 74, image: "/images/nanao.jpg", cup: "E" },
-        {
-          name: "中条あやみ",
-          score: 71,
-          image: "/images/nakajo_ayami.jpg",
-          cup: "C",
-        },
-        { name: "森星", score: 69, image: "/images/mori_hikari.jpg", cup: "C" },
-        {
-          name: "今田美桜",
-          score: 67,
-          image: "/images/imada_mio.jpg",
-          cup: "E",
-        },
-        {
-          name: "藤田ニコル",
-          score: 65,
-          image: "/images/fujita_nicole.jpg",
-          cup: "E",
-        },
-      ],
-    },
-  ],
-  male: [
-    {
-      category: "silhouette",
-      title: "シルエットバランス偏差値",
-      ranking: [
-        {
-          name: "竹野内豊",
-          score: 74,
-          image: "/images/takenouchi_yutaka.jpg",
-        },
-        {
-          name: "福山雅治",
-          score: 72,
-          image: "/images/fukuyama_masaharu.jpg",
-        },
-        { name: "向井理", score: 70, image: "/images/mukai_osamu.jpg" },
-        { name: "玉木宏", score: 68, image: "/images/tamaki_hiroshi.jpg" },
-        { name: "斎藤工", score: 66, image: "/images/saito_takumi.jpg" },
-      ],
-    },
-    {
-      category: "upperBody",
-      title: "上半身バランス偏差値",
-      ranking: [
-        {
-          name: "鈴木亮平",
-          score: 73,
-          image: "/images/suzuki_redactedi.jpg",
-        },
-        {
-          name: "西島秀俊",
-          score: 71,
-          image: "/images/nishijima_hidetoshi.jpg",
-        },
-        {
-          name: "山田孝之",
-          score: 69,
-          image: "/images/yamada_takayuki.jpg",
-        },
-        {
-          name: "松坂桃李",
-          score: 67,
-          image: "/images/matsuzaka_tori.jpg",
-        },
-        { name: "佐藤健", score: 65, image: "/images/sato_takeru.jpg" },
-      ],
-    },
-    {
-      category: "proportion",
-      title: "プロポーション調和スコア",
-      ranking: [
-        {
-          name: "岩田剛典",
-          score: 72,
-          image: "/images/iwata_takanori.jpg",
-        },
-        { name: "吉沢亮", score: 70, image: "/images/yoshizawa_ryo.jpg" },
-        {
-          name: "中村倫也",
-          score: 68,
-          image: "/images/nakamura_tomoya.jpg",
-        },
-        { name: "田中圭", score: 66, image: "/images/tanaka_kei.jpg" },
-        {
-          name: "横浜流星",
-          score: 64,
-          image: "/images/yokohama_ryusei.jpg",
-        },
-      ],
-    },
-  ],
-};
+const mockRankingData = rankingData;
 
 const renderHome = () => render(<Home />);
 
@@ -429,17 +258,18 @@ describe("Home (Ranking Page)", () => {
       renderHome();
       await waitForFemaleSilhouette();
 
-      expect(screen.getByText("Fカップ")).toBeInTheDocument();
+      expect(screen.getByText("Eカップ")).toBeInTheDocument();
       expect(screen.getByText("Dカップ")).toBeInTheDocument();
-      expect(screen.getAllByText("Cカップ")).toHaveLength(2);
-      expect(screen.getByText("Gカップ")).toBeInTheDocument();
+      expect(screen.getByText("Cカップ")).toBeInTheDocument();
+      expect(screen.getByText("Bカップ")).toBeInTheDocument();
+      expect(screen.getByText("Fカップ")).toBeInTheDocument();
     });
 
     test("カップ数バッジにpink系のスタイルが適用されていること", async () => {
       renderHome();
       await waitForFemaleSilhouette();
 
-      expect(screen.getByText("Fカップ")).toHaveClass(
+      expect(screen.getByText("Eカップ")).toHaveClass(
         "bg-pink-100",
         "text-pink-700"
       );
@@ -453,7 +283,20 @@ describe("Home (Ranking Page)", () => {
 
       const row = screen.getByText("長澤まさみ").parentElement;
       expect(row).not.toBeNull();
-      expect(within(row as HTMLElement).getByText("Dカップ")).toBeInTheDocument();
+      expect(within(row as HTMLElement).getByText("Fカップ")).toBeInTheDocument();
+    });
+
+    test("非公表のカップ数バッジは表示されないこと", async () => {
+      renderHome();
+      await waitForFemaleSilhouette();
+
+      clickCategoryTab("上半身バランス偏差値");
+
+      const row = screen.getByText("北川景子").parentElement;
+      expect(row).not.toBeNull();
+      expect(
+        within(row as HTMLElement).queryByText(/カップ$/)
+      ).not.toBeInTheDocument();
     });
 
     test("プロポーションタブでもカップ数が表示されること", async () => {
@@ -464,7 +307,7 @@ describe("Home (Ranking Page)", () => {
 
       const row = screen.getByText("菜々緒").parentElement;
       expect(row).not.toBeNull();
-      expect(within(row as HTMLElement).getByText("Eカップ")).toBeInTheDocument();
+      expect(within(row as HTMLElement).getByText("Bカップ")).toBeInTheDocument();
     });
 
     test("男性から女性に戻すとカップ数が再表示されること", async () => {
@@ -477,7 +320,7 @@ describe("Home (Ranking Page)", () => {
       clickGenderTab("女性");
 
       expect(await screen.findByText("深田恭子")).toBeInTheDocument();
-      expect(screen.getByText("Fカップ")).toBeInTheDocument();
+      expect(screen.getByText("Eカップ")).toBeInTheDocument();
     });
   });
 

@@ -4,33 +4,33 @@
       "category": "silhouette",
       "title": "シルエットバランス偏差値",
       "ranking": [
-        { "name": "深田恭子", "score": 73, "image": "/images/fukada_kyoko.jpg", "cup": "F" },
+        { "name": "深田恭子", "score": 73, "image": "/images/fukada_kyoko.jpg", "cup": "E" },
         { "name": "石原さとみ", "score": 71, "image": "/images/ishihara_satomi.jpg", "cup": "D" },
         { "name": "佐々木希", "score": 69, "image": "/images/sasaki_nozomi.jpg", "cup": "C" },
-        { "name": "新垣結衣", "score": 67, "image": "/images/aragaki_yui.jpg", "cup": "C" },
-        { "name": "綾瀬はるか", "score": 65, "image": "/images/ayase_haruka.jpg", "cup": "G" }
+        { "name": "新垣結衣", "score": 67, "image": "/images/aragaki_yui.jpg", "cup": "B" },
+        { "name": "綾瀬はるか", "score": 65, "image": "/images/ayase_haruka.jpg", "cup": "F" }
       ]
     },
     {
       "category": "upperBody",
       "title": "上半身バランス偏差値",
       "ranking": [
-        { "name": "長澤まさみ", "score": 72, "image": "/images/nagasawa_masami.jpg", "cup": "D" },
-        { "name": "北川景子", "score": 70, "image": "/images/kitagawa_keiko.jpg", "cup": "C" },
-        { "name": "広瀬すず", "score": 68, "image": "/images/hirose_suzu.jpg", "cup": "D" },
-        { "name": "橋本環奈", "score": 66, "image": "/images/hashimoto_kanna.jpg", "cup": "E" },
-        { "name": "浜辺美波", "score": 64, "image": "/images/hamabe_minami.jpg", "cup": "C" }
+        { "name": "長澤まさみ", "score": 72, "image": "/images/nagasawa_masami.jpg", "cup": "F" },
+        { "name": "北川景子", "score": 70, "image": "/images/kitagawa_keiko.jpg", "cup": "非公表" },
+        { "name": "広瀬すず", "score": 68, "image": "/images/hirose_suzu.jpg", "cup": "非公表" },
+        { "name": "橋本環奈", "score": 66, "image": "/images/hashimoto_kanna.jpg", "cup": "非公表" },
+        { "name": "浜辺美波", "score": 64, "image": "/images/hamabe_minami.jpg", "cup": "B" }
       ]
     },
     {
       "category": "proportion",
       "title": "プロポーション調和スコア",
       "ranking": [
-        { "name": "菜々緒", "score": 74, "image": "/images/nanao.jpg", "cup": "E" },
-        { "name": "中条あやみ", "score": 71, "image": "/images/nakajo_ayami.jpg", "cup": "C" },
+        { "name": "菜々緒", "score": 74, "image": "/images/nanao.jpg", "cup": "B" },
+        { "name": "中条あやみ", "score": 71, "image": "/images/nakajo_ayami.jpg", "cup": "非公表" },
         { "name": "森星", "score": 69, "image": "/images/mori_hikari.jpg", "cup": "C" },
-        { "name": "今田美桜", "score": 67, "image": "/images/imada_mio.jpg", "cup": "E" },
-        { "name": "藤田ニコル", "score": 65, "image": "/images/fujita_nicole.jpg", "cup": "E" }
+        { "name": "今田美桜", "score": 67, "image": "/images/imada_mio.jpg", "cup": "F" },
+        { "name": "藤田ニコル", "score": 65, "image": "/images/fujita_nicole.jpg", "cup": "非公表" }
       ]
     }
   ],

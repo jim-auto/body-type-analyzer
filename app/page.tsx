@@ -203,7 +203,9 @@ export default function Home() {
                     <span className="font-semibold text-slate-700">
                       {entry.name}
                     </span>
-                    {gender === "female" && entry.cup ? (
+                    {gender === "female" &&
+                    entry.cup &&
+                    entry.cup !== "非公表" ? (
                       <span className="rounded bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-700">
                         {entry.cup}カップ
                       </span>
