@@ -1,6 +1,7 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import AnalyzePage from "@/app/analyze/page";
+import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 import {
   AI_LOADING_MESSAGES,
   DIAGNOSIS_DISCLAIMERS,
@@ -77,6 +78,7 @@ const mockCreateObjectUrl = jest.fn(() => "blob:preview-url");
 const mockRevokeObjectUrl = jest.fn();
 
 const renderPage = () => render(<AnalyzePage />);
+const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 
 const flushPromises = async () => {
   await act(async () => {
@@ -138,6 +140,35 @@ afterEach(() => {
 });
 
 describe("AnalyzePage", () => {
+  test("モデル性能が公開表示される", () => {
+    renderPage();
+    const performanceSection = screen.getByRole("region", { name: "モデル性能" });
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "モデル性能" })
+    ).toBeInTheDocument();
+    expect(
+      within(performanceSection).getByText((_, element) =>
+        element?.tagName === "P" &&
+        (element.textContent?.includes(
+          `公開プロフィール画像 ${DIAGNOSIS_MODEL_METRICS.trainingCount} 枚`
+        ) ?? false)
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.height.within2Rate))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate))
+    ).toBeInTheDocument();
+  });
+
   test("AI診断ページタイトルが表示される", () => {
     renderPage();
 
