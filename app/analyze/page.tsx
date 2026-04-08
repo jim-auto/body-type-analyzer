@@ -53,35 +53,28 @@ function formatCoverageText(
   return `${Math.round(rate * 10)}割が±${formatErrorBound(maxError)}${unit}以内`;
 }
 
-const PERFORMANCE_HIGHLIGHTS = [
+const PERFORMANCE_SUMMARIES = [
   {
-    label: `身長は${formatCoverageText(
-      DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7,
-      DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0,
-      "cm"
-    )}`,
-    value: formatRate(
-      DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7
-    ),
-    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`,
+    title: "身長",
+    value: `±${formatErrorBound(
+      DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0
+    )}cm`,
+    summary: `${Math.round(
+      (DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7) * 10
+    )}割がこの範囲`,
+    exact: `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate)}`,
+    validation: `検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`,
   },
   {
-    label: `カップは${formatCoverageText(
-      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.rate ?? 0.7,
-      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0,
-      "カップ"
-    )}`,
-    value: formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate),
-    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`,
-  },
-  {
-    label: "カップが完全一致",
-    value: formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate),
-    detail: formatCoverageText(
-      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.rate ?? 0.7,
-      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0,
-      "カップ"
-    ),
+    title: "カップ",
+    value: `±${formatErrorBound(
+      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0
+    )}カップ`,
+    summary: `${Math.round(
+      (DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.rate ?? 0.7) * 10
+    )}割がこの範囲`,
+    exact: `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate)}`,
+    validation: `検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`,
   },
 ] as const;
 
@@ -312,15 +305,27 @@ export default function AnalyzePage() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {PERFORMANCE_HIGHLIGHTS.map((item) => (
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {PERFORMANCE_SUMMARIES.map((item) => (
               <article
-                key={item.label}
-                className="rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-5 py-5"
+                key={item.title}
+                className="rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-6 py-6"
               >
-                <p className="text-sm font-semibold text-slate-500">{item.label}</p>
-                <p className="mt-3 text-3xl font-black text-slate-900">{item.value}</p>
-                <p className="mt-2 text-sm text-slate-500">{item.detail}</p>
+                <p className="text-sm font-semibold tracking-[0.2em] text-slate-400">
+                  {item.title}
+                </p>
+                <p className="mt-3 text-4xl font-black text-slate-900">{item.value}</p>
+                <p className="mt-2 text-base font-semibold text-slate-700">
+                  {item.summary}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-500">
+                  <span className="rounded-full bg-slate-100 px-3 py-1">
+                    {item.exact}
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1">
+                    {item.validation}
+                  </span>
+                </div>
               </article>
             ))}
           </div>

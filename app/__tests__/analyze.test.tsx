@@ -162,14 +162,32 @@ describe("AnalyzePage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        formatRate(DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7)
+        `±${
+          Number.isInteger(DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0)
+            ? `${DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0}`
+            : (DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0).toFixed(1)
+        }cm`
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate))
+      screen.getByText(
+        `±${
+          Number.isInteger(DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0)
+            ? `${DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0}`
+            : (DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0).toFixed(1)
+        }カップ`
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("7割がこの範囲")).toHaveLength(2);
+    expect(
+      screen.getByText(
+        `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate)}`
+      )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate))
+      screen.getByText(
+        `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate)}`
+      )
     ).toBeInTheDocument();
     expect(
       screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`)
@@ -177,6 +195,7 @@ describe("AnalyzePage", () => {
     expect(
       screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`)
     ).toBeInTheDocument();
+    expect(screen.queryByText("身長は7割が±5cm以内")).not.toBeInTheDocument();
     expect(screen.queryByText("身長は8割が±6cm以内")).not.toBeInTheDocument();
     expect(
       within(performanceSection).getByText((_, element) =>
