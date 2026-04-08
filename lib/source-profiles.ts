@@ -435,7 +435,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "スザンヌ",
-    image: "https://ui-avatars.com/api/?name=%E3%82%B9%E3%82%B6%E3%83%B3%E3%83%8C&size=300&background=random&color=fff&bold=true",
+    image: "/images/ov_e382b9e382b6_36ca17f1.jpg",
     actualHeight: 166,
     bust: 85,
     cup: "D",
@@ -863,7 +863,7 @@ export const maleProfilePool: MaleProfileSource[] = [
   },
   {
     name: "松本潤",
-    image: "https://ui-avatars.com/api/?name=%E6%9D%BE%E6%9C%AC%E6%BD%A4&size=300&background=random&color=fff&bold=true",
+    image: "/images/ov_e69dbee69cac_e5cd1066.jpg",
     actualHeight: 173,
   },
   {
