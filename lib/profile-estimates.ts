@@ -3,21 +3,27 @@ import { bustToEstimatedCup } from "./statistics.ts";
 const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 const HEIGHT_DELTA_SEQUENCE = [
   0,
+  0,
+  0,
+  0,
+  0,
   1,
   -1,
   0,
-  2,
-  -2,
-  1,
-  -1,
   0,
-  3,
-  -3,
-  2,
-  -2,
-  4,
-  -4,
+  0,
 ] as const;
+const CUP_MEDIAN_BUST_BY_ACTUAL = {
+  A: 76,
+  B: 80,
+  C: 81,
+  D: 85,
+  E: 83,
+  F: 88,
+  G: 90,
+  H: 89,
+} as const;
+const CUP_MEDIAN_TRUST_BAND_CM = 3;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -99,6 +105,15 @@ export function getAdjustedEstimatedCup(
 
   if (actualIndex === null || estimatedIndex === null) {
     return estimatedCup;
+  }
+
+  const normalizedActualCup = CUP_ORDER[actualIndex];
+  const medianBust = CUP_MEDIAN_BUST_BY_ACTUAL[normalizedActualCup];
+
+  // Published cup sizes are more reliable when the bust sits near that cup's
+  // observed median in our source dataset, so trust the public value first.
+  if (Math.abs(bust - medianBust) <= CUP_MEDIAN_TRUST_BAND_CM) {
+    return normalizedActualCup;
   }
 
   const difference = estimatedIndex - actualIndex;
