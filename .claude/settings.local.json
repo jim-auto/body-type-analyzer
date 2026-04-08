@@ -15,7 +15,17 @@
       "Bash(gh run:*)",
       "Bash(rm:*)",
       "Bash(rm -f components/ImageUploader.tsx components/AnalysisResult.tsx components/LoadingAnimation.tsx components/DisclaimerNotes.tsx components/ShareButtons.tsx components/SafetyNotice.tsx components/SimilarCelebrities.tsx lib/analyzer.ts lib/share.ts lib/similarity.ts)",
-      "Bash(rm -f components/__tests__/ImageUploader.test.tsx components/__tests__/AnalysisResult.test.tsx components/__tests__/LoadingAnimation.test.tsx components/__tests__/DisclaimerNotes.test.tsx components/__tests__/ShareButtons.test.tsx components/__tests__/SafetyNotice.test.tsx components/__tests__/SimilarCelebrities.test.tsx lib/__tests__/analyzer.test.ts lib/__tests__/share.test.ts lib/__tests__/similarity.test.ts)"
+      "Bash(rm -f components/__tests__/ImageUploader.test.tsx components/__tests__/AnalysisResult.test.tsx components/__tests__/LoadingAnimation.test.tsx components/__tests__/DisclaimerNotes.test.tsx components/__tests__/ShareButtons.test.tsx components/__tests__/SafetyNotice.test.tsx components/__tests__/SimilarCelebrities.test.tsx lib/__tests__/analyzer.test.ts lib/__tests__/share.test.ts lib/__tests__/similarity.test.ts)",
+      "Bash(where cursor:*)",
+      "Bash(cursor --help)",
+      "Bash(cursor agent:*)",
+      "Bash(where agent:*)",
+      "Bash(npx codex:*)",
+      "Bash(codex --help)",
+      "Bash(codex exec:*)",
+      "Bash(ls public/images/*.jpg)",
+      "Bash(curl -s --max-time 5 \"https://api.openai.com\")",
+      "Bash(node:*)"
     ]
   }
 }
