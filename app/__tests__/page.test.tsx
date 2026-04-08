@@ -81,6 +81,9 @@ describe("Home (Ranking Page)", () => {
     expect(
       screen.getByRole("link", { name: "AI診断をはじめる" })
     ).toHaveAttribute("href", "/analyze");
+    expect(
+      screen.getByRole("link", { name: "モデル性能を見る" })
+    ).toHaveAttribute("href", "/analyze#model-performance");
   });
 
   test("初期表示で女性の style カテゴリが表示される", () => {

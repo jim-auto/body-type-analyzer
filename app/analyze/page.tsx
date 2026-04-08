@@ -271,6 +271,7 @@ export default function AnalyzePage() {
         </section>
 
         <section
+          id="model-performance"
           aria-label="モデル性能"
           className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8"
         >
