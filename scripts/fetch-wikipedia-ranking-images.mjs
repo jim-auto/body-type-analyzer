@@ -17,7 +17,7 @@ const TARGETS = [
     enTitles: ["Waka Inoue"],
   },
   { name: "泉里香", filename: "izumi_rika" },
-  { name: "おのののか", filename: "onononoka" },
+  { name: "おのののか", filename: "ono_nonoka" },
   {
     name: "SHIHO",
     filename: "shiho",
