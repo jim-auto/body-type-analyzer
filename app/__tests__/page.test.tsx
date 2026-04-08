@@ -6,10 +6,6 @@ import {
   getMismatchEmoji,
 } from "@/lib/profile-estimates";
 import type { RankingData } from "@/lib/ranking";
-import {
-  CUP_DISTRIBUTION_LABEL,
-  calculateCupDeviation,
-} from "@/lib/statistics";
 import rankingData from "../../public/data/ranking.json";
 
 const originalNodeEnv = process.env.NODE_ENV;
@@ -18,10 +14,25 @@ const originalFetch = global.fetch;
 const mockRankingData = rankingData as RankingData;
 const mutableEnv = process.env as Record<string, string | undefined>;
 
+const femaleStyleCategory = mockRankingData.female.find(
+  (entry) => entry.category === "style"
+)!;
+const maleStyleCategory = mockRankingData.male.find(
+  (entry) => entry.category === "style"
+)!;
+const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
+  entry.image.startsWith("/")
+)!;
+const femaleStyleRemoteImageEntry = femaleStyleCategory.ranking.find((entry) =>
+  entry.image.startsWith("https://")
+)!;
+
 const renderHome = () => render(<Home />);
 
-const waitForFemaleSilhouette = async () => {
-  expect(await screen.findByText("菜々緒")).toBeInTheDocument();
+const waitForFemaleStyle = async () => {
+  expect(
+    await screen.findByText(femaleStyleCategory.ranking[0].name)
+  ).toBeInTheDocument();
 };
 
 const clickGenderTab = (label: "女性" | "男性") => {
@@ -80,11 +91,9 @@ describe("Home (Ranking Page)", () => {
 
   test("ページタイトルとサブタイトルが表示される", async () => {
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
-    expect(
-      screen.getByText("芸能人スタイルランキング")
-    ).toBeInTheDocument();
+    expect(screen.getByText("芸能人スタイルランキング")).toBeInTheDocument();
     expect(
       screen.getByText("芸能人のスタイルをAIが偏差値で格付け！")
     ).toBeInTheDocument();
@@ -92,7 +101,7 @@ describe("Home (Ranking Page)", () => {
 
   test("AI診断への CTA が表示される", async () => {
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
     expect(
       screen.getByRole("heading", {
@@ -105,87 +114,93 @@ describe("Home (Ranking Page)", () => {
     ).toHaveAttribute("href", "/analyze");
   });
 
-  test("初期表示で女性のシルエットカテゴリが表示される", async () => {
+  test("初期表示で女性の style カテゴリが表示される", async () => {
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: "シルエットバランス偏差値",
+        name: femaleStyleCategory.title,
       })
     ).toBeInTheDocument();
-    expect(screen.getByText("新垣結衣")).toBeInTheDocument();
-    expect(screen.getByText("長澤まさみ")).toBeInTheDocument();
+    expect(screen.getByText(femaleStyleCategory.ranking[0].name)).toBeInTheDocument();
+    expect(screen.getByText(femaleStyleCategory.ranking[1].name)).toBeInTheDocument();
   });
 
-  test("女性ランキングでカップ数と身長が表示される", async () => {
-    renderHome();
-    await waitForFemaleSilhouette();
+  test("女性 style ランキングでカップ数と身長と偏差値が表示される", async () => {
+    const entryWithCup = femaleStyleCategory.ranking.find((entry) => entry.cup !== null)!;
 
-    expect(screen.getByText("Bカップ")).toBeInTheDocument();
-    expect(screen.getByText("172cm")).toBeInTheDocument();
-    expect(screen.getByText("偏差値76")).toBeInTheDocument();
+    renderHome();
+    await waitForFemaleStyle();
+
+    expect(screen.getByText(entryWithCup.name)).toBeInTheDocument();
+    expect(screen.getAllByText(`${entryWithCup.cup}カップ`).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(`${entryWithCup.actualHeight}cm`).length).toBeGreaterThan(
+      0
+    );
+    expect(screen.getAllByText(`偏差値${entryWithCup.score}`).length).toBeGreaterThan(0);
   });
 
-  test("女性ランキングでAI推定カップ表示がされる", async () => {
+  test("女性 style ランキングでAI推定表示がされる", async () => {
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
     expect(screen.getAllByText(/^AI推定:/)).toHaveLength(20);
-    expect(screen.getAllByText(/AI推定: Bカップ/).length).toBeGreaterThan(0);
   });
 
-  test("女性の上半身タブに切り替えると身長付きで表示される", async () => {
+  test("カテゴリタブ数が女性3つ・男性2つになっている", async () => {
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
-    clickCategoryTab("上半身バランス偏差値");
+    expect(screen.getAllByRole("button", { name: /ランキング$/ })).toHaveLength(3);
 
-    expect(await screen.findByText("原幹恵")).toBeInTheDocument();
-    expect(screen.getAllByText("163cm").length).toBeGreaterThan(0);
+    clickGenderTab("男性");
+
+    expect(await screen.findByText(maleStyleCategory.ranking[0].name)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /ランキング$/ })).toHaveLength(2);
     expect(
-      screen.getAllByText(`偏差値${calculateCupDeviation("G")}`).length
-    ).toBeGreaterThan(0);
-    expect(screen.getByText(CUP_DISTRIBUTION_LABEL)).toBeInTheDocument();
+      screen.queryByRole("button", { name: "AI推定カップ数ランキング" })
+    ).not.toBeInTheDocument();
   });
 
-  test("男性に切り替えると男性ランキングの身長が表示される", async () => {
+  test("男性に切り替えると男性 style ランキングが表示される", async () => {
+    const topMaleEntry = maleStyleCategory.ranking[0];
+
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
     clickGenderTab("男性");
 
-    expect(await screen.findByText("鈴木亮平")).toBeInTheDocument();
-    expect(screen.getByText("186cm")).toBeInTheDocument();
-    expect(screen.getByText("偏差値76")).toBeInTheDocument();
-  });
-
-  test("男性ランキングではカップ数が表示されないがAI推定身長は表示される", async () => {
-    renderHome();
-    await waitForFemaleSilhouette();
-
-    clickGenderTab("男性");
-
-    expect(await screen.findByText("鈴木亮平")).toBeInTheDocument();
-    expect(screen.queryByText(/カップ$/)).not.toBeInTheDocument();
+    expect(await screen.findByText(topMaleEntry.name)).toBeInTheDocument();
+    expect(screen.getAllByText(`${topMaleEntry.actualHeight}cm`).length).toBeGreaterThan(
+      0
+    );
+    expect(screen.getAllByText(`偏差値${topMaleEntry.score}`).length).toBeGreaterThan(
+      0
+    );
     expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(20);
   });
 
   test("男女切り替え時にカテゴリタブが最初に戻る", async () => {
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
-    clickCategoryTab("上半身バランス偏差値");
-    expect(await screen.findByText("原幹恵")).toBeInTheDocument();
+    clickCategoryTab("AI推定カップ数ランキング");
+    expect(
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "AI推定カップ数ランキング",
+      })
+    ).toBeInTheDocument();
 
     clickGenderTab("男性");
 
-    expect(await screen.findByText("鈴木亮平")).toBeInTheDocument();
+    expect(await screen.findByText(maleStyleCategory.ranking[0].name)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: "シルエットバランス偏差値",
+        name: "スタイル偏差値ランキング",
       })
     ).toBeInTheDocument();
   });
@@ -201,8 +216,14 @@ describe("Home (Ranking Page)", () => {
       );
     });
 
-    const image = await screen.findByAltText("菜々緒");
-    expect(image).toHaveAttribute("src", "/body-type-analyzer/images/nanao.jpg");
+    const localImage = await screen.findByAltText(femaleStyleLocalImageEntry.name);
+    expect(localImage).toHaveAttribute(
+      "src",
+      `/body-type-analyzer${femaleStyleLocalImageEntry.image}`
+    );
+
+    const remoteImage = await screen.findByAltText(femaleStyleRemoteImageEntry.name);
+    expect(remoteImage).toHaveAttribute("src", femaleStyleRemoteImageEntry.image);
   });
 
   test("推定身長タブをクリックすると cm 表示になる", async () => {
@@ -210,7 +231,7 @@ describe("Home (Ranking Page)", () => {
     const topEntry = estimatedHeightCategory.ranking[0];
 
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
     clickCategoryTab("AI推定身長ランキング");
 
@@ -237,12 +258,14 @@ describe("Home (Ranking Page)", () => {
           )}`;
 
     renderHome();
-    await waitForFemaleSilhouette();
+    await waitForFemaleStyle();
 
     clickCategoryTab("AI推定カップ数ランキング");
 
     expect(await screen.findByText(topEntry.name)).toBeInTheDocument();
-    expect(screen.getAllByText(`${topEntry.estimatedCup}カップ`).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(`${topEntry.estimatedCup}カップ`).length
+    ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(
         `実際: ${topEntry.cup ? `${topEntry.cup}カップ` : "非公表"}（差: ${cupDiffLabel}）`

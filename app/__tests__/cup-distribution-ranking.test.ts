@@ -1,59 +1,57 @@
-import rankingData from "../../public/data/ranking.json";
-import { getEstimatedCupFromBust } from "@/lib/profile-estimates";
+import rankingDataJson from "../../public/data/ranking.json";
 import type { RankingData } from "@/lib/ranking";
 import { femaleProfilePool } from "@/lib/source-profiles";
-import { calculateCupDeviation } from "@/lib/statistics";
+import {
+  FEMALE_STATS,
+  calculateCupDeviation,
+  calculateDeviation,
+} from "@/lib/statistics";
 
-const femaleCategories = (rankingData as RankingData).female;
+const rankingData = rankingDataJson as RankingData;
+const styleRanking =
+  rankingData.female.find((category) => category.category === "style")?.ranking ?? [];
+const estimatedHeightRanking =
+  rankingData.female.find((category) => category.category === "estimatedHeight")
+    ?.ranking ?? [];
 
-describe("female upperBody ranking", () => {
-  test("uses explicit cup data when available", () => {
-    const explicitCupProfile = femaleProfilePool.find((entry) => entry.cup === "G");
-    const upperBodyRanking =
-      femaleCategories.find((category) => category.category === "upperBody")
-        ?.ranking ?? [];
-    const explicitCupEntry = upperBodyRanking.find(
-      (entry) => entry.name === explicitCupProfile?.name
-    );
+describe("female cup distribution and style ranking", () => {
+  test("女性100人のカップ分布が目標値に一致する", () => {
+    const counts = femaleProfilePool.reduce<Record<string, number>>((result, entry) => {
+      result[entry.cup!] = (result[entry.cup!] ?? 0) + 1;
+      return result;
+    }, {});
 
-    expect(explicitCupProfile).toBeDefined();
-    expect(explicitCupEntry).toBeDefined();
-    expect(explicitCupEntry?.score).toBe(
-      calculateCupDeviation(explicitCupProfile!.cup!)
-    );
+    expect(counts).toEqual({
+      A: 7,
+      B: 22,
+      C: 26,
+      D: 22,
+      E: 13,
+      F: 6,
+      G: 3,
+      H: 1,
+    });
   });
 
-  test("falls back to estimated cup when only bust is available", () => {
-    const upperBodyRanking =
-      femaleCategories.find((category) => category.category === "upperBody")
-        ?.ranking ?? [];
-    const estimatedCupEntry = upperBodyRanking.find(
-      (entry) => entry.cup === null && entry.estimatedCup !== null
-    );
-    const estimatedCupProfile = femaleProfilePool.find(
-      (entry) => entry.name === estimatedCupEntry?.name
-    );
-
-    expect(estimatedCupEntry).toBeDefined();
-    expect(estimatedCupProfile).toBeDefined();
-    expect(estimatedCupEntry?.score).toBe(
-      calculateCupDeviation(getEstimatedCupFromBust(estimatedCupProfile!.bust)!)
-    );
+  test("女性 style ランキングの score は身長偏差値とカップ偏差値の平均になる", () => {
+    styleRanking.forEach((entry) => {
+      expect(entry.score).toBe(
+        Math.round(
+          (
+            calculateDeviation(
+              entry.actualHeight,
+              FEMALE_STATS.height.mean,
+              FEMALE_STATS.height.stddev
+            ) + calculateCupDeviation(entry.cup!)
+          ) / 2
+        )
+      );
+    });
   });
 
-  test("keeps large cups near the top of the ranking", () => {
-    const upperBodyRanking =
-      femaleCategories.find((category) => category.category === "upperBody")
-        ?.ranking ?? [];
-    const topThreeCups = upperBodyRanking
-      .slice(0, 3)
-      .map((entry) => entry.cup ?? entry.estimatedCup);
-    const hCupEntry = upperBodyRanking.find((entry) => entry.cup === "H");
-    const cCupEntry = upperBodyRanking.find((entry) => entry.cup === "C");
-
-    expect(topThreeCups.some((cup) => cup === "G" || cup === "H")).toBe(true);
-    expect(hCupEntry).toBeDefined();
-    expect(cCupEntry).toBeDefined();
-    expect(hCupEntry?.score).toBeGreaterThan(cCupEntry!.score);
+  test("女性 style ランキングは AI推定身長ランキングと別順位になる", () => {
+    expect(styleRanking.map((entry) => entry.name)).not.toEqual(
+      estimatedHeightRanking.map((entry) => entry.name)
+    );
   });
 });

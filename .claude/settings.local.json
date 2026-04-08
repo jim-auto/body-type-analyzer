@@ -26,7 +26,8 @@
       "Bash(ls public/images/*.jpg)",
       "Bash(curl -s --max-time 5 \"https://api.openai.com\")",
       "Bash(node:*)",
-      "WebFetch(domain:x.com)"
+      "WebFetch(domain:x.com)",
+      "Bash(powershell -Command \"Get-Date -Format 'HH:mm'\")"
     ]
   }
 }
