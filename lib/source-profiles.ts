@@ -253,7 +253,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "しほの涼",
-    image: "https://ui-avatars.com/api/?name=%E3%81%97%E3%81%BB%E3%81%AE%E6%B6%BC&size=300&background=random&color=fff&bold=true",
+    image: "/images/shihono_ryo.jpg",
     actualHeight: 172,
     bust: 83,
     cup: "C",
@@ -337,7 +337,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "磯貝花音",
-    image: "https://ui-avatars.com/api/?name=%E7%A3%AF%E8%B2%9D%E8%8A%B1%E9%9F%B3&size=300&background=random&color=fff&bold=true",
+    image: "/images/isogai_kanon.jpg",
     actualHeight: 162,
     bust: 82,
     cup: "C",
@@ -407,7 +407,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "伊原六花",
-    image: "https://ui-avatars.com/api/?name=%E4%BC%8A%E5%8E%9F%E5%85%AD%E8%8A%B1&size=300&background=random&color=fff&bold=true",
+    image: "/images/ihara_rikka.jpg",
     actualHeight: 160,
     bust: 85,
     cup: "D",
@@ -428,7 +428,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "こもりやさくら",
-    image: "https://ui-avatars.com/api/?name=%E3%81%93%E3%82%82%E3%82%8A%E3%82%84%E3%81%95%E3%81%8F%E3%82%89&size=300&background=random&color=fff&bold=true",
+    image: "/images/komoriya_sakura.jpg",
     actualHeight: 161,
     bust: 82,
     cup: "D",
@@ -610,7 +610,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "おのののか",
-    image: "https://ui-avatars.com/api/?name=%E3%81%8A%E3%81%AE%E3%81%AE%E3%81%AE%E3%81%8B&size=300&background=random&color=fff&bold=true",
+    image: "/images/ono_nonoka.jpg",
     actualHeight: 169,
     bust: 83,
     cup: "E",
@@ -659,7 +659,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "井上和香",
-    image: "https://ui-avatars.com/api/?name=%E4%BA%95%E4%B8%8A%E5%92%8C%E9%A6%99&size=300&background=random&color=fff&bold=true",
+    image: "/images/inoue_waka.jpg",
     actualHeight: 166,
     bust: 88,
     cup: "F",
@@ -788,7 +788,7 @@ export const maleProfilePool: MaleProfileSource[] = [
   },
   {
     name: "伊藤英明",
-    image: "https://ui-avatars.com/api/?name=%E4%BC%8A%E8%97%A4%E8%8B%B1%E6%98%8E&size=300&background=random&color=fff&bold=true",
+    image: "/images/ito_hideaki.jpg",
     actualHeight: 183,
   },
   {
@@ -893,7 +893,7 @@ export const maleProfilePool: MaleProfileSource[] = [
   },
   {
     name: "堤真一",
-    image: "https://ui-avatars.com/api/?name=%E5%A0%A4%E7%9C%9F%E4%B8%80&size=300&background=random&color=fff&bold=true",
+    image: "/images/tsutsumi_shinichi.jpg",
     actualHeight: 179,
   },
   {
@@ -983,7 +983,7 @@ export const maleProfilePool: MaleProfileSource[] = [
   },
   {
     name: "杉野遥亮",
-    image: "https://ui-avatars.com/api/?name=%E6%9D%89%E9%87%8E%E9%81%A5%E4%BA%AE&size=300&background=random&color=fff&bold=true",
+    image: "/images/sugino_yosuke.jpg",
     actualHeight: 185,
   },
   {

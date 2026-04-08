@@ -23,9 +23,6 @@ const maleStyleCategory = mockRankingData.male.find(
 const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
   entry.image.startsWith("/")
 )!;
-const femaleStyleRemoteImageEntry = femaleStyleCategory.ranking.find((entry) =>
-  entry.image.startsWith("https://")
-)!;
 
 const renderHome = () => render(<Home />);
 
@@ -207,6 +204,28 @@ describe("Home (Ranking Page)", () => {
 
   test("productionではfetchと画像にbasePathが付与される", async () => {
     mutableEnv.NODE_ENV = "production";
+    const remoteImageEntry = {
+      ...femaleStyleCategory.ranking[0],
+      name: "Remote Image Test",
+      image: "https://example.com/remote.jpg",
+    };
+    const productionRankingData = JSON.parse(
+      JSON.stringify(mockRankingData)
+    ) as RankingData;
+
+    productionRankingData.female = productionRankingData.female.map((category) =>
+      category.category === "style"
+        ? {
+            ...category,
+            ranking: [...category.ranking, remoteImageEntry],
+          }
+        : category
+    );
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        json: () => Promise.resolve(productionRankingData),
+      })
+    );
 
     renderHome();
 
@@ -222,8 +241,8 @@ describe("Home (Ranking Page)", () => {
       `/body-type-analyzer${femaleStyleLocalImageEntry.image}`
     );
 
-    const remoteImage = await screen.findByAltText(femaleStyleRemoteImageEntry.name);
-    expect(remoteImage).toHaveAttribute("src", femaleStyleRemoteImageEntry.image);
+    const remoteImage = await screen.findByAltText(remoteImageEntry.name);
+    expect(remoteImage).toHaveAttribute("src", remoteImageEntry.image);
   });
 
   test("推定身長タブをクリックすると cm 表示になる", async () => {
