@@ -1,8 +1,8 @@
 import { femaleProfilePool, maleProfilePool } from "./source-profiles.ts";
 import {
-  getAdjustedEstimatedCup,
-  getEstimatedHeight,
-} from "./profile-estimates.ts";
+  getFemaleRankingEstimatedCup,
+  getMaleRankingEstimatedHeight,
+} from "./ranking-estimates.ts";
 import {
   CUP_DISTRIBUTION,
   CUP_DISTRIBUTION_SOURCE,
@@ -112,7 +112,7 @@ export function buildFemaleCupDistributionSummary(): FemaleCupDistributionSummar
   );
   const estimatedCounts = femaleProfilePool.reduce<Record<string, number>>(
     (result, entry) => {
-      const estimatedCup = getAdjustedEstimatedCup(entry.bust, entry.cup);
+      const estimatedCup = getFemaleRankingEstimatedCup(entry);
 
       if (estimatedCup) {
         result[estimatedCup] = (result[estimatedCup] ?? 0) + 1;
@@ -142,7 +142,7 @@ export function buildMaleHeightDistributionSummary(): MaleHeightDistributionSumm
   const total = maleProfilePool.length;
   const publicHeights = maleProfilePool.map((entry) => entry.actualHeight);
   const estimatedHeights = maleProfilePool.map((entry) =>
-    getEstimatedHeight(entry.actualHeight, entry.name)
+    getMaleRankingEstimatedHeight(entry)
   );
 
   return {

@@ -7,37 +7,57 @@ import {
 } from "./diagnosis-model.ts";
 
 const REGION_BOUNDS = {
-  full: [0, 1],
-  top: [0, 0.45],
-  mid: [0.25, 0.75],
-  low: [0.45, 1],
+  full: [0, 0, 1, 1],
+  top: [0, 0, 1, 0.45],
+  mid: [0, 0.25, 1, 0.75],
+  low: [0, 0.45, 1, 1],
+  fullCenter: [0.16, 0, 0.84, 1],
+  topCenter: [0.18, 0.02, 0.82, 0.55],
+  torsoCenter: [0.18, 0.16, 0.82, 0.72],
+  lowCenter: [0.16, 0.45, 0.84, 1],
 } as const;
 
 const HEIGHT_FEATURE_SPECS = [
   [
-    { region: "full", size: 6 },
-    { region: "full", size: 8 },
+    { region: "full", size: 6, mode: "gray" },
+    { region: "full", size: 8, mode: "gray" },
   ],
   [
-    { region: "full", size: 6 },
-    { region: "top", size: 6 },
-    { region: "low", size: 6 },
+    { region: "full", size: 6, mode: "gray" },
+    { region: "top", size: 6, mode: "gray" },
+    { region: "low", size: 6, mode: "gray" },
   ],
-  [{ region: "full", size: 14 }],
+  [{ region: "full", size: 14, mode: "gray" }],
+  [
+    { region: "fullCenter", size: 8, mode: "gray" },
+    { region: "lowCenter", size: 8, mode: "gray" },
+  ],
+  [
+    { region: "fullCenter", size: 12, mode: "profile" },
+    { region: "lowCenter", size: 10, mode: "profile" },
+  ],
 ] as const;
 const CUP_FEATURE_SPECS = [
   [
-    { region: "top", size: 8 },
-    { region: "top", size: 12 },
+    { region: "top", size: 8, mode: "gray" },
+    { region: "top", size: 12, mode: "gray" },
   ],
   [
-    { region: "top", size: 8 },
-    { region: "mid", size: 6 },
+    { region: "top", size: 8, mode: "gray" },
+    { region: "mid", size: 6, mode: "gray" },
+  ],
+  [
+    { region: "topCenter", size: 10, mode: "gray" },
+    { region: "torsoCenter", size: 8, mode: "gray" },
+  ],
+  [
+    { region: "topCenter", size: 12, mode: "profile" },
+    { region: "torsoCenter", size: 10, mode: "profile" },
   ],
 ] as const;
 const SIMILARITY_FEATURE_SPECS = [
-  { region: "full", size: 8 },
-  { region: "top", size: 8 },
+  { region: "full", size: 8, mode: "gray" },
+  { region: "top", size: 8, mode: "gray" },
 ] as const;
 
 export const AI_LOADING_MESSAGES = [
@@ -62,7 +82,8 @@ export const DIAGNOSIS_SHARE_URL =
   "https://jim-auto.github.io/body-type-analyzer/";
 
 type FeatureRegion = keyof typeof REGION_BOUNDS;
-type FeatureSpec = { region: FeatureRegion; size: number };
+type FeatureMode = "gray" | "profile";
+type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
 
 function roundFeature(value: number): number {
   return Math.round(value * 10000) / 10000;
@@ -80,8 +101,13 @@ function drawRegion(
     throw new Error("画像の読み込みに失敗しました");
   }
 
-  const [topRatio, bottomRatio] = REGION_BOUNDS[region];
+  const [leftRatio, topRatio, rightRatio, bottomRatio] = REGION_BOUNDS[region];
+  const sourceLeft = Math.floor(image.naturalWidth * leftRatio);
   const sourceTop = Math.floor(image.naturalHeight * topRatio);
+  const sourceWidth = Math.max(
+    1,
+    Math.floor(image.naturalWidth * rightRatio) - sourceLeft
+  );
   const sourceHeight = Math.max(
     1,
     Math.floor(image.naturalHeight * bottomRatio) - sourceTop
@@ -91,9 +117,9 @@ function drawRegion(
   canvas.height = size;
   context.drawImage(
     image,
-    0,
+    sourceLeft,
     sourceTop,
-    image.naturalWidth,
+    sourceWidth,
     sourceHeight,
     0,
     0,
@@ -119,10 +145,37 @@ function grayscaleFromPixels(pixels: Uint8ClampedArray): number[] {
   return grayscale;
 }
 
+function profileFromGrayscale(grayscale: number[], size: number): number[] {
+  const rows = Array.from({ length: size }, (_, rowIndex) => {
+    const start = rowIndex * size;
+    const row = grayscale.slice(start, start + size);
+    return roundFeature(row.reduce((sum, value) => sum + value, 0) / size);
+  });
+  const columns = Array.from({ length: size }, (_, columnIndex) => {
+    let sum = 0;
+
+    for (let rowIndex = 0; rowIndex < size; rowIndex += 1) {
+      sum += grayscale[rowIndex * size + columnIndex] ?? 0;
+    }
+
+    return roundFeature(sum / size);
+  });
+
+  return [...rows, ...columns];
+}
+
+function extractFeatureBlock(image: HTMLImageElement, spec: FeatureSpec): number[] {
+  const grayscale = grayscaleFromPixels(drawRegion(image, spec.region, spec.size));
+
+  if (spec.mode === "profile") {
+    return profileFromGrayscale(grayscale, spec.size);
+  }
+
+  return grayscale;
+}
+
 function extractFeatures(image: HTMLImageElement, specs: readonly FeatureSpec[]): number[] {
-  return specs.flatMap((spec) =>
-    grayscaleFromPixels(drawRegion(image, spec.region, spec.size))
-  );
+  return specs.flatMap((spec) => extractFeatureBlock(image, spec));
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -151,8 +204,12 @@ export async function extractDiagnosisFeatures(
     heightPrimary: extractFeatures(image, HEIGHT_FEATURE_SPECS[0]),
     heightBalanced: extractFeatures(image, HEIGHT_FEATURE_SPECS[1]),
     heightWide: extractFeatures(image, HEIGHT_FEATURE_SPECS[2]),
+    heightCenter: extractFeatures(image, HEIGHT_FEATURE_SPECS[3]),
+    heightProfile: extractFeatures(image, HEIGHT_FEATURE_SPECS[4]),
     cupPrimary: extractFeatures(image, CUP_FEATURE_SPECS[0]),
     cupSecondary: extractFeatures(image, CUP_FEATURE_SPECS[1]),
+    cupCenter: extractFeatures(image, CUP_FEATURE_SPECS[2]),
+    cupProfile: extractFeatures(image, CUP_FEATURE_SPECS[3]),
     similarity: extractFeatures(image, SIMILARITY_FEATURE_SPECS),
   };
 }

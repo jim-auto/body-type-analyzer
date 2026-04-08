@@ -3,9 +3,9 @@ import {
   buildMaleHeightDistributionSummary,
 } from "@/lib/distributions";
 import {
-  getAdjustedEstimatedCup,
-  getEstimatedHeight,
-} from "@/lib/profile-estimates";
+  getFemaleRankingEstimatedCup,
+  getMaleRankingEstimatedHeight,
+} from "@/lib/ranking-estimates";
 import { femaleProfilePool, maleProfilePool } from "@/lib/source-profiles";
 
 describe("distributions", () => {
@@ -71,7 +71,7 @@ describe("distributions", () => {
     const summary = buildFemaleCupDistributionSummary();
     const expectedCounts = femaleProfilePool.reduce<Record<string, number>>(
       (result, entry) => {
-        const estimatedCup = getAdjustedEstimatedCup(entry.bust, entry.cup);
+        const estimatedCup = getFemaleRankingEstimatedCup(entry);
 
         if (estimatedCup) {
           result[estimatedCup] = (result[estimatedCup] ?? 0) + 1;
@@ -128,7 +128,7 @@ describe("distributions", () => {
     const expectedCounts = [0, 0, 0, 0, 0, 0];
 
     for (const entry of maleProfilePool) {
-      const estimatedHeight = getEstimatedHeight(entry.actualHeight, entry.name);
+      const estimatedHeight = getMaleRankingEstimatedHeight(entry);
 
       if (estimatedHeight < 165) {
         expectedCounts[0] += 1;
