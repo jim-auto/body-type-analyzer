@@ -15,6 +15,7 @@ import {
   diagnose,
   extractDiagnosisFeatures,
 } from "@/lib/image-analyzer";
+import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 
 const MESSAGE_INTERVAL_MS = 1500;
 
@@ -35,6 +36,33 @@ function getConfidenceBarClass(confidence: number): string {
 
   return "bg-gradient-to-r from-amber-400 to-yellow-300";
 }
+
+function formatRate(rate: number): string {
+  return `${(rate * 100).toFixed(1)}%`;
+}
+
+const PERFORMANCE_HIGHLIGHTS = [
+  {
+    label: "身長が完全一致",
+    value: formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate),
+    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`,
+  },
+  {
+    label: "身長が±2cm以内",
+    value: formatRate(DIAGNOSIS_MODEL_METRICS.height.within2Rate),
+    detail: `MAE ${DIAGNOSIS_MODEL_METRICS.height.mae.toFixed(2)}cm`,
+  },
+  {
+    label: "カップが完全一致",
+    value: formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate),
+    detail: `検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`,
+  },
+  {
+    label: "カップが±1以内",
+    value: formatRate(DIAGNOSIS_MODEL_METRICS.cup.within1Rate),
+    detail: `MAE ${DIAGNOSIS_MODEL_METRICS.cup.mae.toFixed(2)}`,
+  },
+] as const;
 
 export default function AnalyzePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -239,6 +267,40 @@ export default function AnalyzePage() {
                 {DIAGNOSIS_VALIDATION_LABEL}
               </div>
             </div>
+          </div>
+        </section>
+
+        <section
+          aria-label="モデル性能"
+          className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8"
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-2">
+              <h2 className="text-2xl font-bold text-slate-900">モデル性能</h2>
+              <p className="text-sm leading-6 text-slate-600 sm:text-base">
+                公開プロフィール画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚を
+                leave-one-out で検証した結果です。同系統の画像に対してどれくらい当たりやすいかを、
+                完全一致率と許容誤差内率で公開しています。
+              </p>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+              <p>身長評価 {DIAGNOSIS_MODEL_METRICS.height.trainingCount} 件</p>
+              <p>カップ評価 {DIAGNOSIS_MODEL_METRICS.cup.trainingCount} 件</p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {PERFORMANCE_HIGHLIGHTS.map((item) => (
+              <article
+                key={item.label}
+                className="rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-5 py-5"
+              >
+                <p className="text-sm font-semibold text-slate-500">{item.label}</p>
+                <p className="mt-3 text-3xl font-black text-slate-900">{item.value}</p>
+                <p className="mt-2 text-sm text-slate-500">{item.detail}</p>
+              </article>
+            ))}
           </div>
         </section>
 
