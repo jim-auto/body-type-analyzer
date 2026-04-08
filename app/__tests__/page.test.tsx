@@ -17,6 +17,7 @@ const mutableEnv = process.env as Record<string, string | undefined>;
 const rankingData = rankingDataJson as RankingData;
 const femaleCupDistribution = buildFemaleCupDistributionSummary();
 const maleHeightDistribution = buildMaleHeightDistributionSummary();
+const PAGE_SIZE = 20;
 
 const femaleStyleCategory = rankingData.female.find(
   (entry) => entry.category === "style"
@@ -39,6 +40,10 @@ const clickGenderTab = (label: "女性" | "男性") => {
 
 const clickCategoryTab = (label: string) => {
   fireEvent.click(screen.getByRole("button", { name: label }));
+};
+
+const clickNextPage = () => {
+  fireEvent.click(screen.getByRole("button", { name: "次の20人" }));
 };
 
 const getFemaleCategory = (categoryKey: string) => {
@@ -107,9 +112,7 @@ describe("Home (Ranking Page)", () => {
   test("女性 style ランキングでAI推定表示がされる", () => {
     renderHome();
 
-    expect(screen.getAllByText(/^AI推定:/)).toHaveLength(
-      femaleStyleCategory.ranking.length
-    );
+    expect(screen.getAllByText(/^AI推定:/)).toHaveLength(PAGE_SIZE);
   });
 
   test("カテゴリタブ数が女性3つ・男性2つになっている", () => {
@@ -139,9 +142,24 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(`偏差値${topMaleEntry.score}`).length).toBeGreaterThan(
       0
     );
-    expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(
-      maleStyleCategory.ranking.length
-    );
+    expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(PAGE_SIZE);
+  });
+
+  test("ランキングは20人ずつページ送りできる", () => {
+    const firstPageTop = femaleStyleCategory.ranking[0];
+    const secondPageTop = femaleStyleCategory.ranking[20];
+
+    renderHome();
+
+    expect(screen.getByText(firstPageTop.name)).toBeInTheDocument();
+    expect(screen.queryByText(secondPageTop.name)).not.toBeInTheDocument();
+    expect(screen.getByText("1-20位 / 100人")).toBeInTheDocument();
+
+    clickNextPage();
+
+    expect(screen.queryByText(firstPageTop.name)).not.toBeInTheDocument();
+    expect(screen.getByText(secondPageTop.name)).toBeInTheDocument();
+    expect(screen.getByText("21-40位 / 100人")).toBeInTheDocument();
   });
 
   test("男女切り替え時にカテゴリタブが最初に戻る", () => {

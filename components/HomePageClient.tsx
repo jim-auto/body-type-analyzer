@@ -33,6 +33,8 @@ type DistributionBucket = {
   percentage: number;
 };
 
+const PAGE_SIZE = 20;
+
 const medalColors: Record<number, string> = {
   0: "bg-yellow-400 text-yellow-900",
   1: "bg-gray-300 text-gray-800",
@@ -178,6 +180,7 @@ export default function HomePageClient({
 }: HomePageClientProps) {
   const [gender, setGender] = useState<Gender>("female");
   const [activeTab, setActiveTab] = useState(0);
+  const [activePage, setActivePage] = useState(0);
   const basePath =
     process.env.NODE_ENV === "production" ? "/body-type-analyzer" : "";
 
@@ -187,10 +190,22 @@ export default function HomePageClient({
   const handleGenderChange = (nextGender: Gender) => {
     setGender(nextGender);
     setActiveTab(0);
+    setActivePage(0);
+  };
+
+  const handleCategoryChange = (nextTab: number) => {
+    setActiveTab(nextTab);
+    setActivePage(0);
   };
 
   const categories = data[gender];
   const current = categories[activeTab];
+  const currentRanking = current?.ranking ?? [];
+  const totalPages = Math.max(1, Math.ceil(currentRanking.length / PAGE_SIZE));
+  const currentPage = Math.min(activePage, totalPages - 1);
+  const pageStart = currentPage * PAGE_SIZE;
+  const pageEnd = Math.min(pageStart + PAGE_SIZE, currentRanking.length);
+  const pagedRanking = currentRanking.slice(pageStart, pageEnd);
   const isEstimatedHeightCategory = current?.category === "estimatedHeight";
   const isEstimatedCupCategory = current?.category === "estimatedCup";
   const activeCategoryStyle =
@@ -262,7 +277,7 @@ export default function HomePageClient({
               <button
                 key={`${gender}-${category.category}`}
                 type="button"
-                onClick={() => setActiveTab(index)}
+                onClick={() => handleCategoryChange(index)}
                 aria-pressed={index === activeTab}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   index === activeTab
@@ -280,7 +295,38 @@ export default function HomePageClient({
               <h2 className="text-center text-xl font-bold text-slate-700">
                 {current.title}
               </h2>
-              {current.ranking.map((entry, index) => {
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-100/80 px-4 py-3 text-sm text-slate-600">
+                <p>
+                  {currentRanking.length === 0
+                    ? "0件"
+                    : `${pageStart + 1}-${pageEnd}位 / ${currentRanking.length}人`}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActivePage((page) => Math.max(page - 1, 0))}
+                    disabled={currentPage === 0}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-600 transition enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    前の20人
+                  </button>
+                  <span className="min-w-14 text-center font-semibold text-slate-500">
+                    {currentPage + 1} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActivePage((page) => Math.min(page + 1, totalPages - 1))
+                    }
+                    disabled={currentPage >= totalPages - 1}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-600 transition enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    次の20人
+                  </button>
+                </div>
+              </div>
+              {pagedRanking.map((entry, index) => {
+                const absoluteIndex = pageStart + index;
                 const femaleEntry =
                   gender === "female" && isFemaleEntry(entry) ? entry : null;
                 const predictionText = isEstimatedHeightCategory
@@ -304,16 +350,16 @@ export default function HomePageClient({
                     <div className="flex min-w-0 items-start gap-4">
                       <span
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                          medalColors[index] ?? defaultRankBadge
+                          medalColors[absoluteIndex] ?? defaultRankBadge
                         }`}
                       >
-                        {index + 1}
+                        {absoluteIndex + 1}
                       </span>
                       <img
                         src={resolveImageSrc(entry.image)}
                         alt={entry.name}
                         className={`h-12 w-12 shrink-0 rounded-full object-cover ${
-                          medalBorder[index] ?? defaultAvatarRing
+                          medalBorder[absoluteIndex] ?? defaultAvatarRing
                         }`}
                       />
                       <div className="min-w-0 space-y-1">
@@ -335,7 +381,7 @@ export default function HomePageClient({
                     </div>
                     <span
                       className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${
-                        medalColors[index] ?? defaultScoreBadge
+                        medalColors[absoluteIndex] ?? defaultScoreBadge
                       }`}
                     >
                       {scoreLabel}
