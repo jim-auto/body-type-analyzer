@@ -2,6 +2,7 @@ import {
   DIAGNOSIS_MODEL_ENTRIES,
   diagnoseFromFeatures,
 } from "./diagnosis-model.ts";
+import maleRankingModelJson from "../public/data/male-ranking-model.json" with { type: "json" };
 import {
   getAdjustedEstimatedCup,
   getEstimatedHeight,
@@ -17,10 +18,14 @@ type FemaleModelEstimate = {
 };
 
 const FEMALE_IMAGE_MODEL_WEIGHT = 0.5;
+const MALE_IMAGE_MODEL_WEIGHT = 0.15;
 const diagnosisEntryByName = new Map(
   DIAGNOSIS_MODEL_ENTRIES.map((entry) => [entry.name, entry])
 );
 const femaleEstimateCache = new Map<string, FemaleModelEstimate>();
+const maleRankingModel = maleRankingModelJson as {
+  estimates: Record<string, number>;
+};
 
 const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
@@ -119,5 +124,15 @@ export function getFemaleRankingEstimatedCup(
 export function getMaleRankingEstimatedHeight(
   profile: MaleProfileSource
 ): number {
-  return getEstimatedHeight(profile.actualHeight, profile.name);
+  const baselineEstimate = getEstimatedHeight(profile.actualHeight, profile.name);
+  const modelEstimate = maleRankingModel.estimates[profile.name];
+
+  if (modelEstimate === undefined) {
+    return baselineEstimate;
+  }
+
+  return Math.round(
+    modelEstimate * MALE_IMAGE_MODEL_WEIGHT +
+      baselineEstimate * (1 - MALE_IMAGE_MODEL_WEIGHT)
+  );
 }
