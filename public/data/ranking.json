@@ -3628,48 +3628,48 @@
           "name": "杉野遥亮",
           "image": "/images/sugino_yosuke.jpg",
           "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
+          "estimatedHeight": 183,
+          "heightDiff": -2,
           "score": 74
         },
         {
           "name": "竹内涼真",
           "image": "/images/takeuchi_ryoma.jpg",
           "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
+          "estimatedHeight": 184,
+          "heightDiff": -1,
           "score": 74
         },
         {
           "name": "目黒蓮",
           "image": "/images/meguro_ren.jpg",
           "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
+          "estimatedHeight": 184,
+          "heightDiff": -1,
           "score": 74
         },
         {
           "name": "鈴木伸之",
           "image": "/images/suzuki_nobuyuki.jpg",
           "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
+          "estimatedHeight": 184,
+          "heightDiff": -1,
           "score": 74
         },
         {
           "name": "Shen(Def Tech)",
           "image": "/images/shen_def_tech.jpg",
           "actualHeight": 184,
-          "estimatedHeight": 184,
-          "heightDiff": 0,
+          "estimatedHeight": 182,
+          "heightDiff": -2,
           "score": 72
         },
         {
           "name": "斎藤工",
           "image": "/images/saito_takumi.jpg",
           "actualHeight": 184,
-          "estimatedHeight": 184,
-          "heightDiff": 0,
+          "estimatedHeight": 183,
+          "heightDiff": -1,
           "score": 72
         },
         {
@@ -3684,16 +3684,16 @@
           "name": "渡辺謙",
           "image": "/images/watanabe_ken.jpg",
           "actualHeight": 184,
-          "estimatedHeight": 183,
-          "heightDiff": -1,
+          "estimatedHeight": 182,
+          "heightDiff": -2,
           "score": 72
         },
         {
           "name": "JP",
           "image": "/images/jp.jpg",
           "actualHeight": 183,
-          "estimatedHeight": 183,
-          "heightDiff": 0,
+          "estimatedHeight": 182,
+          "heightDiff": -1,
           "score": 71
         },
         {
@@ -3716,16 +3716,16 @@
           "name": "谷原章介",
           "image": "/images/tanihara_shosuke.jpg",
           "actualHeight": 183,
-          "estimatedHeight": 183,
-          "heightDiff": 0,
+          "estimatedHeight": 182,
+          "heightDiff": -1,
           "score": 71
         },
         {
           "name": "町田啓太",
           "image": "/images/machida_keita.jpg",
           "actualHeight": 183,
-          "estimatedHeight": 183,
-          "heightDiff": 0,
+          "estimatedHeight": 182,
+          "heightDiff": -1,
           "score": 71
         },
         {
@@ -3748,8 +3748,8 @@
           "name": "TAKURO(GLAY)",
           "image": "/images/takuro_glay.jpg",
           "actualHeight": 182,
-          "estimatedHeight": 182,
-          "heightDiff": 0,
+          "estimatedHeight": 181,
+          "heightDiff": -1,
           "score": 69
         },
         {
@@ -3764,8 +3764,8 @@
           "name": "長谷川博己",
           "image": "/images/hasegawa_hiroki.jpg",
           "actualHeight": 182,
-          "estimatedHeight": 182,
-          "heightDiff": 0,
+          "estimatedHeight": 181,
+          "heightDiff": -1,
           "score": 69
         },
         {
@@ -3788,8 +3788,8 @@
           "name": "BOSS THE MC",
           "image": "/images/boss_the_mc_69aab9e8.jpg",
           "actualHeight": 180,
-          "estimatedHeight": 180,
-          "heightDiff": 0,
+          "estimatedHeight": 179,
+          "heightDiff": -1,
           "score": 66
         },
         {
@@ -3884,16 +3884,16 @@
           "name": "あばれる君",
           "image": "/images/jp_e38182e381b0_d61db535.jpg",
           "actualHeight": 179,
-          "estimatedHeight": 179,
-          "heightDiff": 0,
+          "estimatedHeight": 178,
+          "heightDiff": -1,
           "score": 64
         },
         {
           "name": "永山瑛太",
           "image": "/images/jp_e6b0b8e5b1b1_5e7147c7.jpg",
           "actualHeight": 179,
-          "estimatedHeight": 179,
-          "heightDiff": 0,
+          "estimatedHeight": 178,
+          "heightDiff": -1,
           "score": 64
         },
         {
@@ -3916,8 +3916,8 @@
           "name": "竹野内豊",
           "image": "/images/takenouchi_yutaka.jpg",
           "actualHeight": 179,
-          "estimatedHeight": 179,
-          "heightDiff": 0,
+          "estimatedHeight": 178,
+          "heightDiff": -1,
           "score": 64
         },
         {
@@ -3996,8 +3996,8 @@
           "name": "西島秀俊",
           "image": "/images/jp_e8a5bfe5b3b6_10d37b7d.jpg",
           "actualHeight": 178,
-          "estimatedHeight": 178,
-          "heightDiff": 0,
+          "estimatedHeight": 179,
+          "heightDiff": 1,
           "score": 62
         },
         {
@@ -4020,8 +4020,8 @@
           "name": "藤原竜也",
           "image": "/images/jp_e897a4e58e9f_8be65a00.jpg",
           "actualHeight": 178,
-          "estimatedHeight": 178,
-          "heightDiff": 0,
+          "estimatedHeight": 179,
+          "heightDiff": 1,
           "score": 62
         },
         {
@@ -4092,8 +4092,8 @@
           "name": "YOSHIKI",
           "image": "/images/yoshiki_7dee13bf.jpg",
           "actualHeight": 175,
-          "estimatedHeight": 175,
-          "heightDiff": 0,
+          "estimatedHeight": 176,
+          "heightDiff": 1,
           "score": 57
         },
         {
@@ -4108,8 +4108,8 @@
           "name": "いかりや長介",
           "image": "/images/jp_e38184e3818b_12bfdad8.jpg",
           "actualHeight": 175,
-          "estimatedHeight": 175,
-          "heightDiff": 0,
+          "estimatedHeight": 176,
+          "heightDiff": 1,
           "score": 57
         },
         {
@@ -4172,8 +4172,8 @@
           "name": "横浜流星",
           "image": "/images/yokohama_ryusei.jpg",
           "actualHeight": 174,
-          "estimatedHeight": 173,
-          "heightDiff": -1,
+          "estimatedHeight": 174,
+          "heightDiff": 0,
           "score": 55
         },
         {
@@ -4188,16 +4188,16 @@
           "name": "岩田剛典",
           "image": "/images/iwata_takanori.jpg",
           "actualHeight": 174,
-          "estimatedHeight": 174,
-          "heightDiff": 0,
+          "estimatedHeight": 175,
+          "heightDiff": 1,
           "score": 55
         },
         {
           "name": "松本潤",
           "image": "/images/ov_e69dbee69cac_e5cd1066.jpg",
           "actualHeight": 173,
-          "estimatedHeight": 173,
-          "heightDiff": 0,
+          "estimatedHeight": 174,
+          "heightDiff": 1,
           "score": 53
         },
         {
@@ -4236,8 +4236,8 @@
           "name": "ryuchell / りゅうちぇる",
           "image": "/images/ryuchell_0a7a9db9.jpg",
           "actualHeight": 172,
-          "estimatedHeight": 172,
-          "heightDiff": 0,
+          "estimatedHeight": 173,
+          "heightDiff": 1,
           "score": 52
         },
         {
@@ -4252,8 +4252,8 @@
           "name": "堺雅人",
           "image": "/images/jp_e5a0bae99b85_9d6beb74.jpg",
           "actualHeight": 172,
-          "estimatedHeight": 172,
-          "heightDiff": 0,
+          "estimatedHeight": 174,
+          "heightDiff": 2,
           "score": 52
         },
         {
@@ -4284,8 +4284,8 @@
           "name": "ILMARI",
           "image": "/images/ilmari_589ea945.jpg",
           "actualHeight": 171,
-          "estimatedHeight": 170,
-          "heightDiff": -1,
+          "estimatedHeight": 172,
+          "heightDiff": 1,
           "score": 50
         },
         {
@@ -4316,24 +4316,24 @@
           "name": "吉沢亮",
           "image": "/images/jp_e59089e6b2a2_c0e00879.jpg",
           "actualHeight": 171,
-          "estimatedHeight": 172,
-          "heightDiff": 1,
+          "estimatedHeight": 173,
+          "heightDiff": 2,
           "score": 50
         },
         {
           "name": "香川照之",
           "image": "/images/jp_e9a699e5b79d_dd52792a.jpg",
           "actualHeight": 171,
-          "estimatedHeight": 171,
-          "heightDiff": 0,
+          "estimatedHeight": 172,
+          "heightDiff": 1,
           "score": 50
         },
         {
           "name": "妻夫木聡",
           "image": "/images/jp_e5a6bbe5a4ab_e8910f6e.jpg",
           "actualHeight": 171,
-          "estimatedHeight": 171,
-          "heightDiff": 0,
+          "estimatedHeight": 172,
+          "heightDiff": 1,
           "score": 50
         },
         {
@@ -4348,8 +4348,8 @@
           "name": "平野紫耀",
           "image": "/images/jp_e5b9b3e9878e_8c93a39b.jpg",
           "actualHeight": 171,
-          "estimatedHeight": 170,
-          "heightDiff": -1,
+          "estimatedHeight": 171,
+          "heightDiff": 0,
           "score": 50
         },
         {
@@ -4364,8 +4364,8 @@
           "name": "Nissy / 西島隆弘",
           "image": "/images/nissy_3355c7b6.jpg",
           "actualHeight": 170,
-          "estimatedHeight": 170,
-          "heightDiff": 0,
+          "estimatedHeight": 172,
+          "heightDiff": 2,
           "score": 48
         },
         {
@@ -4380,16 +4380,16 @@
           "name": "いとうせいこう",
           "image": "/images/jp_e38184e381a8_257c5d7f.jpg",
           "actualHeight": 170,
-          "estimatedHeight": 170,
-          "heightDiff": 0,
+          "estimatedHeight": 171,
+          "heightDiff": 1,
           "score": 48
         },
         {
           "name": "佐藤健",
           "image": "/images/jp_e4bd90e897a4_b65d2e85.jpg",
           "actualHeight": 170,
-          "estimatedHeight": 170,
-          "heightDiff": 0,
+          "estimatedHeight": 172,
+          "heightDiff": 2,
           "score": 48
         },
         {
@@ -4431,51 +4431,27 @@
       "title": "AI推定身長ランキング",
       "ranking": [
         {
-          "name": "杉野遥亮",
-          "image": "/images/sugino_yosuke.jpg",
-          "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
-          "score": 185
-        },
-        {
           "name": "竹内涼真",
           "image": "/images/takeuchi_ryoma.jpg",
           "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
-          "score": 185
+          "estimatedHeight": 184,
+          "heightDiff": -1,
+          "score": 184
         },
         {
           "name": "目黒蓮",
           "image": "/images/meguro_ren.jpg",
           "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
-          "score": 185
+          "estimatedHeight": 184,
+          "heightDiff": -1,
+          "score": 184
         },
         {
           "name": "鈴木伸之",
           "image": "/images/suzuki_nobuyuki.jpg",
           "actualHeight": 185,
-          "estimatedHeight": 185,
-          "heightDiff": 0,
-          "score": 185
-        },
-        {
-          "name": "Shen(Def Tech)",
-          "image": "/images/shen_def_tech.jpg",
-          "actualHeight": 184,
           "estimatedHeight": 184,
-          "heightDiff": 0,
-          "score": 184
-        },
-        {
-          "name": "斎藤工",
-          "image": "/images/saito_takumi.jpg",
-          "actualHeight": 184,
-          "estimatedHeight": 184,
-          "heightDiff": 0,
+          "heightDiff": -1,
           "score": 184
         },
         {
@@ -4487,19 +4463,19 @@
           "score": 184
         },
         {
-          "name": "渡辺謙",
-          "image": "/images/watanabe_ken.jpg",
-          "actualHeight": 184,
+          "name": "杉野遥亮",
+          "image": "/images/sugino_yosuke.jpg",
+          "actualHeight": 185,
           "estimatedHeight": 183,
-          "heightDiff": -1,
+          "heightDiff": -2,
           "score": 183
         },
         {
-          "name": "JP",
-          "image": "/images/jp.jpg",
-          "actualHeight": 183,
+          "name": "斎藤工",
+          "image": "/images/saito_takumi.jpg",
+          "actualHeight": 184,
           "estimatedHeight": 183,
-          "heightDiff": 0,
+          "heightDiff": -1,
           "score": 183
         },
         {
@@ -4519,22 +4495,6 @@
           "score": 183
         },
         {
-          "name": "谷原章介",
-          "image": "/images/tanihara_shosuke.jpg",
-          "actualHeight": 183,
-          "estimatedHeight": 183,
-          "heightDiff": 0,
-          "score": 183
-        },
-        {
-          "name": "町田啓太",
-          "image": "/images/machida_keita.jpg",
-          "actualHeight": 183,
-          "estimatedHeight": 183,
-          "heightDiff": 0,
-          "score": 183
-        },
-        {
           "name": "福士蒼汰",
           "image": "/images/fukushi_sota.jpg",
           "actualHeight": 183,
@@ -4543,16 +4503,48 @@
           "score": 183
         },
         {
-          "name": "ROLAND",
-          "image": "https://ui-avatars.com/api/?name=ROLAND&size=300&background=random&color=fff&bold=true",
-          "actualHeight": 182,
+          "name": "Shen(Def Tech)",
+          "image": "/images/shen_def_tech.jpg",
+          "actualHeight": 184,
           "estimatedHeight": 182,
-          "heightDiff": 0,
+          "heightDiff": -2,
           "score": 182
         },
         {
-          "name": "TAKURO(GLAY)",
-          "image": "/images/takuro_glay.jpg",
+          "name": "渡辺謙",
+          "image": "/images/watanabe_ken.jpg",
+          "actualHeight": 184,
+          "estimatedHeight": 182,
+          "heightDiff": -2,
+          "score": 182
+        },
+        {
+          "name": "JP",
+          "image": "/images/jp.jpg",
+          "actualHeight": 183,
+          "estimatedHeight": 182,
+          "heightDiff": -1,
+          "score": 182
+        },
+        {
+          "name": "谷原章介",
+          "image": "/images/tanihara_shosuke.jpg",
+          "actualHeight": 183,
+          "estimatedHeight": 182,
+          "heightDiff": -1,
+          "score": 182
+        },
+        {
+          "name": "町田啓太",
+          "image": "/images/machida_keita.jpg",
+          "actualHeight": 183,
+          "estimatedHeight": 182,
+          "heightDiff": -1,
+          "score": 182
+        },
+        {
+          "name": "ROLAND",
+          "image": "https://ui-avatars.com/api/?name=ROLAND&size=300&background=random&color=fff&bold=true",
           "actualHeight": 182,
           "estimatedHeight": 182,
           "heightDiff": 0,
@@ -4567,12 +4559,20 @@
           "score": 182
         },
         {
+          "name": "TAKURO(GLAY)",
+          "image": "/images/takuro_glay.jpg",
+          "actualHeight": 182,
+          "estimatedHeight": 181,
+          "heightDiff": -1,
+          "score": 181
+        },
+        {
           "name": "長谷川博己",
           "image": "/images/hasegawa_hiroki.jpg",
           "actualHeight": 182,
-          "estimatedHeight": 182,
-          "heightDiff": 0,
-          "score": 182
+          "estimatedHeight": 181,
+          "heightDiff": -1,
+          "score": 181
         },
         {
           "name": "反町隆史",
@@ -4588,14 +4588,6 @@
           "actualHeight": 181,
           "estimatedHeight": 180,
           "heightDiff": -1,
-          "score": 180
-        },
-        {
-          "name": "BOSS THE MC",
-          "image": "/images/boss_the_mc_69aab9e8.jpg",
-          "actualHeight": 180,
-          "estimatedHeight": 180,
-          "heightDiff": 0,
           "score": 180
         },
         {
@@ -4695,32 +4687,16 @@
           "score": 180
         },
         {
-          "name": "あばれる君",
-          "image": "/images/jp_e38182e381b0_d61db535.jpg",
-          "actualHeight": 179,
+          "name": "BOSS THE MC",
+          "image": "/images/boss_the_mc_69aab9e8.jpg",
+          "actualHeight": 180,
           "estimatedHeight": 179,
-          "heightDiff": 0,
-          "score": 179
-        },
-        {
-          "name": "永山瑛太",
-          "image": "/images/jp_e6b0b8e5b1b1_5e7147c7.jpg",
-          "actualHeight": 179,
-          "estimatedHeight": 179,
-          "heightDiff": 0,
+          "heightDiff": -1,
           "score": 179
         },
         {
           "name": "浅野忠信",
           "image": "/images/asano_tadanobu.jpg",
-          "actualHeight": 179,
-          "estimatedHeight": 179,
-          "heightDiff": 0,
-          "score": 179
-        },
-        {
-          "name": "竹野内豊",
-          "image": "/images/takenouchi_yutaka.jpg",
           "actualHeight": 179,
           "estimatedHeight": 179,
           "heightDiff": 0,
@@ -4759,6 +4735,46 @@
           "score": 179
         },
         {
+          "name": "西島秀俊",
+          "image": "/images/jp_e8a5bfe5b3b6_10d37b7d.jpg",
+          "actualHeight": 178,
+          "estimatedHeight": 179,
+          "heightDiff": 1,
+          "score": 179
+        },
+        {
+          "name": "藤原竜也",
+          "image": "/images/jp_e897a4e58e9f_8be65a00.jpg",
+          "actualHeight": 178,
+          "estimatedHeight": 179,
+          "heightDiff": 1,
+          "score": 179
+        },
+        {
+          "name": "あばれる君",
+          "image": "/images/jp_e38182e381b0_d61db535.jpg",
+          "actualHeight": 179,
+          "estimatedHeight": 178,
+          "heightDiff": -1,
+          "score": 178
+        },
+        {
+          "name": "永山瑛太",
+          "image": "/images/jp_e6b0b8e5b1b1_5e7147c7.jpg",
+          "actualHeight": 179,
+          "estimatedHeight": 178,
+          "heightDiff": -1,
+          "score": 178
+        },
+        {
+          "name": "竹野内豊",
+          "image": "/images/takenouchi_yutaka.jpg",
+          "actualHeight": 179,
+          "estimatedHeight": 178,
+          "heightDiff": -1,
+          "score": 178
+        },
+        {
           "name": "KURO",
           "image": "https://ui-avatars.com/api/?name=KURO&size=300&background=random&color=fff&bold=true",
           "actualHeight": 178,
@@ -4791,14 +4807,6 @@
           "score": 178
         },
         {
-          "name": "西島秀俊",
-          "image": "/images/jp_e8a5bfe5b3b6_10d37b7d.jpg",
-          "actualHeight": 178,
-          "estimatedHeight": 178,
-          "heightDiff": 0,
-          "score": 178
-        },
-        {
           "name": "大泉洋",
           "image": "/images/jp_e5a4a7e6b389_a5bb1467.jpg",
           "actualHeight": 178,
@@ -4809,14 +4817,6 @@
         {
           "name": "田中圭",
           "image": "/images/tanaka_kei.jpg",
-          "actualHeight": 178,
-          "estimatedHeight": 178,
-          "heightDiff": 0,
-          "score": 178
-        },
-        {
-          "name": "藤原竜也",
-          "image": "/images/jp_e897a4e58e9f_8be65a00.jpg",
           "actualHeight": 178,
           "estimatedHeight": 178,
           "heightDiff": 0,
@@ -4871,6 +4871,22 @@
           "score": 176
         },
         {
+          "name": "YOSHIKI",
+          "image": "/images/yoshiki_7dee13bf.jpg",
+          "actualHeight": 175,
+          "estimatedHeight": 176,
+          "heightDiff": 1,
+          "score": 176
+        },
+        {
+          "name": "いかりや長介",
+          "image": "/images/jp_e38184e3818b_12bfdad8.jpg",
+          "actualHeight": 175,
+          "estimatedHeight": 176,
+          "heightDiff": 1,
+          "score": 176
+        },
+        {
           "name": "永瀬廉",
           "image": "https://ui-avatars.com/api/?name=%E6%B0%B8%E7%80%AC%E5%BB%89&size=300&background=random&color=fff&bold=true",
           "actualHeight": 175,
@@ -4911,24 +4927,8 @@
           "score": 175
         },
         {
-          "name": "YOSHIKI",
-          "image": "/images/yoshiki_7dee13bf.jpg",
-          "actualHeight": 175,
-          "estimatedHeight": 175,
-          "heightDiff": 0,
-          "score": 175
-        },
-        {
           "name": "ZAZY",
           "image": "https://ui-avatars.com/api/?name=ZAZY&size=300&background=random&color=fff&bold=true",
-          "actualHeight": 175,
-          "estimatedHeight": 175,
-          "heightDiff": 0,
-          "score": 175
-        },
-        {
-          "name": "いかりや長介",
-          "image": "/images/jp_e38184e3818b_12bfdad8.jpg",
           "actualHeight": 175,
           "estimatedHeight": 175,
           "heightDiff": 0,
@@ -4951,8 +4951,24 @@
           "score": 175
         },
         {
+          "name": "岩田剛典",
+          "image": "/images/iwata_takanori.jpg",
+          "actualHeight": 174,
+          "estimatedHeight": 175,
+          "heightDiff": 1,
+          "score": 175
+        },
+        {
           "name": "DJ JIN",
           "image": "https://ui-avatars.com/api/?name=DJ%20JIN&size=300&background=random&color=fff&bold=true",
+          "actualHeight": 174,
+          "estimatedHeight": 174,
+          "heightDiff": 0,
+          "score": 174
+        },
+        {
+          "name": "横浜流星",
+          "image": "/images/yokohama_ryusei.jpg",
           "actualHeight": 174,
           "estimatedHeight": 174,
           "heightDiff": 0,
@@ -4967,11 +4983,19 @@
           "score": 174
         },
         {
-          "name": "岩田剛典",
-          "image": "/images/iwata_takanori.jpg",
-          "actualHeight": 174,
+          "name": "松本潤",
+          "image": "/images/ov_e69dbee69cac_e5cd1066.jpg",
+          "actualHeight": 173,
           "estimatedHeight": 174,
-          "heightDiff": 0,
+          "heightDiff": 1,
+          "score": 174
+        },
+        {
+          "name": "堺雅人",
+          "image": "/images/jp_e5a0bae99b85_9d6beb74.jpg",
+          "actualHeight": 172,
+          "estimatedHeight": 174,
+          "heightDiff": 2,
           "score": 174
         },
         {
@@ -4991,22 +5015,6 @@
           "score": 173
         },
         {
-          "name": "横浜流星",
-          "image": "/images/yokohama_ryusei.jpg",
-          "actualHeight": 174,
-          "estimatedHeight": 173,
-          "heightDiff": -1,
-          "score": 173
-        },
-        {
-          "name": "松本潤",
-          "image": "/images/ov_e69dbee69cac_e5cd1066.jpg",
-          "actualHeight": 173,
-          "estimatedHeight": 173,
-          "heightDiff": 0,
-          "score": 173
-        },
-        {
           "name": "千葉雄大",
           "image": "https://ui-avatars.com/api/?name=%E5%8D%83%E8%91%89%E9%9B%84%E5%A4%A7&size=300&background=random&color=fff&bold=true",
           "actualHeight": 173,
@@ -5020,6 +5028,22 @@
           "actualHeight": 173,
           "estimatedHeight": 173,
           "heightDiff": 0,
+          "score": 173
+        },
+        {
+          "name": "ryuchell / りゅうちぇる",
+          "image": "/images/ryuchell_0a7a9db9.jpg",
+          "actualHeight": 172,
+          "estimatedHeight": 173,
+          "heightDiff": 1,
+          "score": 173
+        },
+        {
+          "name": "吉沢亮",
+          "image": "/images/jp_e59089e6b2a2_c0e00879.jpg",
+          "actualHeight": 171,
+          "estimatedHeight": 173,
+          "heightDiff": 2,
           "score": 173
         },
         {
@@ -5039,14 +5063,6 @@
           "score": 172
         },
         {
-          "name": "ryuchell / りゅうちぇる",
-          "image": "/images/ryuchell_0a7a9db9.jpg",
-          "actualHeight": 172,
-          "estimatedHeight": 172,
-          "heightDiff": 0,
-          "score": 172
-        },
-        {
           "name": "あいはら雅一",
           "image": "https://ui-avatars.com/api/?name=%E3%81%82%E3%81%84%E3%81%AF%E3%82%89%E9%9B%85%E4%B8%80&size=300&background=random&color=fff&bold=true",
           "actualHeight": 172,
@@ -5055,19 +5071,43 @@
           "score": 172
         },
         {
-          "name": "堺雅人",
-          "image": "/images/jp_e5a0bae99b85_9d6beb74.jpg",
-          "actualHeight": 172,
-          "estimatedHeight": 172,
-          "heightDiff": 0,
-          "score": 172
-        },
-        {
-          "name": "吉沢亮",
-          "image": "/images/jp_e59089e6b2a2_c0e00879.jpg",
+          "name": "ILMARI",
+          "image": "/images/ilmari_589ea945.jpg",
           "actualHeight": 171,
           "estimatedHeight": 172,
           "heightDiff": 1,
+          "score": 172
+        },
+        {
+          "name": "香川照之",
+          "image": "/images/jp_e9a699e5b79d_dd52792a.jpg",
+          "actualHeight": 171,
+          "estimatedHeight": 172,
+          "heightDiff": 1,
+          "score": 172
+        },
+        {
+          "name": "妻夫木聡",
+          "image": "/images/jp_e5a6bbe5a4ab_e8910f6e.jpg",
+          "actualHeight": 171,
+          "estimatedHeight": 172,
+          "heightDiff": 1,
+          "score": 172
+        },
+        {
+          "name": "Nissy / 西島隆弘",
+          "image": "/images/nissy_3355c7b6.jpg",
+          "actualHeight": 170,
+          "estimatedHeight": 172,
+          "heightDiff": 2,
+          "score": 172
+        },
+        {
+          "name": "佐藤健",
+          "image": "/images/jp_e4bd90e897a4_b65d2e85.jpg",
+          "actualHeight": 170,
+          "estimatedHeight": 172,
+          "heightDiff": 2,
           "score": 172
         },
         {
@@ -5119,16 +5159,8 @@
           "score": 171
         },
         {
-          "name": "香川照之",
-          "image": "/images/jp_e9a699e5b79d_dd52792a.jpg",
-          "actualHeight": 171,
-          "estimatedHeight": 171,
-          "heightDiff": 0,
-          "score": 171
-        },
-        {
-          "name": "妻夫木聡",
-          "image": "/images/jp_e5a6bbe5a4ab_e8910f6e.jpg",
+          "name": "平野紫耀",
+          "image": "/images/jp_e5b9b3e9878e_8c93a39b.jpg",
           "actualHeight": 171,
           "estimatedHeight": 171,
           "heightDiff": 0,
@@ -5143,12 +5175,12 @@
           "score": 171
         },
         {
-          "name": "ILMARI",
-          "image": "/images/ilmari_589ea945.jpg",
-          "actualHeight": 171,
-          "estimatedHeight": 170,
-          "heightDiff": -1,
-          "score": 170
+          "name": "いとうせいこう",
+          "image": "/images/jp_e38184e381a8_257c5d7f.jpg",
+          "actualHeight": 170,
+          "estimatedHeight": 171,
+          "heightDiff": 1,
+          "score": 171
         },
         {
           "name": "増田貴久",
@@ -5159,40 +5191,8 @@
           "score": 170
         },
         {
-          "name": "平野紫耀",
-          "image": "/images/jp_e5b9b3e9878e_8c93a39b.jpg",
-          "actualHeight": 171,
-          "estimatedHeight": 170,
-          "heightDiff": -1,
-          "score": 170
-        },
-        {
-          "name": "Nissy / 西島隆弘",
-          "image": "/images/nissy_3355c7b6.jpg",
-          "actualHeight": 170,
-          "estimatedHeight": 170,
-          "heightDiff": 0,
-          "score": 170
-        },
-        {
           "name": "YAMATO",
           "image": "https://ui-avatars.com/api/?name=YAMATO&size=300&background=random&color=fff&bold=true",
-          "actualHeight": 170,
-          "estimatedHeight": 170,
-          "heightDiff": 0,
-          "score": 170
-        },
-        {
-          "name": "いとうせいこう",
-          "image": "/images/jp_e38184e381a8_257c5d7f.jpg",
-          "actualHeight": 170,
-          "estimatedHeight": 170,
-          "heightDiff": 0,
-          "score": 170
-        },
-        {
-          "name": "佐藤健",
-          "image": "/images/jp_e4bd90e897a4_b65d2e85.jpg",
           "actualHeight": 170,
           "estimatedHeight": 170,
           "heightDiff": 0,

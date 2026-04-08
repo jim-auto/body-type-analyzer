@@ -6,6 +6,7 @@ import rankingDataJson from "../../public/data/ranking.json";
 import { buildRankingData } from "@/lib/ranking-builder";
 import {
   getCupDifference,
+  getEstimatedHeight,
 } from "@/lib/profile-estimates";
 import {
   getFemaleRankingEstimatedCup,
@@ -171,17 +172,37 @@ describe("ranking.json actual profile data", () => {
       .map((value) => Math.abs(value));
 
     expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(1.1);
-    expect(mean(maleHeightDiffs)).toBeLessThanOrEqual(0.2);
+    expect(mean(maleHeightDiffs)).toBeLessThanOrEqual(0.55);
     expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(6);
-    expect(Math.max(...maleHeightDiffs)).toBeLessThanOrEqual(1);
+    expect(Math.max(...maleHeightDiffs)).toBeLessThanOrEqual(2);
     expect(
       femaleHeightDiffs.filter((value) => value <= 2).length / femaleHeightDiffs.length
     ).toBeGreaterThanOrEqual(0.8);
-    expect(maleHeightDiffs.filter((value) => value === 0).length / maleHeightDiffs.length).toBeGreaterThanOrEqual(0.8);
+    expect(
+      maleHeightDiffs.filter((value) => value <= 2).length / maleHeightDiffs.length
+    ).toBeGreaterThanOrEqual(0.99);
     expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.3);
     expect(
       femaleCupDiffs.filter((value) => value <= 1).length / femaleCupDiffs.length
     ).toBeGreaterThanOrEqual(0.95);
+  });
+
+  test("画像モデルの推定が女性・男性の一部ランキング推定に反映される", () => {
+    const femaleChangedCount = femaleProfilePool.filter(
+      (entry) =>
+        entry.image.startsWith("/images/") &&
+        getFemaleRankingEstimatedHeight(entry) !==
+          getEstimatedHeight(entry.actualHeight, entry.name)
+    ).length;
+    const maleChangedCount = maleProfilePool.filter(
+      (entry) =>
+        entry.image.startsWith("/images/") &&
+        getMaleRankingEstimatedHeight(entry) !==
+          getEstimatedHeight(entry.actualHeight, entry.name)
+    ).length;
+
+    expect(femaleChangedCount).toBeGreaterThan(0);
+    expect(maleChangedCount).toBeGreaterThan(0);
   });
 
   test("男性エントリに bust / cup がない", () => {
