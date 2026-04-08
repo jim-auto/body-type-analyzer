@@ -144,6 +144,7 @@ describe("AnalyzePage", () => {
     renderPage();
     const performanceSection = screen.getByRole("region", { name: "モデル性能" });
 
+    expect(performanceSection).toHaveAttribute("id", "model-performance");
     expect(
       screen.getByRole("heading", { level: 2, name: "モデル性能" })
     ).toBeInTheDocument();

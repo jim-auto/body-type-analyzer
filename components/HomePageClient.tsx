@@ -236,12 +236,20 @@ export default function HomePageClient({
             推定値は公開データをもとに補正しつつ、画像診断は seed
             乱数ベースでそれっぽく返します。
           </p>
-          <Link
-            href="/analyze"
-            className="mt-5 inline-flex rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-600"
-          >
-            AI診断をはじめる
-          </Link>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/analyze"
+              className="inline-flex rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-600"
+            >
+              AI診断をはじめる
+            </Link>
+            <Link
+              href="/analyze#model-performance"
+              className="inline-flex rounded-full border border-pink-200 bg-white px-5 py-3 text-sm font-semibold text-pink-600 transition hover:border-pink-300 hover:bg-pink-50"
+            >
+              モデル性能を見る
+            </Link>
+          </div>
         </section>
 
         <div className="mx-auto flex w-full max-w-sm rounded-full bg-slate-100 p-1 shadow-inner">
