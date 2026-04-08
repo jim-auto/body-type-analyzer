@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 *.pem
+/local-data/
+/tmp_*.html
+/talent_search_*.html
 
 # debug
 npm-debug.log*

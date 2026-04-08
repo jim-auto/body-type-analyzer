@@ -6,12 +6,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   AI_LOADING_MESSAGES,
   DIAGNOSIS_DISCLAIMERS,
+  DIAGNOSIS_MODEL_SUMMARY,
+  DIAGNOSIS_VALIDATION_LABEL,
   type DiagnosisResult,
   type SilhouetteType,
   buildShareText,
   buildXShareUrl,
   diagnose,
-  hashFromImage,
+  extractDiagnosisFeatures,
 } from "@/lib/image-analyzer";
 
 const MESSAGE_INTERVAL_MS = 1500;
@@ -118,13 +120,13 @@ export default function AnalyzePage() {
     setProgress(8);
 
     try {
-      const hash = await hashFromImage(file);
+      const features = await extractDiagnosisFeatures(file);
 
       if (runId !== analysisRunRef.current) {
         return;
       }
 
-      runLoadingSequence(diagnose(hash), runId);
+      runLoadingSequence(diagnose(features), runId);
     } catch {
       if (runId !== analysisRunRef.current) {
         return;
@@ -220,8 +222,8 @@ export default function AnalyzePage() {
                   AI診断
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
-                  画像を1枚アップロードすると、AIっぽい顔で身長とカップサイズを推定します。
-                  もちろん真面目そうに見せているだけです。
+                  画像を1枚アップロードすると、公開プロフィール画像から近い特徴を探して
+                  身長とカップサイズを推定します。
                 </p>
               </div>
             </div>
@@ -231,7 +233,10 @@ export default function AnalyzePage() {
                 ⚠ 本人の画像のみ使用してください
               </div>
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-                結果はエンタメ目的です
+                {DIAGNOSIS_MODEL_SUMMARY}
+              </div>
+              <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 sm:col-span-2">
+                {DIAGNOSIS_VALIDATION_LABEL}
               </div>
             </div>
           </div>
@@ -318,7 +323,7 @@ export default function AnalyzePage() {
                     Analyzing
                   </p>
                   <h2 className="text-2xl font-bold text-slate-900">
-                    AIがかなり真剣に診断中
+                    近いサンプルを検索中
                   </h2>
                   <p className="text-sm leading-6 text-slate-500">
                     {AI_LOADING_MESSAGES[loadingMessageIndex]}
@@ -346,10 +351,10 @@ export default function AnalyzePage() {
 
                 <div className="grid gap-3 text-sm text-slate-500">
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    解析精度より演出を優先しています。
+                    画像から特徴量を抽出して近傍候補を比較しています。
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    それっぽい計算をしているように見せかけています。
+                    途中表示は演出ですが、推定自体は固定モデルで計算しています。
                   </div>
                 </div>
               </div>
@@ -363,7 +368,7 @@ export default function AnalyzePage() {
                     診断結果
                   </h2>
                   <p className="text-sm leading-6 text-slate-500">
-                    ハッシュと seed 乱数から、もっともらしい値を決定論的に返しています。
+                    {DIAGNOSIS_MODEL_SUMMARY}から近いサンプルを探して推定しています。
                   </p>
                 </div>
 
@@ -411,7 +416,7 @@ export default function AnalyzePage() {
                           {silhouetteLabels[result.silhouetteType]}
                         </p>
                         <p className="text-sm text-slate-500">
-                          X / I / A のどれかを雰囲気で選んでいます。
+                          推定身長と推定カップの組み合わせから分類しています。
                         </p>
                       </div>
                     </div>
@@ -436,7 +441,7 @@ export default function AnalyzePage() {
                       />
                     </div>
                     <p className="mt-3 text-sm text-slate-500">
-                      低めなのは仕様です。AIもそこまで自信はありません。
+                      近傍の距離と投票のまとまり具合から算出しています。
                     </p>
                   </article>
                 </div>
@@ -451,20 +456,20 @@ export default function AnalyzePage() {
                     診断待機中
                   </h2>
                   <p className="text-sm leading-6 text-slate-500">
-                    画像を選ぶと、ハッシュから seed を作って毎回同じ結果を返します。
-                    同じ画像なら同じ診断になります。
+                    画像から特徴量を抽出し、公開プロフィール画像の近傍を検索します。
+                    同じ画像なら同じ特徴量になり、近い結果になります。
                   </p>
                 </div>
 
                 <div className="grid gap-3 text-sm text-slate-500">
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    ネタローディング演出つきで診断します。
+                    カップ推定は上半身寄り、身長推定は全体寄りの特徴を使います。
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                    leave-one-out 検証値も公開しています。
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
                     結果はあとからコピーして X にシェアできます。
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    免責表示は結果欄にも明示します。
                   </div>
                 </div>
               </div>
@@ -480,7 +485,7 @@ export default function AnalyzePage() {
                   あなたに近い有名人
                 </h2>
                 <p className="text-sm leading-6 text-slate-500">
-                  ランキングデータから、身長とカップサイズが近い候補を抽出しました。
+                  学習に使った公開プロフィール画像の近傍から候補を出しています。
                 </p>
               </div>
 

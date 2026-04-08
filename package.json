@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "fetch:local-training": "node scripts/fetch-local-training-profiles.mjs",
+    "generate:diagnosis-model": "python scripts/generate-diagnosis-model.py",
     "test": "jest --runInBand",
     "test:watch": "jest --watch"
   },
@@ -26,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "iconv-lite": "^0.6.3",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "tailwindcss": "^4",
