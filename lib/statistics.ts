@@ -16,7 +16,9 @@ export function calculateDeviation(
 }
 
 export function bustToEstimatedCup(bustCm: number): string {
-  const diff = bustCm - (bustCm - 12.5);
+  const estimatedUnder = Math.round(bustCm * 0.82);
+  const under = Math.round(estimatedUnder / 5) * 5;
+  const diff = bustCm - under;
 
   if (diff < 11.25) return "A";
   if (diff < 13.75) return "B";

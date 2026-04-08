@@ -54,27 +54,24 @@ describe("statistics", () => {
     expect(calculateDeviation(181, 171, 5.8)).toBe(67);
   });
 
-  test("bustToEstimatedCupは85cmでBを返す", () => {
-    expect(bustToEstimatedCup(85)).toBe("B");
+  test("bustToEstimatedCupは94cmで大きいカップを返す", () => {
+    expect(["E", "F", "G"]).toContain(bustToEstimatedCup(94));
   });
 
-  test("bustToEstimatedCupは88cmでBを返す", () => {
-    expect(bustToEstimatedCup(88)).toBe("B");
+  test("bustToEstimatedCupは80cmで標準的なカップを返す", () => {
+    expect(["B", "C"]).toContain(bustToEstimatedCup(80));
   });
 
-  test("bustToEstimatedCupは92cmでBを返す", () => {
-    expect(bustToEstimatedCup(92)).toBe("B");
+  test("bustToEstimatedCupは88cmで中〜大きめのカップを返す", () => {
+    expect(["C", "D", "E"]).toContain(bustToEstimatedCup(88));
   });
 
-  test("bustToEstimatedCupは75cmでBを返す", () => {
-    expect(bustToEstimatedCup(75)).toBe("B");
+  test("bustToEstimatedCupは異なるバストサイズで異なるカップを返す", () => {
+    expect(bustToEstimatedCup(80)).not.toBe(bustToEstimatedCup(94));
   });
 
-  test("bustToEstimatedCupは100cmでBを返す", () => {
-    expect(bustToEstimatedCup(100)).toBe("B");
-  });
-
-  test("bustToEstimatedCupは70cmでBを返す", () => {
-    expect(bustToEstimatedCup(70)).toBe("B");
+  test("bustToEstimatedCupは複数入力で同じ値に固定されない", () => {
+    const cups = [65, 80, 88, 94].map((bust) => bustToEstimatedCup(bust));
+    expect(new Set(cups).size).toBeGreaterThan(2);
   });
 });

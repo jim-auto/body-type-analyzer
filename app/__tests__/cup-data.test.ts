@@ -7,6 +7,7 @@ import {
   getCupDifference,
   getEstimatedCupFromBust,
   getEstimatedHeight,
+  getNameSeed,
 } from "@/lib/profile-estimates";
 import type {
   FemaleRankingEntry,
@@ -217,6 +218,21 @@ describe("ranking.json actual profile data", () => {
     expect(cupIndexes).toEqual([...cupIndexes].sort((left, right) => right - left));
   });
 
+  test("推定カップ数ランキングの score が全員同じではない", () => {
+    const ranking =
+      femaleCategories.find((category) => category.category === "estimatedCup")
+        ?.ranking ?? [];
+
+    expect(new Set(ranking.map((entry) => entry.score)).size).toBeGreaterThan(1);
+    ranking.forEach((entry) => {
+      expect(entry.score).toBe(
+        estimatedCupOrder.indexOf(
+          entry.estimatedCup as (typeof estimatedCupOrder)[number]
+        ) + 1
+      );
+    });
+  });
+
   test("推定身長ランキングの各エントリに estimatedHeight がある", () => {
     [femaleCategories, maleCategories].forEach((categories) => {
       categories
@@ -280,6 +296,37 @@ describe("ranking.json actual profile data", () => {
     expect(findMaleEntry("silhouette", "木村拓哉")?.score).toBe(
       calculateDeviation(176, MALE_STATS.height.mean, MALE_STATS.height.stddev)
     );
+  });
+
+  test("男性差別化カテゴリの score が想定式と一致する", () => {
+    const upperBodyAdjustment = (getNameSeed("鈴木亮平") % 7) - 3;
+    const proportionEstimatedHeight = getEstimatedHeight(186, "鈴木亮平");
+    const accuracy = 10 - Math.abs(proportionEstimatedHeight - 186);
+
+    expect(findMaleEntry("upperBody", "鈴木亮平")?.score).toBe(
+      calculateDeviation(
+        186 + upperBodyAdjustment,
+        MALE_STATS.height.mean,
+        MALE_STATS.height.stddev
+      )
+    );
+    expect(findMaleEntry("proportion", "鈴木亮平")?.score).toBe(
+      calculateDeviation(186, MALE_STATS.height.mean, MALE_STATS.height.stddev) +
+        Math.round(accuracy / 2)
+    );
+  });
+
+  test("男性の3カテゴリの順位が完全一致しない", () => {
+    const rankingNames = ["silhouette", "upperBody", "proportion"].map(
+      (categoryKey) =>
+        maleCategories
+          .find((category) => category.category === categoryKey)
+          ?.ranking.map((entry) => entry.name) ?? []
+    );
+
+    expect(rankingNames[0]).not.toEqual(rankingNames[1]);
+    expect(rankingNames[0]).not.toEqual(rankingNames[2]);
+    expect(rankingNames[1]).not.toEqual(rankingNames[2]);
   });
 
   test("偏差値の分布が30〜80の範囲に収まる", () => {
