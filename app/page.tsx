@@ -2,14 +2,33 @@
 
 import { useEffect, useState } from "react";
 
+import {
+  getCupDifference,
+  getDeterministicHeightDelta,
+  getEstimatedCupFromBust,
+  getEstimatedHeight,
+  getMismatchEmoji,
+} from "@/lib/profile-estimates";
+
 type Gender = "female" | "male";
 
-type RankingEntry = {
+type FemaleRankingEntry = {
   name: string;
   score: number;
   image: string;
-  cup?: string;
+  cup: string | null;
+  actualHeight: number;
+  bust: number | null;
 };
+
+type MaleRankingEntry = {
+  name: string;
+  score: number;
+  image: string;
+  actualHeight: number;
+};
+
+type RankingEntry = FemaleRankingEntry | MaleRankingEntry;
 
 type RankingCategory = {
   category: string;
@@ -48,6 +67,50 @@ const genderButtonStyles: Record<Gender, { active: string; inactive: string }> =
     },
   };
 
+function isFemaleEntry(entry: RankingEntry): entry is FemaleRankingEntry {
+  return "bust" in entry;
+}
+
+function formatDiff(diff: number, unit: string): string {
+  if (diff === 0) {
+    return "一致";
+  }
+
+  return `${diff > 0 ? "+" : ""}${diff}${unit}`;
+}
+
+function getFemalePredictionText(entry: FemaleRankingEntry): string {
+  const estimatedCup = getEstimatedCupFromBust(entry.bust);
+
+  if (!estimatedCup) {
+    return "AI推定: 実バスト非公表";
+  }
+
+  if (!entry.cup) {
+    return `AI推定: ${estimatedCup}カップ（実カップ非公表 🤔）`;
+  }
+
+  const cupDiff = getCupDifference(entry.cup, estimatedCup);
+
+  if (cupDiff === null) {
+    return `AI推定: ${estimatedCup}カップ`;
+  }
+
+  const emoji = getMismatchEmoji(cupDiff);
+  return `AI推定: ${estimatedCup}カップ（${formatDiff(
+    cupDiff,
+    "サイズ"
+  )} ${emoji}）`;
+}
+
+function getMalePredictionText(entry: MaleRankingEntry): string {
+  const estimatedHeight = getEstimatedHeight(entry.actualHeight, entry.name);
+  const diff = getDeterministicHeightDelta(entry.name);
+  const emoji = getMismatchEmoji(diff);
+
+  return `AI推定: ${estimatedHeight}cm（${formatDiff(diff, "cm")} ${emoji}）`;
+}
+
 export default function Home() {
   const [data, setData] = useState<RankingData | null>(null);
   const [gender, setGender] = useState<Gender>("female");
@@ -64,11 +127,12 @@ export default function Home() {
     let isMounted = true;
 
     fetch(`${basePath}/data/ranking.json`)
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((nextData: RankingData) => {
         if (!isMounted) {
           return;
         }
+
         setData(nextData);
         setLoading(false);
       })
@@ -76,6 +140,7 @@ export default function Home() {
         if (!isMounted) {
           return;
         }
+
         setError(true);
         setLoading(false);
       });
@@ -157,9 +222,9 @@ export default function Home() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
-          {categories.map((cat, index) => (
+          {categories.map((category, index) => (
             <button
-              key={`${gender}-${cat.category}`}
+              key={`${gender}-${category.category}`}
               type="button"
               onClick={() => setActiveTab(index)}
               aria-pressed={index === activeTab}
@@ -169,7 +234,7 @@ export default function Home() {
                   : "bg-slate-200 text-slate-600 hover:bg-slate-300"
               }`}
             >
-              {cat.title}
+              {category.title}
             </button>
           ))}
         </div>
@@ -179,48 +244,60 @@ export default function Home() {
             <h2 className="text-center text-xl font-bold text-slate-700">
               {current.title}
             </h2>
-            {current.ranking.map((entry, index) => (
-              <div
-                key={`${gender}-${entry.name}`}
-                className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-md transition-shadow hover:shadow-lg"
-              >
-                <div className="flex items-center gap-4">
+            {current.ranking.map((entry, index) => {
+              const femaleEntry =
+                gender === "female" && isFemaleEntry(entry) ? entry : null;
+              const predictionText = femaleEntry
+                ? getFemalePredictionText(femaleEntry)
+                : getMalePredictionText(entry as MaleRankingEntry);
+
+              return (
+                <div
+                  key={`${gender}-${entry.name}`}
+                  className="flex items-start justify-between rounded-2xl bg-white p-4 shadow-md transition-shadow hover:shadow-lg"
+                >
+                  <div className="flex min-w-0 items-start gap-4">
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                        medalColors[index] ?? "bg-slate-400 text-white"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <img
+                      src={resolveImageSrc(entry.image)}
+                      alt={entry.name}
+                      className={`h-12 w-12 shrink-0 rounded-full object-cover ${
+                        medalBorder[index] ?? ""
+                      }`}
+                    />
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-slate-700">
+                          {entry.name}
+                        </span>
+                        {femaleEntry?.cup ? (
+                          <span className="rounded bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-700">
+                            {femaleEntry.cup}カップ
+                          </span>
+                        ) : null}
+                        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                          {entry.actualHeight}cm
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">{predictionText}</p>
+                    </div>
+                  </div>
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm ${
-                      medalColors[index] ?? "bg-slate-400 text-white"
+                    className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${
+                      medalColors[index] ?? "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {index + 1}
+                    偏差値{entry.score}
                   </span>
-                  <img
-                    src={resolveImageSrc(entry.image)}
-                    alt={entry.name}
-                    className={`h-12 w-12 rounded-full object-cover ${
-                      medalBorder[index] ?? ""
-                    }`}
-                  />
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-slate-700">
-                      {entry.name}
-                    </span>
-                    {gender === "female" &&
-                    entry.cup &&
-                    entry.cup !== "非公表" ? (
-                      <span className="rounded bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-700">
-                        {entry.cup}カップ
-                      </span>
-                    ) : null}
-                  </div>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-sm font-bold ${
-                    medalColors[index] ?? "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {entry.score}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : null}
       </main>
