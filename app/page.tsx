@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import {
   formatSignedDifference,
@@ -186,6 +187,24 @@ export default function Home() {
             芸能人のスタイルをAIが偏差値で格付け！
           </p>
         </div>
+
+        <section className="rounded-3xl border border-rose-100 bg-[linear-gradient(135deg,_rgba(251,113,133,0.12),_rgba(255,255,255,0.95))] p-6 text-center shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-500">
+            New
+          </p>
+          <h2 className="mt-2 text-2xl font-bold text-slate-800">
+            あなたのスタイルも診断してみる？
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
+            画像をアップロードすると、seed 乱数ベースで身長とカップサイズをそれっぽく推定します。
+          </p>
+          <Link
+            href="/analyze"
+            className="mt-5 inline-flex rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-600"
+          >
+            AI診断をはじめる
+          </Link>
+        </section>
 
         <div className="mx-auto flex w-full max-w-sm rounded-full bg-slate-100 p-1 shadow-inner">
           <button
