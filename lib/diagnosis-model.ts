@@ -74,6 +74,15 @@ export type HeightMetrics = {
   exactRate: number;
   within2Rate: number;
   coverage: ErrorCoverage[];
+  generalization: {
+    method: string;
+    holdoutCount: number;
+    trainingCount: number;
+    mae: number;
+    exactRate: number;
+    within2Rate: number;
+    coverage: ErrorCoverage[];
+  };
   models: Array<{
     featureSet: keyof DiagnosisFeatures;
     k: number;
@@ -87,6 +96,15 @@ export type CupMetrics = {
   exactRate: number;
   within1Rate: number;
   coverage: ErrorCoverage[];
+  generalization: {
+    method: string;
+    holdoutCount: number;
+    trainingCount: number;
+    mae: number;
+    exactRate: number;
+    within1Rate: number;
+    coverage: ErrorCoverage[];
+  };
   models: Array<{
     featureSet: keyof DiagnosisFeatures;
     k: number;
