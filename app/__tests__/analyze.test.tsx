@@ -163,52 +163,64 @@ describe("AnalyzePage", () => {
       within(performanceSection).getByText((_, element) =>
         element?.tagName === "P" &&
         (element.textContent?.includes(
-          `公開プロフィール画像 ${DIAGNOSIS_MODEL_METRICS.trainingCount} 枚`
+          `学習プロフィール画像 ${DIAGNOSIS_MODEL_METRICS.trainingCount} 枚`
         ) ?? false)
       )
     ).toBeInTheDocument();
     expect(
       screen.getByText(
         `±${
-          Number.isInteger(DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0)
-            ? `${DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0}`
-            : (DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0).toFixed(1)
+          Number.isInteger(
+            DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0
+          )
+            ? `${DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0}`
+            : (
+                DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0
+              ).toFixed(1)
         }cm`
       )
     ).toBeInTheDocument();
     expect(
       screen.getByText(
         `±${
-          Number.isInteger(DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0)
-            ? `${DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0}`
-            : (DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0).toFixed(1)
+          Number.isInteger(
+            DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0
+          )
+            ? `${DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0}`
+            : (
+                DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0
+              ).toFixed(1)
         }カップ`
       )
     ).toBeInTheDocument();
     expect(screen.getAllByText("7割がこの範囲")).toHaveLength(2);
     expect(
       screen.getByText(
-        `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate)}`
+        `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.height.generalization.exactRate)}`
       )
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate)}`
+        `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.cup.generalization.exactRate)}`
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`)
-    ).toBeInTheDocument();
+      screen.getAllByText(
+        `固定テスト ${DIAGNOSIS_MODEL_METRICS.height.generalization.holdoutCount}件`
+      )
+    ).toHaveLength(2);
     expect(
-      screen.getByText(`検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`)
-    ).toBeInTheDocument();
+      screen.getAllByText(
+        `固定テスト ${DIAGNOSIS_MODEL_METRICS.cup.generalization.holdoutCount}件`
+      )
+    ).toHaveLength(2);
     expect(screen.queryByText("身長は7割が±5cm以内")).not.toBeInTheDocument();
     expect(screen.queryByText("身長は8割が±6cm以内")).not.toBeInTheDocument();
     expect(
       within(performanceSection).getByText((_, element) =>
         element?.tagName === "P" &&
         (element.textContent?.includes(
-          "数cm単位・1カップ単位でどこまで収まるかを中心に公開しています。"
+          "学習に使っていない固定テストで確認した結果です。"
         ) ?? false)
       )
     ).toBeInTheDocument();

@@ -68,18 +68,18 @@ const SIMILARITY_FEATURE_SPECS = [
 
 export const AI_LOADING_MESSAGES = [
   "輪郭と明暗パターンを抽出中…",
-  "公開プロフィール画像と比較中…",
+  "学習プロフィール画像と比較中…",
   "身長の近傍候補を集計中…",
   "カップの近傍投票を計算中…",
   "診断結果を組み立て中…",
 ] as const;
 
 export const DIAGNOSIS_MODEL_SUMMARY = `学習プロフィール画像${DIAGNOSIS_MODEL_METRICS.trainingCount}枚の近傍比較モデル`;
-export const DIAGNOSIS_VALIDATION_LABEL = `検証: 身長の8割が±${DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0}cm以内 / カップの7割が±${DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0}カップ以内`;
+export const DIAGNOSIS_VALIDATION_LABEL = `固定テスト: 身長の7割が±${DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0}cm以内 / カップの7割が±${DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0}カップ以内`;
 
 export const DIAGNOSIS_DISCLAIMERS = [
   `※ ${DIAGNOSIS_MODEL_SUMMARY}です`,
-  `※ leave-one-out検証: 身長の8割が±${DIAGNOSIS_MODEL_METRICS.height.coverage[1]?.maxError ?? 0}cm以内 / カップの7割が±${DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0}カップ以内`,
+  `※ 固定テスト: 身長${DIAGNOSIS_MODEL_METRICS.height.generalization.holdoutCount}件 / カップ${DIAGNOSIS_MODEL_METRICS.cup.generalization.holdoutCount}件`,
   "※ 未知データへの精度保証はありません。結果は参考・エンタメ用途です",
   "※ 画像はサーバーに送信されません。全てブラウザ内で処理されます",
 ] as const;

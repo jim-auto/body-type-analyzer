@@ -76,6 +76,19 @@ ROBUST_CUP_MODELS = (
     ("cupCenter", 5),
     ("cupEdgeTop", 5),
 )
+TRUSTED_LOCAL_SOURCES = {
+    "talent-databank",
+    "idolprof",
+    "idolprof.com",
+    "idolprof-idolprof",
+    "idolprof-idolprof.com",
+    "amic-e.com",
+    "media-iz.com",
+    "mache.tv",
+    "y6nvocam.gdl-entertainment.tokyo",
+}
+CURATED_LOCAL_HEIGHT_SOURCES = set(TRUSTED_LOCAL_SOURCES)
+CURATED_LOCAL_CUP_SOURCES = set(TRUSTED_LOCAL_SOURCES)
 
 
 @dataclass(frozen=True)
@@ -133,25 +146,35 @@ def load_local_training_profiles() -> list[Profile]:
 
     records = json.loads(LOCAL_TRAINING_DATA_PATH.read_text(encoding="utf-8"))
 
-    return [
-        Profile(
-            name=record["name"],
-            image=record["imagePath"],
-            actual_height=float(record["actualHeight"]),
-            cup=record["cup"],
-            source=record.get("source", "local"),
-            use_for_height=bool(
-                record.get(
-                    "useForHeight",
-                    record.get("source") == "talent-databank",
-                )
-            ),
-            use_for_cup=bool(record.get("useForCup", False)),
-            use_for_similarity=bool(record.get("useForSimilarity", True)),
+    profiles: list[Profile] = []
+
+    for record in records:
+        if not record.get("imagePath") or record.get("cup") not in CUP_ORDER:
+            continue
+
+        source = record.get("source", "local")
+        use_for_height = bool(
+            record.get(
+                "useForHeight",
+                source == "talent-databank",
+            )
+        ) and source in CURATED_LOCAL_HEIGHT_SOURCES
+        use_for_cup = bool(record.get("useForCup", False)) and source in CURATED_LOCAL_CUP_SOURCES
+
+        profiles.append(
+            Profile(
+                name=record["name"],
+                image=record["imagePath"],
+                actual_height=float(record["actualHeight"]),
+                cup=record["cup"],
+                source=source,
+                use_for_height=use_for_height,
+                use_for_cup=use_for_cup,
+                use_for_similarity=bool(record.get("useForSimilarity", False)),
+            )
         )
-        for record in records
-        if record.get("imagePath") and record.get("cup") in CUP_ORDER
-    ]
+
+    return profiles
 
 
 def resolve_image_path(image_path: str) -> Path:
@@ -253,6 +276,7 @@ def weighted_vote(neighbors: list[tuple[float, str]]) -> str:
 def get_neighbors(
     feature_sets: list[list[float]],
     values: list[float] | list[str],
+    names: list[str],
     target_index: int,
     neighbor_count: int,
     candidate_indices: list[int] | None = None,
@@ -263,18 +287,23 @@ def get_neighbors(
         else list(range(len(feature_sets)))
     )
     neighbors = [
-        (euclidean_distance(feature_sets[target_index], feature_sets[index]), values[index])
+        (
+            euclidean_distance(feature_sets[target_index], feature_sets[index]),
+            names[index],
+            values[index],
+        )
         for index in allowed_indices
         if index != target_index
     ]
-    neighbors.sort(key=lambda item: item[0])
+    neighbors.sort(key=lambda item: (item[0], item[1]))
 
-    return neighbors[:neighbor_count]
+    return [(distance, value) for distance, _, value in neighbors[:neighbor_count]]
 
 
 def build_ranked_neighbors(
     named_feature_sets: dict[str, list[list[float]]],
     values: list[float] | list[str],
+    names: list[str],
     candidate_indices: list[int],
     feature_names: tuple[str, ...],
 ) -> dict[str, dict[int, list[tuple[float, float]] | list[tuple[float, str]]]]:
@@ -283,6 +312,7 @@ def build_ranked_neighbors(
             index: get_neighbors(
                 named_feature_sets[feature_name],
                 values,
+                names,
                 index,
                 len(candidate_indices) - 1,
                 candidate_indices,
@@ -497,6 +527,7 @@ def summarize_cup_errors(errors: list[int], train_count: int) -> dict[str, float
 def evaluate_height_models_on_split(
     named_feature_sets: dict[str, list[list[float]]],
     heights: list[float],
+    names: list[str],
     train_indices: list[int],
     evaluation_indices: list[int],
     models: tuple[tuple[str, int], ...],
@@ -509,6 +540,7 @@ def evaluate_height_models_on_split(
                 get_neighbors(
                     named_feature_sets[feature_name],
                     heights,
+                    names,
                     index,
                     neighbor_count,
                     train_indices,
@@ -525,6 +557,7 @@ def evaluate_height_models_on_split(
 def evaluate_cup_models_on_split(
     named_feature_sets: dict[str, list[list[float]]],
     cups: list[str],
+    names: list[str],
     train_indices: list[int],
     evaluation_indices: list[int],
     models: tuple[tuple[str, int], ...],
@@ -537,6 +570,7 @@ def evaluate_cup_models_on_split(
                 get_neighbors(
                     named_feature_sets[feature_name],
                     cups,
+                    names,
                     index,
                     neighbor_count,
                     train_indices,
@@ -553,11 +587,13 @@ def evaluate_cup_models_on_split(
 def select_height_models(
     named_feature_sets: dict[str, list[list[float]]],
     heights: list[float],
+    names: list[str],
     height_indices: list[int],
 ) -> tuple[tuple[tuple[str, int], ...], dict[str, float]]:
     ranked_neighbors = build_ranked_neighbors(
         named_feature_sets,
         heights,
+        names,
         height_indices,
         HEIGHT_FEATURE_CANDIDATES,
     )
@@ -599,11 +635,13 @@ def select_height_models(
 def select_cup_models(
     named_feature_sets: dict[str, list[list[float]]],
     cups: list[str],
+    names: list[str],
     cup_indices: list[int],
 ) -> tuple[tuple[tuple[str, int], ...], dict[str, float]]:
     ranked_neighbors = build_ranked_neighbors(
         named_feature_sets,
         cups,
+        names,
         cup_indices,
         CUP_FEATURE_CANDIDATES,
     )
@@ -643,30 +681,26 @@ def select_cup_models(
 def select_height_models_for_generalization(
     named_feature_sets: dict[str, list[list[float]]],
     heights: list[float],
+    names: list[str],
     profiles: list[Profile],
     height_indices: list[int],
 ) -> tuple[tuple[tuple[str, int], ...], dict[str, float], dict[str, float]]:
-    public_height_indices = [
-        index for index in height_indices if profiles[index].source == "public"
-    ]
-    auxiliary_height_indices = [
-        index for index in height_indices if profiles[index].source != "public"
-    ]
-    public_train_indices, holdout_indices = build_stratified_holdout(
-        public_height_indices,
+    train_indices, holdout_indices = build_stratified_holdout(
+        height_indices,
         lambda index: round(heights[index] / 5) * 5,
         profiles,
     )
-    selection_indices = sorted(public_train_indices + auxiliary_height_indices)
     models, _ = select_height_models(
         named_feature_sets,
         heights,
-        selection_indices,
+        names,
+        train_indices,
     )
     loocv_metrics = evaluate_height_models(
         build_ranked_neighbors(
             named_feature_sets,
             heights,
+            names,
             height_indices,
             HEIGHT_FEATURE_CANDIDATES,
         ),
@@ -675,12 +709,13 @@ def select_height_models_for_generalization(
         models,
     )
     holdout_metrics = {
-        "method": "fixed public holdout with talent-databank auxiliary training",
+        "method": "fixed trusted-source holdout",
         "holdoutCount": len(holdout_indices),
         **evaluate_height_models_on_split(
             named_feature_sets,
             heights,
-            selection_indices,
+            names,
+            train_indices,
             holdout_indices,
             models,
         ),
@@ -692,14 +727,12 @@ def select_height_models_for_generalization(
 def select_cup_models_for_generalization(
     named_feature_sets: dict[str, list[list[float]]],
     cups: list[str],
+    names: list[str],
     profiles: list[Profile],
     cup_indices: list[int],
 ) -> tuple[tuple[tuple[str, int], ...], dict[str, float], dict[str, float]]:
-    public_cup_indices = [
-        index for index in cup_indices if profiles[index].source == "public"
-    ]
-    selection_indices, holdout_indices = build_stratified_holdout(
-        public_cup_indices,
+    train_indices, holdout_indices = build_stratified_holdout(
+        cup_indices,
         lambda index: cups[index],
         profiles,
     )
@@ -708,6 +741,7 @@ def select_cup_models_for_generalization(
         build_ranked_neighbors(
             named_feature_sets,
             cups,
+            names,
             cup_indices,
             CUP_FEATURE_CANDIDATES,
         ),
@@ -716,12 +750,13 @@ def select_cup_models_for_generalization(
         models,
     )
     holdout_metrics = {
-        "method": "fixed public holdout",
+        "method": "fixed trusted-source holdout",
         "holdoutCount": len(holdout_indices),
         **evaluate_cup_models_on_split(
             named_feature_sets,
             cups,
-            selection_indices,
+            names,
+            train_indices,
             holdout_indices,
             models,
         ),
@@ -743,6 +778,7 @@ def build_model() -> dict[str, object]:
     }
     heights = [profile.actual_height for profile in profiles]
     cups = [profile.cup for profile in profiles]
+    names = [profile.name for profile in profiles]
     height_indices = [
         index for index, profile in enumerate(profiles) if profile.use_for_height
     ]
@@ -753,12 +789,14 @@ def build_model() -> dict[str, object]:
     _, height_metrics, height_generalization = select_height_models_for_generalization(
         feature_sets,
         heights,
+        names,
         profiles,
         height_indices,
     )
     _, cup_metrics, cup_generalization = select_cup_models_for_generalization(
         feature_sets,
         cups,
+        names,
         profiles,
         cup_indices,
     )
