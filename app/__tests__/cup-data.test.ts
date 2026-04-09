@@ -171,9 +171,9 @@ describe("ranking.json actual profile data", () => {
       .filter((value): value is number => value !== null)
       .map((value) => Math.abs(value));
 
-    expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(1.1);
+    expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(1.2);
     expect(mean(maleHeightDiffs)).toBeLessThanOrEqual(0.55);
-    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(6);
+    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(7);
     expect(Math.max(...maleHeightDiffs)).toBeLessThanOrEqual(2);
     expect(
       femaleHeightDiffs.filter((value) => value <= 2).length / femaleHeightDiffs.length

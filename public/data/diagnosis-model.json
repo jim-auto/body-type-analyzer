@@ -1,41 +1,59 @@
 {
   "version": 1,
-  "generatedAt": "2026-04-08T23:57:13.046327+00:00",
+  "generatedAt": "2026-04-09T01:27:16.689658+00:00",
   "metrics": {
     "trainingCount": 87,
     "height": {
-      "strategy": "auto-selected tolerance-first median ensemble of edge-enhanced kNN regressors",
-      "mae": 3.541096,
-      "exactRate": 0.136986,
-      "within2Rate": 0.424658,
+      "strategy": "holdout-selected filtered-source edge-enhanced kNN regressors",
+      "mae": 3.97541,
+      "exactRate": 0.065574,
+      "within2Rate": 0.377049,
       "coverage": [
         {
           "rate": 0.7,
-          "maxError": 4.0
+          "maxError": 5.0
         },
         {
           "rate": 0.8,
           "maxError": 6.0
         }
       ],
-      "trainingCount": 73,
+      "trainingCount": 61,
       "models": [
         {
-          "featureSet": "heightWide",
+          "featureSet": "heightPrimary",
+          "k": 9
+        },
+        {
+          "featureSet": "heightBalanced",
           "k": 5
         },
         {
           "featureSet": "heightEdgeFull",
-          "k": 13
-        },
-        {
-          "featureSet": "heightEdgeCenter",
-          "k": 11
+          "k": 3
         }
-      ]
+      ],
+      "generalization": {
+        "method": "fixed public holdout with talent-databank auxiliary training",
+        "holdoutCount": 10,
+        "mae": 4.7,
+        "exactRate": 0.0,
+        "within2Rate": 0.2,
+        "coverage": [
+          {
+            "rate": 0.7,
+            "maxError": 4.0
+          },
+          {
+            "rate": 0.8,
+            "maxError": 7.0
+          }
+        ],
+        "trainingCount": 51
+      }
     },
     "cup": {
-      "strategy": "auto-selected vote ensemble of edge-enhanced kNN classifiers",
+      "strategy": "fixed robust edge-enhanced kNN classifiers",
       "mae": 0.924528,
       "exactRate": 0.377358,
       "within1Rate": 0.792453,
@@ -63,7 +81,25 @@
           "featureSet": "cupEdgeTop",
           "k": 5
         }
-      ]
+      ],
+      "generalization": {
+        "method": "fixed public holdout",
+        "holdoutCount": 10,
+        "mae": 0.7,
+        "exactRate": 0.5,
+        "within1Rate": 0.8,
+        "coverage": [
+          {
+            "rate": 0.7,
+            "maxError": 1
+          },
+          {
+            "rate": 0.8,
+            "maxError": 1
+          }
+        ],
+        "trainingCount": 43
+      }
     },
     "similarity": {
       "feature": "full grayscale 8x8 + top grayscale 8x8",
@@ -90101,7 +90137,7 @@
       "cup": "D",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -91653,7 +91689,7 @@
       "cup": "C",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -94757,7 +94793,7 @@
       "cup": "C",
       "silhouetteType": "I",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -111829,7 +111865,7 @@
       "cup": "C",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -116485,7 +116521,7 @@
       "cup": "B",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -118037,7 +118073,7 @@
       "cup": "B",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -122693,7 +122729,7 @@
       "cup": "C",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -124245,7 +124281,7 @@
       "cup": "C",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -127349,7 +127385,7 @@
       "cup": "B",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -128901,7 +128937,7 @@
       "cup": "B",
       "silhouetteType": "I",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -130453,7 +130489,7 @@
       "cup": "B",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },
@@ -132005,7 +132041,7 @@
       "cup": "C",
       "silhouetteType": "X",
       "availability": {
-        "height": true,
+        "height": false,
         "cup": false,
         "similarity": true
       },

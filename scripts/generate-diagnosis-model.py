@@ -4,6 +4,7 @@ import json
 import math
 import statistics
 import subprocess
+import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from itertools import combinations, product
@@ -68,6 +69,13 @@ CUP_FEATURE_CANDIDATES = (
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
+HOLDOUT_RATIO = 0.2
+MIN_HOLDOUT_BUCKET_SIZE = 4
+ROBUST_CUP_MODELS = (
+    ("cupSecondary", 3),
+    ("cupCenter", 5),
+    ("cupEdgeTop", 5),
+)
 
 
 @dataclass(frozen=True)
@@ -76,6 +84,7 @@ class Profile:
     image: str
     actual_height: float
     cup: str
+    source: str = "public"
     use_for_height: bool = True
     use_for_cup: bool = True
     use_for_similarity: bool = True
@@ -104,6 +113,7 @@ def load_profiles() -> list[Profile]:
             image=profile["image"],
             actual_height=float(profile["actualHeight"]),
             cup=profile["cup"],
+            source="public",
         )
         for profile in profiles
         if profile["image"].startswith("/images/") and profile["cup"] in CUP_ORDER
@@ -129,13 +139,11 @@ def load_local_training_profiles() -> list[Profile]:
             image=record["imagePath"],
             actual_height=float(record["actualHeight"]),
             cup=record["cup"],
+            source=record.get("source", "local"),
             use_for_height=bool(
                 record.get(
                     "useForHeight",
-                    (
-                        record.get("source") not in {"oricon", "instagram.com"}
-                        or record["name"] in ORICON_HEIGHT_ALLOWLIST
-                    ),
+                    record.get("source") == "talent-databank",
                 )
             ),
             use_for_cup=bool(record.get("useForCup", False)),
@@ -322,6 +330,39 @@ def build_error_coverage(values: list[float], ratios: list[float]) -> list[dict[
     ]
 
 
+def stable_index_hash(value: str) -> int:
+    return int(hashlib.sha1(value.encode("utf-8")).hexdigest()[:8], 16)
+
+
+def build_stratified_holdout(
+    indices: list[int],
+    bucket_for_index,
+    profiles: list[Profile],
+    ratio: float = HOLDOUT_RATIO,
+) -> tuple[list[int], list[int]]:
+    grouped: dict[str, list[int]] = {}
+
+    for index in indices:
+        bucket = str(bucket_for_index(index))
+        grouped.setdefault(bucket, []).append(index)
+
+    train_indices: list[int] = []
+    holdout_indices: list[int] = []
+
+    for bucket_indices in grouped.values():
+        ordered = sorted(bucket_indices, key=lambda index: stable_index_hash(profiles[index].name))
+        holdout_count = (
+            max(1, round(len(ordered) * ratio))
+            if len(ordered) >= MIN_HOLDOUT_BUCKET_SIZE
+            else 0
+        )
+
+        holdout_indices.extend(ordered[:holdout_count])
+        train_indices.extend(ordered[holdout_count:])
+
+    return sorted(train_indices), sorted(holdout_indices)
+
+
 def infer_silhouette(actual_height: float, cup: str) -> str:
     cup_value = CUP_ORDER.index(cup)
 
@@ -433,6 +474,82 @@ def evaluate_cup_models(
     }
 
 
+def summarize_height_errors(errors: list[float], train_count: int) -> dict[str, float]:
+    return {
+        "mae": round(statistics.fmean(errors), 6),
+        "exactRate": round(sum(error == 0 for error in errors) / len(errors), 6),
+        "within2Rate": round(sum(error <= 2 for error in errors) / len(errors), 6),
+        "coverage": build_error_coverage(errors, [0.7, 0.8]),
+        "trainingCount": train_count,
+    }
+
+
+def summarize_cup_errors(errors: list[int], train_count: int) -> dict[str, float]:
+    return {
+        "mae": round(statistics.fmean(errors), 6),
+        "exactRate": round(sum(error == 0 for error in errors) / len(errors), 6),
+        "within1Rate": round(sum(error <= 1 for error in errors) / len(errors), 6),
+        "coverage": build_error_coverage(errors, [0.7, 0.8]),
+        "trainingCount": train_count,
+    }
+
+
+def evaluate_height_models_on_split(
+    named_feature_sets: dict[str, list[list[float]]],
+    heights: list[float],
+    train_indices: list[int],
+    evaluation_indices: list[int],
+    models: tuple[tuple[str, int], ...],
+) -> dict[str, float]:
+    errors: list[float] = []
+
+    for index in evaluation_indices:
+        predictions = [
+            weighted_average(
+                get_neighbors(
+                    named_feature_sets[feature_name],
+                    heights,
+                    index,
+                    neighbor_count,
+                    train_indices,
+                )
+            )
+            for feature_name, neighbor_count in models
+        ]
+        prediction = median_rounded(predictions)
+        errors.append(abs(prediction - heights[index]))
+
+    return summarize_height_errors(errors, len(train_indices))
+
+
+def evaluate_cup_models_on_split(
+    named_feature_sets: dict[str, list[list[float]]],
+    cups: list[str],
+    train_indices: list[int],
+    evaluation_indices: list[int],
+    models: tuple[tuple[str, int], ...],
+) -> dict[str, float]:
+    errors: list[int] = []
+
+    for index in evaluation_indices:
+        predictions = [
+            weighted_vote(
+                get_neighbors(
+                    named_feature_sets[feature_name],
+                    cups,
+                    index,
+                    neighbor_count,
+                    train_indices,
+                )
+            )
+            for feature_name, neighbor_count in models
+        ]
+        prediction = vote_cups(predictions)
+        errors.append(abs(CUP_ORDER.index(prediction) - CUP_ORDER.index(cups[index])))
+
+    return summarize_cup_errors(errors, len(train_indices))
+
+
 def select_height_models(
     named_feature_sets: dict[str, list[list[float]]],
     heights: list[float],
@@ -523,22 +640,94 @@ def select_cup_models(
     return best_models, best_metrics
 
 
-def evaluate_height(
+def select_height_models_for_generalization(
     named_feature_sets: dict[str, list[list[float]]],
     heights: list[float],
+    profiles: list[Profile],
     height_indices: list[int],
-) -> dict[str, float]:
-    _, metrics = select_height_models(named_feature_sets, heights, height_indices)
-    return metrics
+) -> tuple[tuple[tuple[str, int], ...], dict[str, float], dict[str, float]]:
+    public_height_indices = [
+        index for index in height_indices if profiles[index].source == "public"
+    ]
+    auxiliary_height_indices = [
+        index for index in height_indices if profiles[index].source != "public"
+    ]
+    public_train_indices, holdout_indices = build_stratified_holdout(
+        public_height_indices,
+        lambda index: round(heights[index] / 5) * 5,
+        profiles,
+    )
+    selection_indices = sorted(public_train_indices + auxiliary_height_indices)
+    models, _ = select_height_models(
+        named_feature_sets,
+        heights,
+        selection_indices,
+    )
+    loocv_metrics = evaluate_height_models(
+        build_ranked_neighbors(
+            named_feature_sets,
+            heights,
+            height_indices,
+            HEIGHT_FEATURE_CANDIDATES,
+        ),
+        heights,
+        height_indices,
+        models,
+    )
+    holdout_metrics = {
+        "method": "fixed public holdout with talent-databank auxiliary training",
+        "holdoutCount": len(holdout_indices),
+        **evaluate_height_models_on_split(
+            named_feature_sets,
+            heights,
+            selection_indices,
+            holdout_indices,
+            models,
+        ),
+    }
+
+    return models, loocv_metrics, holdout_metrics
 
 
-def evaluate_cup(
+def select_cup_models_for_generalization(
     named_feature_sets: dict[str, list[list[float]]],
     cups: list[str],
+    profiles: list[Profile],
     cup_indices: list[int],
-) -> dict[str, float]:
-    _, metrics = select_cup_models(named_feature_sets, cups, cup_indices)
-    return metrics
+) -> tuple[tuple[tuple[str, int], ...], dict[str, float], dict[str, float]]:
+    public_cup_indices = [
+        index for index in cup_indices if profiles[index].source == "public"
+    ]
+    selection_indices, holdout_indices = build_stratified_holdout(
+        public_cup_indices,
+        lambda index: cups[index],
+        profiles,
+    )
+    models = ROBUST_CUP_MODELS
+    loocv_metrics = evaluate_cup_models(
+        build_ranked_neighbors(
+            named_feature_sets,
+            cups,
+            cup_indices,
+            CUP_FEATURE_CANDIDATES,
+        ),
+        cups,
+        cup_indices,
+        models,
+    )
+    holdout_metrics = {
+        "method": "fixed public holdout",
+        "holdoutCount": len(holdout_indices),
+        **evaluate_cup_models_on_split(
+            named_feature_sets,
+            cups,
+            selection_indices,
+            holdout_indices,
+            models,
+        ),
+    }
+
+    return models, loocv_metrics, holdout_metrics
 
 
 def build_model() -> dict[str, object]:
@@ -561,8 +750,18 @@ def build_model() -> dict[str, object]:
     similarity_indices = [
         index for index, profile in enumerate(profiles) if profile.use_for_similarity
     ]
-    height_metrics = evaluate_height(feature_sets, heights, height_indices)
-    cup_metrics = evaluate_cup(feature_sets, cups, cup_indices)
+    _, height_metrics, height_generalization = select_height_models_for_generalization(
+        feature_sets,
+        heights,
+        profiles,
+        height_indices,
+    )
+    _, cup_metrics, cup_generalization = select_cup_models_for_generalization(
+        feature_sets,
+        cups,
+        profiles,
+        cup_indices,
+    )
 
     return {
         "version": 1,
@@ -570,12 +769,14 @@ def build_model() -> dict[str, object]:
         "metrics": {
             "trainingCount": len(profiles),
             "height": {
-                "strategy": "auto-selected tolerance-first median ensemble of edge-enhanced kNN regressors",
+                "strategy": "holdout-selected filtered-source edge-enhanced kNN regressors",
                 **height_metrics,
+                "generalization": height_generalization,
             },
             "cup": {
-                "strategy": "auto-selected vote ensemble of edge-enhanced kNN classifiers",
+                "strategy": "fixed robust edge-enhanced kNN classifiers",
                 **cup_metrics,
+                "generalization": cup_generalization,
             },
             "similarity": {
                 "feature": "full grayscale 8x8 + top grayscale 8x8",
