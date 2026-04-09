@@ -6,6 +6,7 @@ import iconv from "iconv-lite";
 
 const USER_AGENT = "body-type-analyzer/1.0 (local training fetcher)";
 const THROTTLE_MS = Number(process.env.THROTTLE_MS ?? 400);
+const FETCH_TIMEOUT_MS = Number(process.env.FETCH_TIMEOUT_MS ?? 15000);
 const ORICON_BASE_URL = "https://www.oricon.co.jp";
 const ORICON_NO_IMAGE_PATH = "/pc/img/_parts/common/ph-noimage03.png";
 const IDOLPROF_API_URL = "https://idolprof.com/wp-json/wp/v2/yada_wiki";
@@ -43,13 +44,28 @@ const IMG_SRC_BLOCKLIST = [
   "name_",
   "spacer",
 ];
+const IDOLPROF_PAGE_IMAGE_BLOCKLIST = [
+  "amazon-adsystem",
+  "rakuten.",
+  "hb.afl.",
+  "line.gif",
+  "logo",
+  "banner",
+  "no-image",
+  "site-icon",
+  "favicon",
+];
 
 const LOCAL_DATA_DIR = path.join(process.cwd(), "local-data");
 const LOCAL_IMAGES_DIR = path.join(LOCAL_DATA_DIR, "training-images");
 const LOCAL_PROFILES_PATH = path.join(LOCAL_DATA_DIR, "training-profiles.json");
 const SOURCE_PROFILES_PATH = path.join(process.cwd(), "lib", "source-profiles.ts");
+const BROAD_POOL = process.env.BROAD_POOL === "1";
+const MAX_BROAD_NEW = Number(process.env.MAX_BROAD_NEW ?? 120);
+const IDOLPROF_CUPS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 let nextRequestAt = 0;
+const idolprofCupCandidateCache = new Map();
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -120,11 +136,21 @@ async function throttledFetch(url) {
     await sleep(waitMs);
   }
 
-  const response = await fetch(url, {
-    headers: {
-      "user-agent": USER_AGENT,
-    },
-  });
+  const abortController = new AbortController();
+  const timeout = setTimeout(() => abortController.abort(), FETCH_TIMEOUT_MS);
+
+  let response;
+
+  try {
+    response = await fetch(url, {
+      headers: {
+        "user-agent": USER_AGENT,
+      },
+      signal: abortController.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   nextRequestAt = Date.now() + THROTTLE_MS;
 
@@ -204,7 +230,8 @@ function buildWikipediaSummaryUrl(title) {
 
 function buildIdolprofLookupUrl(name) {
   const url = new URL(IDOLPROF_API_URL);
-  url.searchParams.set("slug", name);
+  url.searchParams.set("search", name);
+  url.searchParams.set("per_page", "10");
   return url.toString();
 }
 
@@ -334,9 +361,21 @@ function normalizeLink(url) {
   return matches ?? [];
 }
 
+function normalizeIdolprofUrl(url) {
+  return decodeHtml(url)
+    .replace(/^\/\//, "https://")
+    .replace(/^http:\/\/idolprof\.com\//u, "https://idolprof.com/")
+    .replace(/^https?:\/\/idolprof\.xsrv\.jp\//u, "https://idolprof.com/");
+}
+
 function extractAnchorLinks(html) {
   return [...html.matchAll(/<a[^>]+href="([^"]+)"/giu)]
     .flatMap((match) => normalizeLink(match[1]));
+}
+
+function extractTextLinks(text) {
+  return [...String(text).matchAll(/https?:\/\/[^\s<>"']+/giu)]
+    .flatMap((match) => normalizeLink(match[0]));
 }
 
 function isBlockedExternalLink(url) {
@@ -388,6 +427,24 @@ function extractInlineImageUrl(html, pageUrl) {
   return candidates[0] ?? null;
 }
 
+function extractIdolprofPageImageUrl(html, pageUrl) {
+  const candidates = [
+    extractMetaImageUrl(html),
+    ...[...html.matchAll(/<img[^>]+src="([^"]+)"/giu)].map((match) => match[1]),
+  ]
+    .map((candidate) => normalizeImageCandidate(candidate, pageUrl))
+    .filter(Boolean)
+    .map((candidate) => normalizeIdolprofUrl(candidate))
+    .filter(
+      (candidate) =>
+        !IDOLPROF_PAGE_IMAGE_BLOCKLIST.some((pattern) => candidate.includes(pattern))
+    )
+    .filter((candidate) => /\.(?:jpe?g|png|webp)(?:[?#].*)?$/iu.test(candidate))
+    .filter((candidate) => candidate.includes("/wp-content/uploads/"));
+
+  return candidates[0] ?? null;
+}
+
 async function resolveWikipediaProfileFromUrl(url) {
   const pageTitle = decodeURIComponent(new URL(url).pathname.replace(/^\/wiki\//u, ""));
 
@@ -408,6 +465,50 @@ async function resolveWikipediaProfileFromUrl(url) {
     imageUrl,
     stats: null,
   };
+}
+
+async function resolveIdolprofProfilePage(target, pageUrl, stats = null) {
+  const html = await fetchHtml(pageUrl);
+  const idolprofImageUrl = extractIdolprofPageImageUrl(html, pageUrl);
+
+  if (idolprofImageUrl) {
+    return {
+      source: "idolprof",
+      profileUrl: pageUrl,
+      imageUrl: idolprofImageUrl,
+      stats,
+    };
+  }
+
+  const links = [
+    ...new Set([...extractAnchorLinks(html), ...extractTextLinks(html)]),
+  ]
+    .filter((url) => !url.startsWith("https://idolprof.com/wiki/"))
+    .filter((url) => !isBlockedExternalLink(url));
+
+  for (const link of links) {
+    try {
+      if (link.startsWith("https://ja.wikipedia.org/wiki/")) {
+        const wikipediaProfile = await resolveWikipediaProfileFromUrl(link);
+
+        if (wikipediaProfile) {
+          return wikipediaProfile;
+        }
+
+        continue;
+      }
+
+      const externalProfile = await resolveExternalLinkedProfile(target, link);
+
+      if (externalProfile) {
+        return externalProfile;
+      }
+    } catch {
+      // Ignore broken fallbacks and continue to the next candidate link.
+    }
+  }
+
+  return null;
 }
 
 async function resolveExternalLinkedProfile(target, url) {
@@ -553,45 +654,145 @@ async function resolveWikipediaProfile(target) {
 }
 
 async function resolveIdolprofProfile(target) {
+  if (target.cup) {
+    const cupCandidates = await getIdolprofCupCandidatesExact(target.cup);
+    const cupCandidate = cupCandidates.find(
+      (entry) => normalizeName(entry.name) === normalizeName(target.name)
+    );
+
+    if (cupCandidate?.profileUrl) {
+      const exactProfile = await resolveIdolprofProfilePage(
+        target,
+        cupCandidate.profileUrl
+      );
+
+      if (exactProfile) {
+        return exactProfile;
+      }
+    }
+  }
+
   const pages = await fetchJson(buildIdolprofLookupUrl(target.name));
   const page = pages.find(
     (entry) => normalizeName(entry?.title?.rendered ?? "") === normalizeName(target.name)
   );
 
+  if (page?.link) {
+    const exactProfile = await resolveIdolprofProfilePage(
+      target,
+      normalizeIdolprofUrl(page.link)
+    );
+
+    if (exactProfile) {
+      return exactProfile;
+    }
+  }
+
   if (!page?.content?.rendered) {
     return null;
   }
 
-  const links = [...new Set(extractAnchorLinks(page.content.rendered))]
-    .filter((url) => !url.startsWith("https://idolprof.com/wiki/"))
-    .filter((url) => !isBlockedExternalLink(url));
-
-  for (const link of links) {
-    try {
-      if (link.startsWith("https://ja.wikipedia.org/wiki/")) {
-        const wikipediaProfile = await resolveWikipediaProfileFromUrl(link);
-
-        if (wikipediaProfile) {
-          return wikipediaProfile;
-        }
-
-        continue;
-      }
-
-      const externalProfile = await resolveExternalLinkedProfile(target, link);
-
-      if (externalProfile) {
-        return externalProfile;
-      }
-    } catch {
-      // Ignore broken fallbacks and continue to the next candidate link.
-    }
-  }
-
-  return null;
+  return resolveIdolprofProfilePage(
+    target,
+    page.link
+      ? normalizeIdolprofUrl(page.link)
+      : `https://idolprof.com/wiki/${encodeURIComponent(target.name)}/`
+  );
 }
 
-function toStoredRecord(target, resolved, localImagePath) {
+async function fetchIdolprofPage(title) {
+  const pages = await fetchJson(buildIdolprofLookupUrl(title));
+
+  return (
+    pages.find(
+      (entry) => normalizeName(entry?.title?.rendered ?? "") === normalizeName(title)
+    ) ?? null
+  );
+}
+
+function parseIdolprofCategoryCandidates(renderedContent) {
+  const candidates = [];
+
+  for (const [, rowHtml] of renderedContent.matchAll(/<tr>([\s\S]*?)<\/tr>/giu)) {
+    const linkMatch = rowHtml.match(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/iu);
+    const cells = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/giu)].map((match) =>
+      decodeHtml(match[1])
+    );
+
+    if (!linkMatch || cells.length < 8) {
+      continue;
+    }
+
+    const name = decodeHtml(linkMatch[2]);
+    const actualHeight = Number(cells[2]);
+    const bust = Number(cells[4]);
+    const waist = Number(cells[5]);
+    const hip = Number(cells[6]);
+    const cup = cells[7]?.trim().toUpperCase();
+
+    if (!name || !Number.isFinite(actualHeight) || !Number.isFinite(bust) || !cup) {
+      continue;
+    }
+
+    if (!/^[A-H]$/u.test(cup)) {
+      continue;
+    }
+
+    candidates.push({
+      name,
+      profileUrl: normalizeIdolprofUrl(linkMatch[1]),
+      actualHeight,
+      bust,
+      waist: Number.isFinite(waist) ? waist : null,
+      hip: Number.isFinite(hip) ? hip : null,
+      cup,
+    });
+  }
+
+  return candidates;
+}
+
+async function getIdolprofCupCandidates(cup) {
+  if (idolprofCupCandidateCache.has(cup)) {
+    return idolprofCupCandidateCache.get(cup);
+  }
+
+  const categoryPage = await fetchIdolprofPage(`${cup}カップ`);
+  const candidates = categoryPage?.content?.rendered
+    ? parseIdolprofCategoryCandidates(categoryPage.content.rendered)
+    : [];
+
+  idolprofCupCandidateCache.set(cup, candidates);
+  return candidates;
+}
+
+async function getIdolprofCupCandidatesExact(cup) {
+  if (idolprofCupCandidateCache.has(cup)) {
+    return idolprofCupCandidateCache.get(cup);
+  }
+
+  const categoryPage = await fetchIdolprofPage(`${cup}\u30ab\u30c3\u30d7`);
+  const candidates = categoryPage?.content?.rendered
+    ? parseIdolprofCategoryCandidates(categoryPage.content.rendered)
+    : [];
+
+  idolprofCupCandidateCache.set(cup, candidates);
+  return candidates;
+}
+
+function shouldUseResolvedRecordForHeight(source) {
+  return source !== "instagram.com";
+}
+
+function shouldUseResolvedRecordForCup(source) {
+  return source !== "oricon" && source !== "ja.wikipedia.org";
+}
+
+function shouldUseBroadRecordForTraining(source) {
+  return shouldUseResolvedRecordForHeight(source);
+}
+
+function toStoredRecord(target, resolved, localImagePath, overrides = {}) {
   return {
     name: target.name,
     imagePath: localImagePath.replace(/\\/g, "/"),
@@ -605,14 +806,189 @@ function toStoredRecord(target, resolved, localImagePath) {
     scrapedBust: Number.isFinite(resolved.stats?.bust) ? resolved.stats.bust : null,
     scrapedWaist: Number.isFinite(resolved.stats?.waist) ? resolved.stats.waist : null,
     scrapedHip: Number.isFinite(resolved.stats?.hip) ? resolved.stats.hip : null,
+    useForHeight: shouldUseResolvedRecordForHeight(resolved.source),
+    useForCup: shouldUseResolvedRecordForCup(resolved.source),
+    useForSimilarity: false,
+    ...overrides,
   };
 }
 
-async function main() {
-  const { femaleTargets: targets, sourceNames } = await loadProfilePools();
-  const existingProfiles = (await readExistingProfiles()).filter((entry) =>
-    sourceNames.has(entry.name)
+async function writeStoredProfiles(existingByName) {
+  const mergedProfiles = [...existingByName.values()].sort((left, right) =>
+    left.name.localeCompare(right.name, "ja")
   );
+
+  await fs.mkdir(LOCAL_DATA_DIR, { recursive: true });
+  await fs.writeFile(
+    LOCAL_PROFILES_PATH,
+    `${JSON.stringify(mergedProfiles, null, 2)}\n`,
+    "utf8"
+  );
+}
+
+async function collectBroadIdolprofPool(existingByName, additions, failures) {
+  let addedCount = 0;
+
+  for (const cup of IDOLPROF_CUPS) {
+    if (addedCount >= MAX_BROAD_NEW) {
+      break;
+    }
+
+    const categoryPage = await fetchIdolprofPage(`${cup}カップ`);
+
+    if (!categoryPage?.content?.rendered) {
+      continue;
+    }
+
+    const candidates = parseIdolprofCategoryCandidates(categoryPage.content.rendered);
+
+    for (const candidate of candidates) {
+      if (addedCount >= MAX_BROAD_NEW) {
+        break;
+      }
+
+      if (existingByName.has(candidate.name)) {
+        continue;
+      }
+
+      try {
+        const resolved = await resolveIdolprofProfile(candidate);
+
+        if (!resolved) {
+          failures.push({ name: candidate.name, reason: "idolprof-broad-no-image" });
+          continue;
+        }
+
+        const { buffer, contentType } = await fetchBuffer(resolved.imageUrl);
+        const extension = contentType.includes("png") ? "png" : "jpg";
+        const localImagePath = path.join(
+          "local-data",
+          "training-images",
+          `${slugify(`broad_${resolved.source}_${candidate.name}`)}.${extension}`
+        );
+
+        await fs.writeFile(path.join(process.cwd(), localImagePath), buffer);
+
+        const useForTraining = shouldUseBroadRecordForTraining(resolved.source);
+        const record = toStoredRecord(candidate, resolved, localImagePath, {
+          waist: candidate.waist,
+          hip: candidate.hip,
+          useForHeight: useForTraining,
+          useForCup: useForTraining,
+          useForSimilarity: false,
+          source: `idolprof-${resolved.source}`,
+        });
+
+        existingByName.set(candidate.name, record);
+        additions.push({
+          name: candidate.name,
+          profileUrl: resolved.profileUrl,
+          imagePath: record.imagePath,
+          source: record.source,
+        });
+        addedCount += 1;
+        console.log(`${candidate.name} -> ${record.imagePath} (${record.source})`);
+      } catch (error) {
+        failures.push({
+          name: candidate.name,
+          reason: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
+  return addedCount;
+}
+
+async function collectBroadIdolprofPoolV2(existingByName, additions, failures) {
+  let addedCount = 0;
+
+  for (const cup of IDOLPROF_CUPS) {
+    if (addedCount >= MAX_BROAD_NEW) {
+      break;
+    }
+
+    let candidates = [];
+
+    try {
+      candidates = await getIdolprofCupCandidatesExact(cup);
+    } catch (error) {
+      failures.push({
+        name: `${cup}カップ`,
+        reason: error instanceof Error ? error.message : String(error),
+      });
+      continue;
+    }
+
+    for (const candidate of candidates) {
+      if (addedCount >= MAX_BROAD_NEW) {
+        break;
+      }
+
+      if (existingByName.has(candidate.name)) {
+        continue;
+      }
+
+      try {
+        const resolved = await resolveIdolprofProfilePage(
+          candidate,
+          candidate.profileUrl,
+          candidate
+        );
+
+        if (!resolved) {
+          failures.push({ name: candidate.name, reason: "idolprof-broad-no-image" });
+          continue;
+        }
+
+        const { buffer, contentType } = await fetchBuffer(resolved.imageUrl);
+        const extension = contentType.includes("png") ? "png" : "jpg";
+        const localImagePath = path.join(
+          "local-data",
+          "training-images",
+          `${slugify(`broad_${resolved.source}_${candidate.name}`)}.${extension}`
+        );
+
+        await fs.writeFile(path.join(process.cwd(), localImagePath), buffer);
+
+        const useForTraining = shouldUseBroadRecordForTraining(resolved.source);
+        const record = toStoredRecord(candidate, resolved, localImagePath, {
+          waist: candidate.waist,
+          hip: candidate.hip,
+          useForHeight: useForTraining,
+          useForCup: useForTraining,
+          useForSimilarity: false,
+          source: `idolprof-${resolved.source}`,
+        });
+
+        existingByName.set(candidate.name, record);
+        additions.push({
+          name: candidate.name,
+          profileUrl: resolved.profileUrl,
+          imagePath: record.imagePath,
+          source: record.source,
+        });
+        await writeStoredProfiles(existingByName);
+        addedCount += 1;
+        console.log(`${candidate.name} -> ${record.imagePath} (${record.source})`);
+      } catch (error) {
+        failures.push({
+          name: candidate.name,
+          reason: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
+  return addedCount;
+}
+
+async function main() {
+  const { femaleTargets: targets } = await loadProfilePools();
+  const existingProfiles = (await readExistingProfiles()).map((entry) => ({
+    ...entry,
+    useForSimilarity: false,
+  }));
   const existingByName = new Map(existingProfiles.map((entry) => [entry.name, entry]));
 
   await fs.mkdir(LOCAL_IMAGES_DIR, { recursive: true });
@@ -660,6 +1036,16 @@ async function main() {
     }
   }
 
+  let broadAdded = 0;
+
+  if (BROAD_POOL) {
+    broadAdded = await collectBroadIdolprofPoolV2(
+      existingByName,
+      additions,
+      failures
+    );
+  }
+
   const mergedProfiles = [...existingByName.values()].sort((left, right) =>
     left.name.localeCompare(right.name, "ja")
   );
@@ -676,6 +1062,7 @@ async function main() {
       {
         requested: targets.length,
         stored: additions.length,
+        broadAdded,
         failed: failures.length,
         failures,
       },

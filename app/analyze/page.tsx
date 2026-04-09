@@ -57,24 +57,28 @@ const PERFORMANCE_SUMMARIES = [
   {
     title: "身長",
     value: `±${formatErrorBound(
-      DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0
+      DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0
     )}cm`,
     summary: `${Math.round(
-      (DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.rate ?? 0.7) * 10
+      (DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.rate ?? 0.7) * 10
     )}割がこの範囲`,
-    exact: `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.height.exactRate)}`,
-    validation: `検証 ${DIAGNOSIS_MODEL_METRICS.height.trainingCount}件`,
+    exact: `完全一致 ${formatRate(
+      DIAGNOSIS_MODEL_METRICS.height.generalization.exactRate
+    )}`,
+    validation: `固定テスト ${DIAGNOSIS_MODEL_METRICS.height.generalization.holdoutCount}件`,
   },
   {
     title: "カップ",
     value: `±${formatErrorBound(
-      DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.maxError ?? 0
+      DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0
     )}カップ`,
     summary: `${Math.round(
-      (DIAGNOSIS_MODEL_METRICS.cup.coverage[0]?.rate ?? 0.7) * 10
+      (DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.rate ?? 0.7) * 10
     )}割がこの範囲`,
-    exact: `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.cup.exactRate)}`,
-    validation: `検証 ${DIAGNOSIS_MODEL_METRICS.cup.trainingCount}件`,
+    exact: `完全一致 ${formatRate(
+      DIAGNOSIS_MODEL_METRICS.cup.generalization.exactRate
+    )}`,
+    validation: `固定テスト ${DIAGNOSIS_MODEL_METRICS.cup.generalization.holdoutCount}件`,
   },
 ] as const;
 
@@ -264,7 +268,7 @@ export default function AnalyzePage() {
                   AI診断
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
-                  画像を1枚アップロードすると、公開プロフィール画像から近い特徴を探して
+                  画像を1枚アップロードすると、学習プロフィール画像から近い特徴を探して
                   身長とカップサイズを推定します。
                 </p>
               </div>
@@ -293,15 +297,16 @@ export default function AnalyzePage() {
             <div className="max-w-2xl space-y-2">
               <h2 className="text-2xl font-bold text-slate-900">モデル性能</h2>
               <p className="text-sm leading-6 text-slate-600 sm:text-base">
-                公開プロフィール画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚を
-                leave-one-out で検証した結果です。同系統の画像に対してどれくらい当たりやすいかを、
-                数cm単位・1カップ単位でどこまで収まるかを中心に公開しています。
+                学習プロフィール画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚から作った
+                近傍比較モデルを、学習に使っていない固定テストで確認した結果です。
+                完全一致より、数cm単位・1カップ単位でどこまで収まるかを中心に公開しています。
               </p>
             </div>
 
             <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-              <p>身長評価 {DIAGNOSIS_MODEL_METRICS.height.trainingCount} 件</p>
-              <p>カップ評価 {DIAGNOSIS_MODEL_METRICS.cup.trainingCount} 件</p>
+              <p>学習画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚</p>
+              <p>身長 固定テスト {DIAGNOSIS_MODEL_METRICS.height.generalization.holdoutCount} 件</p>
+              <p>カップ 固定テスト {DIAGNOSIS_MODEL_METRICS.cup.generalization.holdoutCount} 件</p>
             </div>
           </div>
 
@@ -545,7 +550,7 @@ export default function AnalyzePage() {
                     診断待機中
                   </h2>
                   <p className="text-sm leading-6 text-slate-500">
-                    画像から特徴量を抽出し、公開プロフィール画像の近傍を検索します。
+                    画像から特徴量を抽出し、学習プロフィール画像の近傍を検索します。
                     同じ画像なら同じ特徴量になり、近い結果になります。
                   </p>
                 </div>
@@ -555,7 +560,7 @@ export default function AnalyzePage() {
                     カップ推定は上半身寄り、身長推定は全体寄りの特徴を使います。
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    leave-one-out 検証値も公開しています。
+                    固定テストの検証値も公開しています。
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
                     結果はあとからコピーして X にシェアできます。
@@ -574,7 +579,7 @@ export default function AnalyzePage() {
                   あなたに近い有名人
                 </h2>
                 <p className="text-sm leading-6 text-slate-500">
-                  学習に使った公開プロフィール画像の近傍から候補を出しています。
+                  学習に使ったプロフィール画像の近傍から候補を出しています。
                 </p>
               </div>
 

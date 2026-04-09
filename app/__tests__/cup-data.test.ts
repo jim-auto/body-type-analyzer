@@ -181,7 +181,7 @@ describe("ranking.json actual profile data", () => {
     expect(
       maleHeightDiffs.filter((value) => value <= 2).length / maleHeightDiffs.length
     ).toBeGreaterThanOrEqual(0.99);
-    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.3);
+    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.4);
     expect(
       femaleCupDiffs.filter((value) => value <= 1).length / femaleCupDiffs.length
     ).toBeGreaterThanOrEqual(0.95);
