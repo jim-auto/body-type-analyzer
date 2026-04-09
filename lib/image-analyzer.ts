@@ -36,6 +36,11 @@ const HEIGHT_FEATURE_SPECS = [
     { region: "fullCenter", size: 12, mode: "profile" },
     { region: "lowCenter", size: 10, mode: "profile" },
   ],
+  [{ region: "full", size: 8, mode: "edge" }],
+  [
+    { region: "fullCenter", size: 8, mode: "edge" },
+    { region: "lowCenter", size: 8, mode: "edge" },
+  ],
 ] as const;
 const CUP_FEATURE_SPECS = [
   [
@@ -54,6 +59,7 @@ const CUP_FEATURE_SPECS = [
     { region: "topCenter", size: 12, mode: "profile" },
     { region: "torsoCenter", size: 10, mode: "profile" },
   ],
+  [{ region: "top", size: 10, mode: "edge" }],
 ] as const;
 const SIMILARITY_FEATURE_SPECS = [
   { region: "full", size: 8, mode: "gray" },
@@ -82,7 +88,7 @@ export const DIAGNOSIS_SHARE_URL =
   "https://jim-auto.github.io/body-type-analyzer/";
 
 type FeatureRegion = keyof typeof REGION_BOUNDS;
-type FeatureMode = "gray" | "profile";
+type FeatureMode = "gray" | "profile" | "edge";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
 
 function roundFeature(value: number): number {
@@ -164,11 +170,36 @@ function profileFromGrayscale(grayscale: number[], size: number): number[] {
   return [...rows, ...columns];
 }
 
+function edgeFromGrayscale(grayscale: number[], size: number): number[] {
+  const edgeValues: number[] = [];
+
+  for (let rowIndex = 0; rowIndex < size; rowIndex += 1) {
+    for (let columnIndex = 0; columnIndex < size; columnIndex += 1) {
+      const center = grayscale[rowIndex * size + columnIndex] ?? 0;
+      const left = grayscale[rowIndex * size + Math.max(0, columnIndex - 1)] ?? center;
+      const right =
+        grayscale[rowIndex * size + Math.min(size - 1, columnIndex + 1)] ?? center;
+      const up = grayscale[Math.max(0, rowIndex - 1) * size + columnIndex] ?? center;
+      const down =
+        grayscale[Math.min(size - 1, rowIndex + 1) * size + columnIndex] ?? center;
+      const gradient = Math.min(1, (Math.abs(right - left) + Math.abs(down - up)) / 2);
+
+      edgeValues.push(roundFeature(gradient));
+    }
+  }
+
+  return edgeValues;
+}
+
 function extractFeatureBlock(image: HTMLImageElement, spec: FeatureSpec): number[] {
   const grayscale = grayscaleFromPixels(drawRegion(image, spec.region, spec.size));
 
   if (spec.mode === "profile") {
     return profileFromGrayscale(grayscale, spec.size);
+  }
+
+  if (spec.mode === "edge") {
+    return edgeFromGrayscale(grayscale, spec.size);
   }
 
   return grayscale;
@@ -206,10 +237,13 @@ export async function extractDiagnosisFeatures(
     heightWide: extractFeatures(image, HEIGHT_FEATURE_SPECS[2]),
     heightCenter: extractFeatures(image, HEIGHT_FEATURE_SPECS[3]),
     heightProfile: extractFeatures(image, HEIGHT_FEATURE_SPECS[4]),
+    heightEdgeFull: extractFeatures(image, HEIGHT_FEATURE_SPECS[5]),
+    heightEdgeCenter: extractFeatures(image, HEIGHT_FEATURE_SPECS[6]),
     cupPrimary: extractFeatures(image, CUP_FEATURE_SPECS[0]),
     cupSecondary: extractFeatures(image, CUP_FEATURE_SPECS[1]),
     cupCenter: extractFeatures(image, CUP_FEATURE_SPECS[2]),
     cupProfile: extractFeatures(image, CUP_FEATURE_SPECS[3]),
+    cupEdgeTop: extractFeatures(image, CUP_FEATURE_SPECS[4]),
     similarity: extractFeatures(image, SIMILARITY_FEATURE_SPECS),
   };
 }

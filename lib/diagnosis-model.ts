@@ -25,10 +25,13 @@ export type DiagnosisFeatures = {
   heightWide: number[];
   heightCenter: number[];
   heightProfile: number[];
+  heightEdgeFull: number[];
+  heightEdgeCenter: number[];
   cupPrimary: number[];
   cupSecondary: number[];
   cupCenter: number[];
   cupProfile: number[];
+  cupEdgeTop: number[];
   similarity: number[];
 };
 
@@ -183,12 +186,11 @@ function getNeighbors(
   stats?: DistanceStats,
   excludeName?: string
 ): Neighbor[] {
-  const availabilityKey =
-    featureSetName === "cupPrimary" || featureSetName === "cupSecondary"
-      ? "cup"
-      : featureSetName === "similarity"
-        ? "similarity"
-        : "height";
+  const availabilityKey = featureSetName.startsWith("cup")
+    ? "cup"
+    : featureSetName === "similarity"
+      ? "similarity"
+      : "height";
 
   return DIAGNOSIS_MODEL_ENTRIES.filter((entry) => entry.name !== excludeName)
     .filter((entry) => entry.availability[availabilityKey])
