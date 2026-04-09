@@ -70,9 +70,9 @@ describe("diagnosis-model", () => {
 
   test("保存済みメトリクスは最低限の汎化閾値を満たす", () => {
     expect(DIAGNOSIS_MODEL_METRICS.trainingCount).toBeGreaterThanOrEqual(50);
-    expect(DIAGNOSIS_MODEL_METRICS.height.mae).toBeLessThan(3.9);
-    expect(DIAGNOSIS_MODEL_METRICS.height.within2Rate).toBeGreaterThan(0.45);
-    expect(DIAGNOSIS_MODEL_METRICS.cup.mae).toBeLessThan(1.05);
+    expect(DIAGNOSIS_MODEL_METRICS.height.mae).toBeLessThan(3.6);
+    expect(DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError).toBeLessThanOrEqual(4);
+    expect(DIAGNOSIS_MODEL_METRICS.cup.mae).toBeLessThan(0.95);
     expect(DIAGNOSIS_MODEL_METRICS.cup.within1Rate).toBeGreaterThan(0.72);
   });
 
@@ -82,10 +82,13 @@ describe("diagnosis-model", () => {
     expect(sampleEntry.featureSets.heightWide.length).toBe(196);
     expect(sampleEntry.featureSets.heightCenter.length).toBe(128);
     expect(sampleEntry.featureSets.heightProfile.length).toBe(44);
+    expect(sampleEntry.featureSets.heightEdgeFull.length).toBe(64);
+    expect(sampleEntry.featureSets.heightEdgeCenter.length).toBe(128);
     expect(sampleEntry.featureSets.cupPrimary.length).toBe(208);
     expect(sampleEntry.featureSets.cupSecondary.length).toBe(100);
     expect(sampleEntry.featureSets.cupCenter.length).toBe(164);
     expect(sampleEntry.featureSets.cupProfile.length).toBe(44);
+    expect(sampleEntry.featureSets.cupEdgeTop.length).toBe(100);
     expect(sampleEntry.featureSets.similarity.length).toBe(128);
   });
 

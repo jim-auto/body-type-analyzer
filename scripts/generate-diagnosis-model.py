@@ -32,10 +32,13 @@ FEATURE_SETS = {
     "heightWide": [("full", 14, "gray")],
     "heightCenter": [("fullCenter", 8, "gray"), ("lowCenter", 8, "gray")],
     "heightProfile": [("fullCenter", 12, "profile"), ("lowCenter", 10, "profile")],
+    "heightEdgeFull": [("full", 8, "edge")],
+    "heightEdgeCenter": [("fullCenter", 8, "edge"), ("lowCenter", 8, "edge")],
     "cupPrimary": [("top", 8, "gray"), ("top", 12, "gray")],
     "cupSecondary": [("top", 8, "gray"), ("mid", 6, "gray")],
     "cupCenter": [("topCenter", 10, "gray"), ("torsoCenter", 8, "gray")],
     "cupProfile": [("topCenter", 12, "profile"), ("torsoCenter", 10, "profile")],
+    "cupEdgeTop": [("top", 10, "edge")],
     "similarity": [("full", 8, "gray"), ("top", 8, "gray")],
 }
 ORICON_HEIGHT_ALLOWLIST = {
@@ -53,12 +56,15 @@ HEIGHT_FEATURE_CANDIDATES = (
     "heightWide",
     "heightCenter",
     "heightProfile",
+    "heightEdgeFull",
+    "heightEdgeCenter",
 )
 CUP_FEATURE_CANDIDATES = (
     "cupPrimary",
     "cupSecondary",
     "cupCenter",
     "cupProfile",
+    "cupEdgeTop",
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
@@ -174,11 +180,31 @@ def profile_features(values: list[float], size: int) -> list[float]:
     return rows + columns
 
 
+def edge_features(values: list[float], size: int) -> list[float]:
+    edges: list[float] = []
+
+    for row_index in range(size):
+        for column_index in range(size):
+            center = values[row_index * size + column_index]
+            left = values[row_index * size + max(0, column_index - 1)]
+            right = values[row_index * size + min(size - 1, column_index + 1)]
+            up = values[max(0, row_index - 1) * size + column_index]
+            down = values[min(size - 1, row_index + 1) * size + column_index]
+            gradient = min(1.0, (abs(right - left) + abs(down - up)) / 2)
+
+            edges.append(round(gradient, 4))
+
+    return edges
+
+
 def extract_feature_block(gray_image: Image.Image, region_name: str, size: int, mode: str) -> list[float]:
     values = crop_and_resize(gray_image, region_name, size)
 
     if mode == "profile":
         return profile_features(values, size)
+
+    if mode == "edge":
+        return edge_features(values, size)
 
     return values
 
@@ -420,7 +446,7 @@ def select_height_models(
     )
     best_models: tuple[tuple[str, int], ...] | None = None
     best_metrics: dict[str, float] | None = None
-    best_score: tuple[float, float, float, float] | None = None
+    best_score: tuple[float, float, float, float, float] | None = None
 
     for size in range(1, min(len(HEIGHT_FEATURE_CANDIDATES), MAX_ENSEMBLE_SIZE) + 1):
         for feature_names in combinations(HEIGHT_FEATURE_CANDIDATES, size):
@@ -432,12 +458,14 @@ def select_height_models(
                     height_indices,
                     models,
                 )
+                coverage70 = metrics["coverage"][0]["maxError"]
                 coverage80 = metrics["coverage"][1]["maxError"]
                 score = (
-                    metrics["within2Rate"],
+                    -coverage70,
                     -coverage80,
                     -metrics["mae"],
                     metrics["exactRate"],
+                    metrics["within2Rate"],
                 )
 
                 if best_score is None or score > best_score:
@@ -542,11 +570,11 @@ def build_model() -> dict[str, object]:
         "metrics": {
             "trainingCount": len(profiles),
             "height": {
-                "strategy": "auto-selected median ensemble of kNN regressors",
+                "strategy": "auto-selected tolerance-first median ensemble of edge-enhanced kNN regressors",
                 **height_metrics,
             },
             "cup": {
-                "strategy": "auto-selected vote ensemble of kNN classifiers",
+                "strategy": "auto-selected vote ensemble of edge-enhanced kNN classifiers",
                 **cup_metrics,
             },
             "similarity": {
