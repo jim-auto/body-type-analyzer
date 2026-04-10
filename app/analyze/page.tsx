@@ -63,6 +63,7 @@ const PERFORMANCE_SUMMARIES = [
     exact: `完全一致 ${formatRate(
       DIAGNOSIS_MODEL_METRICS.height.generalization.exactRate
     )}`,
+    mae: `平均誤差 ${formatErrorBound(DIAGNOSIS_MODEL_METRICS.height.generalization.mae)}cm`,
     validation: `固定テスト ${DIAGNOSIS_MODEL_METRICS.height.generalization.holdoutCount}件`,
   },
   {
@@ -76,6 +77,7 @@ const PERFORMANCE_SUMMARIES = [
     exact: `完全一致 ${formatRate(
       DIAGNOSIS_MODEL_METRICS.cup.generalization.exactRate
     )}`,
+    mae: `平均誤差 ${formatErrorBound(DIAGNOSIS_MODEL_METRICS.cup.generalization.mae)}カップ`,
     validation: `固定テスト ${DIAGNOSIS_MODEL_METRICS.cup.generalization.holdoutCount}件`,
   },
 ] as const;
@@ -290,6 +292,9 @@ export default function AnalyzePage() {
                 <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-500">
                   <span className="rounded-full bg-slate-100 px-3 py-1">
                     {item.exact}
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1">
+                    {item.mae}
                   </span>
                   <span className="rounded-full bg-slate-100 px-3 py-1">
                     {item.validation}

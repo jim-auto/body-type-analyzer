@@ -71,6 +71,11 @@ K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
 HOLDOUT_RATIO = 0.2
 MIN_HOLDOUT_BUCKET_SIZE = 4
+ROBUST_HEIGHT_MODELS = (
+    ("heightPrimary", 5),
+    ("heightEdgeFull", 15),
+    ("heightEdgeCenter", 9),
+)
 ROBUST_CUP_MODELS = (
     ("cupSecondary", 3),
     ("cupCenter", 5),
@@ -690,12 +695,7 @@ def select_height_models_for_generalization(
         lambda index: round(heights[index] / 5) * 5,
         profiles,
     )
-    models, _ = select_height_models(
-        named_feature_sets,
-        heights,
-        names,
-        train_indices,
-    )
+    models = ROBUST_HEIGHT_MODELS
     loocv_metrics = evaluate_height_models(
         build_ranked_neighbors(
             named_feature_sets,
@@ -807,7 +807,7 @@ def build_model() -> dict[str, object]:
         "metrics": {
             "trainingCount": len(profiles),
             "height": {
-                "strategy": "holdout-selected filtered-source edge-enhanced kNN regressors",
+                "strategy": "fixed robust edge-enhanced kNN regressors",
                 **height_metrics,
                 "generalization": height_generalization,
             },
