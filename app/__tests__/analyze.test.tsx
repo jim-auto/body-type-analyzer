@@ -185,7 +185,17 @@ describe("AnalyzePage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
+        `平均誤差 ${formatErrorBound(DIAGNOSIS_MODEL_METRICS.height.generalization.mae)}cm`
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
         `完全一致 ${formatRate(DIAGNOSIS_MODEL_METRICS.cup.generalization.exactRate)}`
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `平均誤差 ${formatErrorBound(DIAGNOSIS_MODEL_METRICS.cup.generalization.mae)}カップ`
       )
     ).toBeInTheDocument();
     expect(

@@ -228,7 +228,11 @@ function getNeighbors(
     .sort(
       (left, right) =>
         left.distance - right.distance ||
-        left.entry.name.localeCompare(right.entry.name, "ja")
+        (left.entry.name < right.entry.name
+          ? -1
+          : left.entry.name > right.entry.name
+            ? 1
+            : 0)
     )
     .slice(0, neighborCount);
 }
