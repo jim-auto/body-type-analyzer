@@ -10,8 +10,6 @@ import {
   DIAGNOSIS_VALIDATION_LABEL,
   type DiagnosisResult,
   type SilhouetteType,
-  buildShareText,
-  buildXShareUrl,
   diagnose,
   extractDiagnosisFeatures,
 } from "@/lib/image-analyzer";
@@ -91,14 +89,11 @@ export default function AnalyzePage() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [copyMessage, setCopyMessage] = useState("");
   const previewUrlRef = useRef<string | null>(null);
   const timeoutIdsRef = useRef<number[]>([]);
   const analysisRunRef = useRef(0);
   const basePath =
     process.env.NODE_ENV === "production" ? "/body-type-analyzer" : "";
-
-  const shareText = result ? buildShareText(result) : "";
 
   const resolveImageSrc = (src: string) =>
     src.startsWith("/") ? `${basePath}${src}` : src;
@@ -159,7 +154,6 @@ export default function AnalyzePage() {
     updatePreviewUrl(nextPreviewUrl);
     setSelectedFileName(file.name);
     setErrorMessage(null);
-    setCopyMessage("");
     setResult(null);
     setIsAnalyzing(true);
     setLoadingMessageIndex(0);
@@ -219,33 +213,6 @@ export default function AnalyzePage() {
     handleFiles(event.dataTransfer.files);
   };
 
-  const handleCopy = async () => {
-    if (!result) {
-      return;
-    }
-
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareText);
-      } else {
-        const textArea = document.createElement("textarea");
-
-        textArea.value = shareText;
-        textArea.setAttribute("readonly", "true");
-        textArea.style.position = "absolute";
-        textArea.style.left = "-9999px";
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-      }
-
-      setCopyMessage("結果テキストをコピーしました。");
-    } catch {
-      setCopyMessage("コピーに失敗しました。");
-    }
-  };
-
   useEffect(() => {
     return () => {
       analysisRunRef.current += 1;
@@ -275,9 +242,6 @@ export default function AnalyzePage() {
             </div>
 
             <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                ⚠ 本人の画像のみ使用してください
-              </div>
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
                 {DIAGNOSIS_MODEL_SUMMARY}
               </div>
@@ -563,7 +527,7 @@ export default function AnalyzePage() {
                     固定テストの検証値も公開しています。
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    結果はあとからコピーして X にシェアできます。
+                    結果は類似有名人や注意書きとあわせて画面内で確認できます。
                   </div>
                 </div>
               </div>
@@ -622,44 +586,16 @@ export default function AnalyzePage() {
               <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8">
                 <div className="mb-5 space-y-2">
                   <h2 className="text-2xl font-bold text-slate-900">
-                    シェアする
+                    診断の見方
                   </h2>
                   <p className="text-sm leading-6 text-slate-500">
-                    診断結果はテキストでコピーするか、X にそのまま投稿できます。
+                    診断結果はこの画面で確認する前提にしています。共有やコピーの機能は出していません。
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                  >
-                    結果テキストをコピー
-                  </button>
-                  <a
-                    href={buildXShareUrl(result)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
-                  >
-                    Xでシェア
-                  </a>
-                </div>
-
-                {copyMessage ? (
-                  <p role="status" className="mt-4 text-sm text-emerald-600">
-                    {copyMessage}
-                  </p>
-                ) : null}
-
-                <textarea
-                  readOnly
-                  aria-label="シェア文"
-                  value={shareText}
-                  rows={8}
-                  className="mt-5 w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600 outline-none"
-                />
+                <p className="text-sm leading-6 text-slate-500">
+                  診断結果は画面上で確認できます。共有やコピーの機能は表示していません。
+                </p>
               </section>
 
               <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 shadow-sm">

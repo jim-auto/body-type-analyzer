@@ -7,8 +7,6 @@ import {
   DIAGNOSIS_DISCLAIMERS,
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
-  buildShareText,
-  buildXShareUrl,
   diagnose,
   extractDiagnosisFeatures,
   type DiagnosisFeatures,
@@ -22,8 +20,6 @@ jest.mock("@/lib/image-analyzer", () => {
     ...actual,
     extractDiagnosisFeatures: jest.fn(),
     diagnose: jest.fn(),
-    buildShareText: jest.fn(),
-    buildXShareUrl: jest.fn(),
   };
 });
 
@@ -78,9 +74,6 @@ const mockFeatures: DiagnosisFeatures = {
 
 const mockedExtractDiagnosisFeatures = jest.mocked(extractDiagnosisFeatures);
 const mockedDiagnose = jest.mocked(diagnose);
-const mockedBuildShareText = jest.mocked(buildShareText);
-const mockedBuildXShareUrl = jest.mocked(buildXShareUrl);
-const mockClipboardWriteText = jest.fn();
 const mockCreateObjectUrl = jest.fn(() => "blob:preview-url");
 const mockRevokeObjectUrl = jest.fn();
 
@@ -122,11 +115,6 @@ beforeEach(() => {
   jest.useFakeTimers();
   mockedExtractDiagnosisFeatures.mockResolvedValue(mockFeatures);
   mockedDiagnose.mockReturnValue(mockResult);
-  mockedBuildShareText.mockReturnValue("share-text");
-  mockedBuildXShareUrl.mockReturnValue(
-    "https://x.com/intent/tweet?text=share-text"
-  );
-  mockClipboardWriteText.mockResolvedValue(undefined);
   mockCreateObjectUrl.mockReturnValue("blob:preview-url");
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
@@ -137,10 +125,6 @@ beforeEach(() => {
     configurable: true,
     writable: true,
     value: mockRevokeObjectUrl,
-  });
-  Object.defineProperty(navigator, "clipboard", {
-    configurable: true,
-    value: { writeText: mockClipboardWriteText },
   });
 });
 
@@ -240,12 +224,9 @@ describe("AnalyzePage", () => {
     expect(screen.getByTestId("upload-area")).toBeInTheDocument();
   });
 
-  test("注意文が表示される", () => {
+  test("診断概要が表示される", () => {
     renderPage();
 
-    expect(
-      screen.getByText("⚠ 本人の画像のみ使用してください")
-    ).toBeInTheDocument();
     expect(screen.getByText(DIAGNOSIS_MODEL_SUMMARY)).toBeInTheDocument();
     expect(screen.getByText(DIAGNOSIS_VALIDATION_LABEL)).toBeInTheDocument();
   });
@@ -336,34 +317,17 @@ describe("AnalyzePage", () => {
     expect(screen.getByText("今田美桜")).toBeInTheDocument();
   });
 
-  test("シェア UI が表示され、シェア文と X リンクが使われる", async () => {
+  test("シェア UI は表示されない", async () => {
     renderPage();
 
     await uploadImage();
     await finishAnalysis();
 
-    expect(screen.getByText("結果テキストをコピー")).toBeInTheDocument();
-    expect(screen.getByLabelText("シェア文")).toHaveValue("share-text");
-    expect(screen.getByRole("link", { name: "Xでシェア" })).toHaveAttribute(
-      "href",
-      "https://x.com/intent/tweet?text=share-text"
-    );
-  });
-
-  test("コピー操作で clipboard にシェア文を書き込む", async () => {
-    renderPage();
-
-    await uploadImage();
-    await finishAnalysis();
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "結果テキストをコピー" }));
-    });
-
-    expect(mockClipboardWriteText).toHaveBeenCalledWith("share-text");
+    expect(screen.queryByText("結果テキストをコピー")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("シェア文")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: "" })
-    ).toHaveTextContent("結果テキストをコピーしました。");
+      screen.queryByRole("link", { name: "Xでシェア" })
+    ).not.toBeInTheDocument();
   });
 
   test("画像以外を選ぶとエラーメッセージを表示する", async () => {
