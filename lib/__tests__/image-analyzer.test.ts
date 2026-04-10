@@ -2,8 +2,6 @@ import {
   DIAGNOSIS_DISCLAIMERS,
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
-  buildShareText,
-  buildXShareUrl,
   diagnose,
 } from "@/lib/image-analyzer";
 import { DIAGNOSIS_MODEL_ENTRIES, type DiagnosisFeatures } from "@/lib/diagnosis-model";
@@ -27,23 +25,6 @@ describe("image-analyzer", () => {
     );
     expect(result.similarCelebrities.length).toBe(3);
     expect(result.similarCelebrities[0]?.name).toBe(result.similarCelebrity);
-  });
-
-  test("buildShareText は近傍比較モデルの文言を含む", () => {
-    const shareText = buildShareText(diagnose(sampleFeatures));
-
-    expect(shareText).toContain("【芸能人スタイルランキング 画像比較診断】");
-    expect(shareText).toContain("AI信頼度:");
-    expect(shareText).toContain("近傍比較モデル");
-    expect(shareText).toContain("#芸能人スタイルランキング");
-  });
-
-  test("buildXShareUrl は X の intent URL を返す", () => {
-    const result = diagnose(sampleFeatures);
-    const url = buildXShareUrl(result);
-
-    expect(url).toContain("https://x.com/intent/tweet?text=");
-    expect(url).toContain(encodeURIComponent(result.similarCelebrity));
   });
 
   test("診断説明文はモデル概要と検証値を含む", () => {

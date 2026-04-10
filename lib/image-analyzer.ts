@@ -84,9 +84,6 @@ export const DIAGNOSIS_DISCLAIMERS = [
   "※ 画像はサーバーに送信されません。全てブラウザ内で処理されます",
 ] as const;
 
-export const DIAGNOSIS_SHARE_URL =
-  "https://jim-auto.github.io/body-type-analyzer/";
-
 type FeatureRegion = keyof typeof REGION_BOUNDS;
 type FeatureMode = "gray" | "profile" | "edge";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
@@ -250,25 +247,6 @@ export async function extractDiagnosisFeatures(
 
 export function diagnose(features: DiagnosisFeatures): DiagnosisResult {
   return diagnoseFromFeatures(features);
-}
-
-export function buildShareText(result: DiagnosisResult): string {
-  return [
-    "【芸能人スタイルランキング 画像比較診断】",
-    `推定身長: ${result.estimatedHeight}cm（偏差値${result.heightDeviation}）`,
-    `推定カップ: ${result.estimatedCup}カップ（偏差値${result.cupDeviation}）`,
-    `似ている有名人: ${result.similarCelebrity}`,
-    `AI信頼度: ${result.confidence}%（近傍比較モデル）`,
-    "",
-    "#芸能人スタイルランキング",
-    DIAGNOSIS_SHARE_URL,
-  ].join("\n");
-}
-
-export function buildXShareUrl(result: DiagnosisResult): string {
-  return `https://x.com/intent/tweet?text=${encodeURIComponent(
-    buildShareText(result)
-  )}`;
 }
 
 export type { DiagnosisFeatures, DiagnosisResult, SilhouetteType };
