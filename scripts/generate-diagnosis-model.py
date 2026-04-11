@@ -37,12 +37,14 @@ FEATURE_SETS = {
     "heightEdgeFull": [("full", 8, "edge")],
     "heightEdgeCenter": [("fullCenter", 8, "edge"), ("lowCenter", 8, "edge")],
     "heightHistFull": [("full", 8, "gray_histogram"), ("full", 8, "edge_histogram")],
+    "heightLbpFull": [("full", 8, "lbp"), ("fullCenter", 8, "lbp")],
     "cupPrimary": [("top", 8, "gray"), ("top", 12, "gray")],
     "cupSecondary": [("top", 8, "gray"), ("mid", 6, "gray")],
     "cupCenter": [("topCenter", 10, "gray"), ("torsoCenter", 8, "gray")],
     "cupProfile": [("topCenter", 12, "profile"), ("torsoCenter", 10, "profile")],
     "cupEdgeTop": [("top", 10, "edge")],
     "cupHistTop": [("top", 8, "gray_histogram"), ("top", 8, "edge_histogram")],
+    "cupLbpTop": [("top", 8, "lbp"), ("topCenter", 8, "lbp")],
     "similarity": [("full", 8, "gray"), ("top", 8, "gray")],
 }
 ORICON_HEIGHT_ALLOWLIST = {
@@ -63,6 +65,7 @@ HEIGHT_FEATURE_CANDIDATES = (
     "heightEdgeFull",
     "heightEdgeCenter",
     "heightHistFull",
+    "heightLbpFull",
 )
 CUP_FEATURE_CANDIDATES = (
     "cupPrimary",
@@ -71,6 +74,7 @@ CUP_FEATURE_CANDIDATES = (
     "cupProfile",
     "cupEdgeTop",
     "cupHistTop",
+    "cupLbpTop",
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
@@ -768,6 +772,35 @@ def edge_features(values: list[float], size: int) -> list[float]:
     return edges
 
 
+def lbp_features(values: list[float], size: int, bin_count: int = 16) -> list[float]:
+    """Simplified Local Binary Pattern histogram."""
+    patterns: list[int] = []
+    offsets = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1)]
+
+    for row in range(size):
+        for col in range(size):
+            center = values[row * size + col]
+            code = 0
+
+            for bit, (dr, dc) in enumerate(offsets):
+                nr = max(0, min(size - 1, row + dr))
+                nc = max(0, min(size - 1, col + dc))
+
+                if values[nr * size + nc] >= center:
+                    code |= 1 << bit
+
+            patterns.append(code)
+
+    bins = [0.0] * bin_count
+    total = len(patterns) if patterns else 1
+
+    for pattern in patterns:
+        bin_index = min(pattern * bin_count // 256, bin_count - 1)
+        bins[bin_index] += 1
+
+    return [round(count / total, 4) for count in bins]
+
+
 def histogram_features(values: list[float], bin_count: int = 16) -> list[float]:
     bins = [0.0] * bin_count
 
@@ -800,6 +833,9 @@ def extract_feature_block(gray_image: Image.Image, region_name: str, size: int, 
 
     if mode == "edge_histogram":
         return edge_histogram_features(values, size)
+
+    if mode == "lbp":
+        return lbp_features(values, size)
 
     return values
 
@@ -2109,12 +2145,21 @@ def build_model(
         cup_indices,
     )
 
+    active_indices = [
+        index
+        for index in range(len(profiles))
+        if max(
+            feature_weight_sets[feature_name][index]
+            for feature_name in FEATURE_SETS
+        ) > 0.001
+    ]
+
     return {
         "version": 2,
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "normalization": normalization_stats,
         "metrics": {
-            "trainingCount": len(profiles),
+            "trainingCount": len(active_indices),
             "height": {
                 "strategy": build_strategy_label(
                     "robust edge-enhanced kNN regressors",
@@ -2174,6 +2219,10 @@ def build_model(
                 },
             }
             for index, profile in enumerate(profiles)
+            if max(
+                feature_weight_sets[feature_name][index]
+                for feature_name in FEATURE_SETS
+            ) > 0.001
         ],
     }
 

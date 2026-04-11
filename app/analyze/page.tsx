@@ -13,7 +13,6 @@ import {
   type SilhouetteType,
   diagnose,
   extractDiagnosisFeatures,
-  isDiagnosisInputQualityError,
 } from "@/lib/image-analyzer";
 import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 
@@ -93,6 +92,7 @@ export default function AnalyzePage() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLowQuality, setIsLowQuality] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
   const timeoutIdsRef = useRef<number[]>([]);
   const analysisRunRef = useRef(0);
@@ -159,30 +159,28 @@ export default function AnalyzePage() {
     setSelectedFileName(file.name);
     setErrorMessage(null);
     setResult(null);
+    setIsLowQuality(false);
     setIsAnalyzing(true);
     setLoadingMessageIndex(0);
     setProgress(8);
 
     try {
-      const features = await extractDiagnosisFeatures(file);
+      const { features, isLowQuality: lowQuality } = await extractDiagnosisFeatures(file);
 
       if (runId !== analysisRunRef.current) {
         return;
       }
 
+      setIsLowQuality(lowQuality);
       runLoadingSequence(diagnose(features), runId);
-    } catch (error) {
+    } catch {
       if (runId !== analysisRunRef.current) {
         return;
       }
 
       setIsAnalyzing(false);
       setProgress(0);
-      setErrorMessage(
-        isDiagnosisInputQualityError(error)
-          ? DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE
-          : "画像の読み込みに失敗しました。別の画像でお試しください。"
-      );
+      setErrorMessage("画像の読み込みに失敗しました。別の画像でお試しください。");
     }
   };
 
@@ -381,6 +379,13 @@ export default function AnalyzePage() {
               <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
                 {errorMessage}
               </p>
+            ) : null}
+
+            {isLowQuality && !isAnalyzing && result ? (
+              <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <p className="font-semibold">画像品質に関する注意</p>
+                <p className="mt-1">{DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE}</p>
+              </div>
             ) : null}
           </div>
 

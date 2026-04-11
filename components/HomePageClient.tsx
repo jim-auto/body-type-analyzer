@@ -7,6 +7,7 @@ import type {
   FemaleCupDistributionSummary,
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
+import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 import {
   formatSignedDifference,
   getMismatchEmoji,
@@ -303,6 +304,33 @@ export default function HomePageClient({
               <h2 className="text-center text-xl font-bold text-slate-700">
                 {current.title}
               </h2>
+
+              {isEstimatedHeightCategory ? (
+                <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+                  <span>AI推定精度</span>
+                  <span className="font-bold">
+                    7割が±{DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0}cm以内
+                  </span>
+                  <span className="text-sky-600">
+                    平均誤差 {Number.isInteger(DIAGNOSIS_MODEL_METRICS.height.generalization.mae)
+                      ? DIAGNOSIS_MODEL_METRICS.height.generalization.mae
+                      : DIAGNOSIS_MODEL_METRICS.height.generalization.mae.toFixed(1)}cm
+                  </span>
+                </div>
+              ) : isEstimatedCupCategory ? (
+                <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-pink-800">
+                  <span>AI推定精度</span>
+                  <span className="font-bold">
+                    7割が±{DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0}カップ以内
+                  </span>
+                  <span className="text-pink-600">
+                    平均誤差 {Number.isInteger(DIAGNOSIS_MODEL_METRICS.cup.generalization.mae)
+                      ? DIAGNOSIS_MODEL_METRICS.cup.generalization.mae
+                      : DIAGNOSIS_MODEL_METRICS.cup.generalization.mae.toFixed(1)}カップ
+                  </span>
+                </div>
+              ) : null}
+
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-100/80 px-4 py-3 text-sm text-slate-600">
                 <p>
                   {currentRanking.length === 0

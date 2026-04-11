@@ -46,6 +46,10 @@ const HEIGHT_FEATURE_SPECS = [
     { region: "full", size: 8, mode: "gray_histogram" },
     { region: "full", size: 8, mode: "edge_histogram" },
   ],
+  [
+    { region: "full", size: 8, mode: "lbp" },
+    { region: "fullCenter", size: 8, mode: "lbp" },
+  ],
 ] as const;
 const CUP_FEATURE_SPECS = [
   [
@@ -68,6 +72,10 @@ const CUP_FEATURE_SPECS = [
   [
     { region: "top", size: 8, mode: "gray_histogram" },
     { region: "top", size: 8, mode: "edge_histogram" },
+  ],
+  [
+    { region: "top", size: 8, mode: "lbp" },
+    { region: "topCenter", size: 8, mode: "lbp" },
   ],
 ] as const;
 const SIMILARITY_FEATURE_SPECS = [
@@ -108,7 +116,7 @@ export const DIAGNOSIS_DISCLAIMERS = [
 ] as const;
 
 type FeatureRegion = keyof typeof REGION_BOUNDS;
-type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram";
+type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram" | "lbp";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
 type FocusRange = { start: number; end: number };
 type FocusCropConfig = {
@@ -440,6 +448,40 @@ function edgeFromGrayscale(grayscale: number[], size: number): number[] {
   return edgeValues;
 }
 
+function lbpFromGrayscale(grayscale: number[], size: number, binCount = 16): number[] {
+  const offsets = [[-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]] as const;
+  const patterns: number[] = [];
+
+  for (let row = 0; row < size; row += 1) {
+    for (let col = 0; col < size; col += 1) {
+      const center = grayscale[row * size + col] ?? 0;
+      let code = 0;
+
+      for (let bit = 0; bit < offsets.length; bit += 1) {
+        const [dr, dc] = offsets[bit]!;
+        const nr = Math.max(0, Math.min(size - 1, row + dr));
+        const nc = Math.max(0, Math.min(size - 1, col + dc));
+
+        if ((grayscale[nr * size + nc] ?? 0) >= center) {
+          code |= 1 << bit;
+        }
+      }
+
+      patterns.push(code);
+    }
+  }
+
+  const bins = Array.from({ length: binCount }, () => 0);
+  const total = patterns.length || 1;
+
+  for (const pattern of patterns) {
+    const binIndex = Math.min(Math.floor((pattern * binCount) / 256), binCount - 1);
+    bins[binIndex] += 1;
+  }
+
+  return bins.map((count) => roundFeature(count / total));
+}
+
 function histogramFromValues(values: number[], binCount = 16): number[] {
   const bins = Array.from({ length: binCount }, () => 0);
 
@@ -470,6 +512,10 @@ function extractFeatureBlock(image: HTMLCanvasElement, spec: FeatureSpec): numbe
 
   if (spec.mode === "edge_histogram") {
     return histogramFromValues(edgeFromGrayscale(grayscale, spec.size));
+  }
+
+  if (spec.mode === "lbp") {
+    return lbpFromGrayscale(grayscale, spec.size);
   }
 
   return grayscale;
@@ -574,17 +620,20 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
+export type DiagnosisFeatureResult = {
+  features: DiagnosisFeatures;
+  isLowQuality: boolean;
+};
+
 export async function extractDiagnosisFeatures(
   file: File
-): Promise<DiagnosisFeatures> {
+): Promise<DiagnosisFeatureResult> {
   const image = await loadImage(file);
   const sourceImage = createSourceCanvas(image);
   const focusedImage = createFocusedCanvas(image, DEFAULT_FOCUS_CROP);
   const focusedQualityMetrics = buildDiagnosisImageQualityMetrics(focusedImage);
 
-  if (isLowInformationDiagnosisImageQuality(focusedQualityMetrics)) {
-    throw new DiagnosisInputQualityError();
-  }
+  const isLowQuality = isLowInformationDiagnosisImageQuality(focusedQualityMetrics);
 
   const rawFeatures: DiagnosisFeatures = {
     heightPrimary: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[0]),
@@ -595,16 +644,21 @@ export async function extractDiagnosisFeatures(
     heightEdgeFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[5]),
     heightEdgeCenter: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[6]),
     heightHistFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[7]),
+    heightLbpFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[8]),
     cupPrimary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[0]),
     cupSecondary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[1]),
     cupCenter: extractFeatures(focusedImage, CUP_FEATURE_SPECS[2]),
     cupProfile: extractFeatures(focusedImage, CUP_FEATURE_SPECS[3]),
     cupEdgeTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[4]),
     cupHistTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[5]),
+    cupLbpTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[6]),
     similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
   };
 
-  return normalizeFeatures(rawFeatures);
+  return {
+    features: normalizeFeatures(rawFeatures),
+    isLowQuality,
+  };
 }
 
 export function diagnose(features: DiagnosisFeatures): DiagnosisResult {

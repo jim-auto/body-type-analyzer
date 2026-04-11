@@ -8,10 +8,10 @@ import {
   DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE,
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
-  DiagnosisInputQualityError,
   diagnose,
   extractDiagnosisFeatures,
   type DiagnosisFeatures,
+  type DiagnosisFeatureResult,
   type DiagnosisResult,
 } from "@/lib/image-analyzer";
 
@@ -67,12 +67,14 @@ const mockFeatures: DiagnosisFeatures = {
   heightEdgeFull: [0.1, 0.2, 0.3],
   heightEdgeCenter: [0.1, 0.2, 0.3],
   heightHistFull: [0.1, 0.2, 0.3],
+  heightLbpFull: [0.1, 0.2, 0.3],
   cupPrimary: [0.4, 0.5, 0.6],
   cupSecondary: [0.4, 0.5, 0.6],
   cupCenter: [0.4, 0.5, 0.6],
   cupProfile: [0.4, 0.5, 0.6],
   cupEdgeTop: [0.4, 0.5, 0.6],
   cupHistTop: [0.4, 0.5, 0.6],
+  cupLbpTop: [0.4, 0.5, 0.6],
   similarity: [0.7, 0.8, 0.9],
 };
 
@@ -115,9 +117,14 @@ const finishAnalysis = async () => {
   });
 };
 
+const mockFeatureResult: DiagnosisFeatureResult = {
+  features: mockFeatures,
+  isLowQuality: false,
+};
+
 beforeEach(() => {
   jest.useFakeTimers();
-  mockedExtractDiagnosisFeatures.mockResolvedValue(mockFeatures);
+  mockedExtractDiagnosisFeatures.mockResolvedValue(mockFeatureResult);
   mockedDiagnose.mockReturnValue(mockResult);
   mockCreateObjectUrl.mockReturnValue("blob:preview-url");
   Object.defineProperty(URL, "createObjectURL", {
@@ -368,20 +375,21 @@ describe("AnalyzePage", () => {
     ).toBeInTheDocument();
   });
 
-  test("低品質画像のときは専用メッセージを表示する", async () => {
-    mockedExtractDiagnosisFeatures.mockRejectedValueOnce(
-      new DiagnosisInputQualityError()
-    );
+  test("低品質画像のときは警告バナーを表示しつつ結果も出す", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: true,
+    });
     renderPage();
 
     await uploadImage();
+    await finishAnalysis();
 
+    expect(screen.getByText("画像品質に関する注意")).toBeInTheDocument();
     expect(
       screen.getByText(DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE)
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("画像の読み込みに失敗しました。別の画像でお試しください。")
-    ).not.toBeInTheDocument();
+    expect(screen.getByText("診断結果")).toBeInTheDocument();
   });
 
   test("結果表示時に免責表示が並ぶ", async () => {
