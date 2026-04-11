@@ -28,12 +28,14 @@ export type DiagnosisFeatures = {
   heightEdgeFull: number[];
   heightEdgeCenter: number[];
   heightHistFull: number[];
+  heightLbpFull: number[];
   cupPrimary: number[];
   cupSecondary: number[];
   cupCenter: number[];
   cupProfile: number[];
   cupEdgeTop: number[];
   cupHistTop: number[];
+  cupLbpTop: number[];
   similarity: number[];
 };
 

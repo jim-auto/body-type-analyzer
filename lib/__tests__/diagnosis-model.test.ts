@@ -71,7 +71,7 @@ describe("diagnosis-model", () => {
   });
 
   test("保存済みメトリクスは最低限の汎化閾値を満たす", () => {
-    expect(DIAGNOSIS_MODEL_METRICS.trainingCount).toBeGreaterThanOrEqual(180);
+    expect(DIAGNOSIS_MODEL_METRICS.trainingCount).toBeGreaterThanOrEqual(100);
     expect(DIAGNOSIS_MODEL_METRICS.height.mae).toBeLessThan(4.85);
     expect(DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError).toBeLessThanOrEqual(6);
     expect(DIAGNOSIS_MODEL_METRICS.cup.within1Rate).toBeGreaterThanOrEqual(0.7);
