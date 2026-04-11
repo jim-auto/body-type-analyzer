@@ -5,8 +5,10 @@ import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 import {
   AI_LOADING_MESSAGES,
   DIAGNOSIS_DISCLAIMERS,
+  DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE,
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
+  DiagnosisInputQualityError,
   diagnose,
   extractDiagnosisFeatures,
   type DiagnosisFeatures,
@@ -64,11 +66,13 @@ const mockFeatures: DiagnosisFeatures = {
   heightProfile: [0.1, 0.2, 0.3],
   heightEdgeFull: [0.1, 0.2, 0.3],
   heightEdgeCenter: [0.1, 0.2, 0.3],
+  heightHistFull: [0.1, 0.2, 0.3],
   cupPrimary: [0.4, 0.5, 0.6],
   cupSecondary: [0.4, 0.5, 0.6],
   cupCenter: [0.4, 0.5, 0.6],
   cupProfile: [0.4, 0.5, 0.6],
   cupEdgeTop: [0.4, 0.5, 0.6],
+  cupHistTop: [0.4, 0.5, 0.6],
   similarity: [0.7, 0.8, 0.9],
 };
 
@@ -362,6 +366,22 @@ describe("AnalyzePage", () => {
     expect(
       screen.getByText("画像の読み込みに失敗しました。別の画像でお試しください。")
     ).toBeInTheDocument();
+  });
+
+  test("低品質画像のときは専用メッセージを表示する", async () => {
+    mockedExtractDiagnosisFeatures.mockRejectedValueOnce(
+      new DiagnosisInputQualityError()
+    );
+    renderPage();
+
+    await uploadImage();
+
+    expect(
+      screen.getByText(DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("画像の読み込みに失敗しました。別の画像でお試しください。")
+    ).not.toBeInTheDocument();
   });
 
   test("結果表示時に免責表示が並ぶ", async () => {

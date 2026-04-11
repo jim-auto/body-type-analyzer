@@ -27,12 +27,21 @@ export type DiagnosisFeatures = {
   heightProfile: number[];
   heightEdgeFull: number[];
   heightEdgeCenter: number[];
+  heightHistFull: number[];
   cupPrimary: number[];
   cupSecondary: number[];
   cupCenter: number[];
   cupProfile: number[];
   cupEdgeTop: number[];
+  cupHistTop: number[];
   similarity: number[];
+};
+
+export type NormalizationStats = {
+  [K in keyof DiagnosisFeatures]: {
+    mean: number[];
+    stddev: number[];
+  };
 };
 
 export type SimilarCelebrity = {
@@ -67,6 +76,17 @@ export type ErrorCoverage = {
   maxError: number;
 };
 
+export type MetricDistribution = {
+  mean: number;
+  stddev: number;
+};
+
+export type StabilityCoverage = {
+  rate: number;
+  meanMaxError: number;
+  stddevMaxError: number;
+};
+
 export type HeightMetrics = {
   strategy: string;
   trainingCount: number;
@@ -82,6 +102,16 @@ export type HeightMetrics = {
     exactRate: number;
     within2Rate: number;
     coverage: ErrorCoverage[];
+    stability?: {
+      method: string;
+      splitCount: number;
+      mae: MetricDistribution;
+      exactRate: MetricDistribution;
+      within2Rate: MetricDistribution;
+      coverage: StabilityCoverage[];
+      holdoutCount: MetricDistribution;
+      trainingCount: MetricDistribution;
+    };
   };
   models: Array<{
     featureSet: keyof DiagnosisFeatures;
@@ -104,6 +134,16 @@ export type CupMetrics = {
     exactRate: number;
     within1Rate: number;
     coverage: ErrorCoverage[];
+    stability?: {
+      method: string;
+      splitCount: number;
+      mae: MetricDistribution;
+      exactRate: MetricDistribution;
+      within1Rate: MetricDistribution;
+      coverage: StabilityCoverage[];
+      holdoutCount: MetricDistribution;
+      trainingCount: MetricDistribution;
+    };
   };
   models: Array<{
     featureSet: keyof DiagnosisFeatures;
@@ -128,12 +168,21 @@ export type DiagnosisModelEntry = {
     cup: boolean;
     similarity: boolean;
   };
+  sourceWeights: {
+    height: number;
+    cup: number;
+    similarity: number;
+  };
+  featureWeights?: {
+    [K in keyof DiagnosisFeatures]?: number;
+  };
   featureSets: DiagnosisFeatures;
 };
 
 export type DiagnosisModel = {
   version: number;
   generatedAt: string;
+  normalization?: NormalizationStats;
   metrics: {
     trainingCount: number;
     height: HeightMetrics;
@@ -165,6 +214,40 @@ const diagnosisModel = diagnosisModelJson as DiagnosisModel;
 export const DIAGNOSIS_MODEL = diagnosisModel;
 export const DIAGNOSIS_MODEL_ENTRIES = diagnosisModel.entries;
 export const DIAGNOSIS_MODEL_METRICS = diagnosisModel.metrics;
+export const DIAGNOSIS_MODEL_NORMALIZATION = diagnosisModel.normalization;
+
+export function normalizeFeatures(
+  features: DiagnosisFeatures,
+): DiagnosisFeatures {
+  const normalization = DIAGNOSIS_MODEL_NORMALIZATION;
+
+  if (!normalization) {
+    return features;
+  }
+
+  const result = {} as DiagnosisFeatures;
+
+  for (const key of Object.keys(features) as (keyof DiagnosisFeatures)[]) {
+    const stats = normalization[key];
+
+    if (!stats) {
+      result[key] = features[key];
+      continue;
+    }
+
+    result[key] = features[key].map((value, index) => {
+      const stddev = stats.stddev[index];
+
+      if (stddev === undefined || stddev <= 1e-9) {
+        return 0;
+      }
+
+      return Math.round(((value - stats.mean[index]) / stddev) * 10000) / 10000;
+    });
+  }
+
+  return result;
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -212,6 +295,12 @@ function getNeighbors(
 
   return DIAGNOSIS_MODEL_ENTRIES.filter((entry) => entry.name !== excludeName)
     .filter((entry) => entry.availability[availabilityKey])
+    .filter(
+      (entry) =>
+        (entry.featureWeights?.[featureSetName] ??
+          entry.sourceWeights?.[availabilityKey] ??
+          1) > 0
+    )
     .map((entry) => {
       const distance = euclideanDistance(
         targetFeatures,
@@ -221,7 +310,11 @@ function getNeighbors(
       return {
         entry,
         distance,
-        weight: 1 / ((distance + 1e-6) ** 2),
+        weight:
+          (entry.featureWeights?.[featureSetName] ??
+            entry.sourceWeights?.[availabilityKey] ??
+            1) /
+          ((distance + 1e-6) ** 2),
         distanceScore: stats ? normalizeDistance(distance, stats) : 1 / (1 + distance),
       };
     })
@@ -238,11 +331,19 @@ function getNeighbors(
 }
 
 function weightedMean(neighbors: Neighbor[], value: (entry: DiagnosisModelEntry) => number): number {
+  if (neighbors.length === 0) {
+    return 0;
+  }
+
   const totalWeight = neighbors.reduce((sum, neighbor) => sum + neighbor.weight, 0);
   const weightedSum = neighbors.reduce(
     (sum, neighbor) => sum + neighbor.weight * value(neighbor.entry),
     0
   );
+
+  if (totalWeight <= 1e-12) {
+    return neighbors.reduce((sum, neighbor) => sum + value(neighbor.entry), 0) / neighbors.length;
+  }
 
   return weightedSum / totalWeight;
 }
@@ -275,7 +376,7 @@ function weightedCupVote(neighbors: Neighbor[]): {
 
   return {
     cup,
-    winningShare: (scores.get(cup) ?? 0) / totalWeight,
+    winningShare: totalWeight <= 1e-12 ? 1 / DIAGNOSIS_CUP_ORDER.length : (scores.get(cup) ?? 0) / totalWeight,
   };
 }
 

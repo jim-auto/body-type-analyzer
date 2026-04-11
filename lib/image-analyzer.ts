@@ -1,6 +1,7 @@
 import {
   DIAGNOSIS_MODEL_METRICS,
   diagnoseFromFeatures,
+  normalizeFeatures,
   type DiagnosisFeatures,
   type DiagnosisResult,
   type SilhouetteType,
@@ -41,6 +42,10 @@ const HEIGHT_FEATURE_SPECS = [
     { region: "fullCenter", size: 8, mode: "edge" },
     { region: "lowCenter", size: 8, mode: "edge" },
   ],
+  [
+    { region: "full", size: 8, mode: "gray_histogram" },
+    { region: "full", size: 8, mode: "edge_histogram" },
+  ],
 ] as const;
 const CUP_FEATURE_SPECS = [
   [
@@ -60,6 +65,10 @@ const CUP_FEATURE_SPECS = [
     { region: "torsoCenter", size: 10, mode: "profile" },
   ],
   [{ region: "top", size: 10, mode: "edge" }],
+  [
+    { region: "top", size: 8, mode: "gray_histogram" },
+    { region: "top", size: 8, mode: "edge_histogram" },
+  ],
 ] as const;
 const SIMILARITY_FEATURE_SPECS = [
   { region: "full", size: 8, mode: "gray" },
@@ -72,6 +81,13 @@ const FOCUS_MIN_WIDTH_RATIO = 0.68;
 const FOCUS_MIN_HEIGHT_RATIO = 0.88;
 const FOCUS_HORIZONTAL_PADDING_RATIO = 0.1;
 const FOCUS_VERTICAL_PADDING_RATIO = 0.04;
+const LOW_INFORMATION_BRIGHTNESS_MIN = 0.88;
+const LOW_INFORMATION_CONTRAST_MAX = 0.09;
+const LOW_INFORMATION_EDGE_MEAN_MAX = 0.03;
+const LOW_INFORMATION_ENTROPY_MAX = 2.2;
+
+export const DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE =
+  "Image quality is too low for a stable estimate. Use a clearer photo with visible outline and contrast.";
 
 export const AI_LOADING_MESSAGES = [
   "輪郭と明暗パターンを抽出中…",
@@ -92,12 +108,85 @@ export const DIAGNOSIS_DISCLAIMERS = [
 ] as const;
 
 type FeatureRegion = keyof typeof REGION_BOUNDS;
-type FeatureMode = "gray" | "profile" | "edge";
+type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
 type FocusRange = { start: number; end: number };
+type FocusCropConfig = {
+  lowQuantile: number;
+  highQuantile: number;
+  minWidthRatio: number;
+  minHeightRatio: number;
+  horizontalPaddingRatio: number;
+  verticalPaddingRatio: number;
+};
+
+export type DiagnosisImageQualityMetrics = {
+  width: number;
+  height: number;
+  aspectRatio: number;
+  brightnessMean: number;
+  contrastStddev: number;
+  edgeMean: number;
+  edgeP90: number;
+  entropy: number;
+};
+
+export class DiagnosisInputQualityError extends Error {
+  constructor(message = DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE) {
+    super(message);
+    this.name = "DiagnosisInputQualityError";
+  }
+}
+
+const DEFAULT_FOCUS_CROP: FocusCropConfig = {
+  lowQuantile: FOCUS_LOW_QUANTILE,
+  highQuantile: FOCUS_HIGH_QUANTILE,
+  minWidthRatio: FOCUS_MIN_WIDTH_RATIO,
+  minHeightRatio: FOCUS_MIN_HEIGHT_RATIO,
+  horizontalPaddingRatio: FOCUS_HORIZONTAL_PADDING_RATIO,
+  verticalPaddingRatio: FOCUS_VERTICAL_PADDING_RATIO,
+};
 
 function roundFeature(value: number): number {
   return Math.round(value * 10000) / 10000;
+}
+
+function roundQualityMetric(value: number): number {
+  return Math.round(value * 1000000) / 1000000;
+}
+
+function mean(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function populationStddev(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  const average = mean(values);
+
+  return Math.sqrt(
+    values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length
+  );
+}
+
+function percentile(values: number[], ratio: number): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  const ordered = [...values].sort((left, right) => left - right);
+  const index = Math.min(
+    ordered.length - 1,
+    Math.max(0, Math.round((ordered.length - 1) * ratio))
+  );
+
+  return ordered[index] ?? 0;
 }
 
 function getWeightedBounds(weights: number[], lowQuantile: number, highQuantile: number) {
@@ -153,7 +242,10 @@ function expandFocusRange(
   return { start: nextStart, end: nextEnd };
 }
 
-function createFocusedCanvas(image: HTMLImageElement): HTMLCanvasElement {
+function createFocusedCanvas(
+  image: HTMLImageElement,
+  focusCrop: FocusCropConfig
+): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -181,25 +273,25 @@ function createFocusedCanvas(image: HTMLImageElement): HTMLCanvasElement {
 
   const rowBounds = getWeightedBounds(
     rowWeights,
-    FOCUS_LOW_QUANTILE,
-    FOCUS_HIGH_QUANTILE
+    focusCrop.lowQuantile,
+    focusCrop.highQuantile
   );
   const columnBounds = getWeightedBounds(
     columnWeights,
-    FOCUS_LOW_QUANTILE,
-    FOCUS_HIGH_QUANTILE
+    focusCrop.lowQuantile,
+    focusCrop.highQuantile
   );
   const verticalRange = expandFocusRange(
     rowBounds.start / FOCUS_SAMPLE_SIZE,
     (rowBounds.end + 1) / FOCUS_SAMPLE_SIZE,
-    FOCUS_MIN_HEIGHT_RATIO,
-    FOCUS_VERTICAL_PADDING_RATIO
+    focusCrop.minHeightRatio,
+    focusCrop.verticalPaddingRatio
   );
   const horizontalRange = expandFocusRange(
     columnBounds.start / FOCUS_SAMPLE_SIZE,
     (columnBounds.end + 1) / FOCUS_SAMPLE_SIZE,
-    FOCUS_MIN_WIDTH_RATIO,
-    FOCUS_HORIZONTAL_PADDING_RATIO
+    focusCrop.minWidthRatio,
+    focusCrop.horizontalPaddingRatio
   );
   const sourceLeft = Math.floor(image.naturalWidth * horizontalRange.start);
   const sourceTop = Math.floor(image.naturalHeight * verticalRange.start);
@@ -348,6 +440,19 @@ function edgeFromGrayscale(grayscale: number[], size: number): number[] {
   return edgeValues;
 }
 
+function histogramFromValues(values: number[], binCount = 16): number[] {
+  const bins = Array.from({ length: binCount }, () => 0);
+
+  for (const value of values) {
+    const index = Math.min(Math.floor(value * binCount), binCount - 1);
+    bins[index] += 1;
+  }
+
+  const total = values.length || 1;
+
+  return bins.map((count) => roundFeature(count / total));
+}
+
 function extractFeatureBlock(image: HTMLCanvasElement, spec: FeatureSpec): number[] {
   const grayscale = grayscaleFromPixels(drawRegion(image, spec.region, spec.size));
 
@@ -359,11 +464,97 @@ function extractFeatureBlock(image: HTMLCanvasElement, spec: FeatureSpec): numbe
     return edgeFromGrayscale(grayscale, spec.size);
   }
 
+  if (spec.mode === "gray_histogram") {
+    return histogramFromValues(grayscale);
+  }
+
+  if (spec.mode === "edge_histogram") {
+    return histogramFromValues(edgeFromGrayscale(grayscale, spec.size));
+  }
+
   return grayscale;
 }
 
 function extractFeatures(image: HTMLCanvasElement, specs: readonly FeatureSpec[]): number[] {
   return specs.flatMap((spec) => extractFeatureBlock(image, spec));
+}
+
+export function buildDiagnosisImageQualityMetrics(
+  image: HTMLCanvasElement
+): DiagnosisImageQualityMetrics {
+  const grayscale = grayscaleFromPixels(drawRegion(image, "full", FOCUS_SAMPLE_SIZE));
+  const edgeValues = edgeFromGrayscale(grayscale, FOCUS_SAMPLE_SIZE);
+  const histogram = Array.from({ length: 256 }, () => 0);
+
+  grayscale.forEach((value) => {
+    const bucket = Math.min(255, Math.max(0, Math.round(value * 255)));
+
+    histogram[bucket] += 1;
+  });
+
+  const total = histogram.reduce((sum, count) => sum + count, 0);
+  let entropy = 0;
+
+  histogram.forEach((count) => {
+    if (count === 0 || total === 0) {
+      return;
+    }
+
+    const probability = count / total;
+    entropy -= probability * Math.log2(probability);
+  });
+
+  return {
+    width: image.width,
+    height: image.height,
+    aspectRatio: roundQualityMetric(image.width / Math.max(1, image.height)),
+    brightnessMean: roundQualityMetric(mean(grayscale)),
+    contrastStddev: roundQualityMetric(populationStddev(grayscale)),
+    edgeMean: roundQualityMetric(mean(edgeValues)),
+    edgeP90: roundQualityMetric(percentile(edgeValues, 0.9)),
+    entropy: roundQualityMetric(entropy),
+  };
+}
+
+export function isLowInformationDiagnosisImageQuality(
+  metrics: DiagnosisImageQualityMetrics
+): boolean {
+  return (
+    metrics.brightnessMean > LOW_INFORMATION_BRIGHTNESS_MIN &&
+    metrics.contrastStddev < LOW_INFORMATION_CONTRAST_MAX &&
+    metrics.edgeMean < LOW_INFORMATION_EDGE_MEAN_MAX &&
+    metrics.entropy < LOW_INFORMATION_ENTROPY_MAX
+  );
+}
+
+export function isDiagnosisInputQualityError(
+  error: unknown
+): error is DiagnosisInputQualityError {
+  return error instanceof DiagnosisInputQualityError;
+}
+
+function averageFeatureVectors(featureVectors: number[][]): number[] {
+  if (featureVectors.length === 1) {
+    return featureVectors[0] ?? [];
+  }
+
+  const vectorLength = featureVectors[0]?.length ?? 0;
+
+  return Array.from({ length: vectorLength }, (_, index) => {
+    const sum = featureVectors.reduce(
+      (total, featureVector) => total + (featureVector[index] ?? 0),
+      0
+    );
+
+    return roundFeature(sum / featureVectors.length);
+  });
+}
+
+function extractEnsembleFeatures(
+  images: HTMLCanvasElement[],
+  specs: readonly FeatureSpec[]
+): number[] {
+  return averageFeatureVectors(images.map((image) => extractFeatures(image, specs)));
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -388,23 +579,32 @@ export async function extractDiagnosisFeatures(
 ): Promise<DiagnosisFeatures> {
   const image = await loadImage(file);
   const sourceImage = createSourceCanvas(image);
-  const focusedImage = createFocusedCanvas(image);
+  const focusedImage = createFocusedCanvas(image, DEFAULT_FOCUS_CROP);
+  const focusedQualityMetrics = buildDiagnosisImageQualityMetrics(focusedImage);
 
-  return {
-    heightPrimary: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[0]),
-    heightBalanced: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[1]),
-    heightWide: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[2]),
-    heightCenter: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[3]),
-    heightProfile: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[4]),
-    heightEdgeFull: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[5]),
-    heightEdgeCenter: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[6]),
+  if (isLowInformationDiagnosisImageQuality(focusedQualityMetrics)) {
+    throw new DiagnosisInputQualityError();
+  }
+
+  const rawFeatures: DiagnosisFeatures = {
+    heightPrimary: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[0]),
+    heightBalanced: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[1]),
+    heightWide: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[2]),
+    heightCenter: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[3]),
+    heightProfile: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[4]),
+    heightEdgeFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[5]),
+    heightEdgeCenter: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[6]),
+    heightHistFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[7]),
     cupPrimary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[0]),
     cupSecondary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[1]),
     cupCenter: extractFeatures(focusedImage, CUP_FEATURE_SPECS[2]),
     cupProfile: extractFeatures(focusedImage, CUP_FEATURE_SPECS[3]),
     cupEdgeTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[4]),
+    cupHistTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[5]),
     similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
   };
+
+  return normalizeFeatures(rawFeatures);
 }
 
 export function diagnose(features: DiagnosisFeatures): DiagnosisResult {
