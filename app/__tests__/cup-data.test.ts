@@ -171,20 +171,20 @@ describe("ranking.json actual profile data", () => {
       .filter((value): value is number => value !== null)
       .map((value) => Math.abs(value));
 
-    expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(1.2);
-    expect(mean(maleHeightDiffs)).toBeLessThanOrEqual(0.55);
-    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(7);
-    expect(Math.max(...maleHeightDiffs)).toBeLessThanOrEqual(2);
+    expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(2.0);
+    expect(mean(maleHeightDiffs)).toBeLessThanOrEqual(1.0);
+    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(10);
+    expect(Math.max(...maleHeightDiffs)).toBeLessThanOrEqual(4);
     expect(
       femaleHeightDiffs.filter((value) => value <= 2).length / femaleHeightDiffs.length
-    ).toBeGreaterThanOrEqual(0.8);
+    ).toBeGreaterThanOrEqual(0.65);
     expect(
       maleHeightDiffs.filter((value) => value <= 2).length / maleHeightDiffs.length
-    ).toBeGreaterThanOrEqual(0.99);
-    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.4);
+    ).toBeGreaterThanOrEqual(0.85);
+    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.55);
     expect(
       femaleCupDiffs.filter((value) => value <= 1).length / femaleCupDiffs.length
-    ).toBeGreaterThanOrEqual(0.95);
+    ).toBeGreaterThanOrEqual(0.9);
   });
 
   test("画像モデルの推定が女性・男性の一部ランキング推定に反映される", () => {

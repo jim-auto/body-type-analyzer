@@ -26,6 +26,7 @@ FEATURE_SETS = {
     "heightWide": [("full", 14, "gray")],
     "heightCenter": [("fullCenter", 8, "gray"), ("lowCenter", 8, "gray")],
     "heightProfile": [("fullCenter", 12, "profile"), ("lowCenter", 10, "profile")],
+    "heightHistFull": [("full", 8, "gray_histogram"), ("full", 8, "edge_histogram")],
 }
 FEATURE_CANDIDATES = (
     "heightPrimary",
@@ -33,6 +34,7 @@ FEATURE_CANDIDATES = (
     "heightWide",
     "heightCenter",
     "heightProfile",
+    "heightHistFull",
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
@@ -97,11 +99,52 @@ def profile_features(values: list[float], size: int) -> list[float]:
     return rows + columns
 
 
+def edge_features(values: list[float], size: int) -> list[float]:
+    edges: list[float] = []
+
+    for row_index in range(size):
+        for column_index in range(size):
+            center = values[row_index * size + column_index]
+            left = values[row_index * size + max(0, column_index - 1)]
+            right = values[row_index * size + min(size - 1, column_index + 1)]
+            up = values[max(0, row_index - 1) * size + column_index]
+            down = values[min(size - 1, row_index + 1) * size + column_index]
+            gradient = min(1.0, (abs(right - left) + abs(down - up)) / 2)
+
+            edges.append(round(gradient, 4))
+
+    return edges
+
+
+def histogram_features(values: list[float], bin_count: int = 16) -> list[float]:
+    bins = [0.0] * bin_count
+
+    for value in values:
+        index = min(int(value * bin_count), bin_count - 1)
+        bins[index] += 1
+
+    total = len(values) if len(values) > 0 else 1
+
+    return [round(count / total, 4) for count in bins]
+
+
+def edge_histogram_features(values: list[float], size: int, bin_count: int = 16) -> list[float]:
+    edges = edge_features(values, size)
+
+    return histogram_features(edges, bin_count)
+
+
 def extract_feature_block(gray_image: Image.Image, region_name: str, size: int, mode: str) -> list[float]:
     values = crop_and_resize(gray_image, region_name, size)
 
     if mode == "profile":
         return profile_features(values, size)
+
+    if mode == "gray_histogram":
+        return histogram_features(values)
+
+    if mode == "edge_histogram":
+        return edge_histogram_features(values, size)
 
     return values
 
@@ -117,6 +160,53 @@ def extract_features(gray_image: Image.Image, specs: list[tuple[str, int, str]])
 
 def euclidean_distance(left: list[float], right: list[float]) -> float:
     return math.sqrt(sum((l - r) ** 2 for l, r in zip(left, right, strict=True)))
+
+
+def compute_normalization_stats(
+    named_feature_sets: dict[str, list[list[float]]],
+) -> dict[str, dict[str, list[float]]]:
+    stats: dict[str, dict[str, list[float]]] = {}
+
+    for feature_name, vectors in named_feature_sets.items():
+        if not vectors:
+            stats[feature_name] = {"mean": [], "stddev": []}
+            continue
+
+        dim = len(vectors[0])
+        means: list[float] = []
+        stddevs: list[float] = []
+
+        for d in range(dim):
+            values = [vectors[i][d] for i in range(len(vectors))]
+            mean = statistics.fmean(values)
+            stddev = statistics.pstdev(values)
+            means.append(round(mean, 6))
+            stddevs.append(round(stddev, 6))
+
+        stats[feature_name] = {"mean": means, "stddev": stddevs}
+
+    return stats
+
+
+def normalize_feature_sets(
+    named_feature_sets: dict[str, list[list[float]]],
+    normalization_stats: dict[str, dict[str, list[float]]],
+) -> dict[str, list[list[float]]]:
+    normalized: dict[str, list[list[float]]] = {}
+
+    for feature_name, vectors in named_feature_sets.items():
+        stats = normalization_stats[feature_name]
+        means = stats["mean"]
+        stddevs = stats["stddev"]
+        normalized[feature_name] = [
+            [
+                round((v - means[d]) / stddevs[d], 4) if stddevs[d] > 1e-9 else 0.0
+                for d, v in enumerate(vector)
+            ]
+            for vector in vectors
+        ]
+
+    return normalized
 
 
 def js_round(value: float) -> int:
@@ -265,12 +355,14 @@ def build_model() -> dict[str, object]:
     gray_images = [
         Image.open(resolve_image_path(str(profile["image"]))).convert("L") for profile in profiles
     ]
-    feature_sets = {
+    raw_feature_sets = {
         feature_name: [
             extract_features(image, specs) for image in gray_images
         ]
         for feature_name, specs in FEATURE_SETS.items()
     }
+    normalization_stats = compute_normalization_stats(raw_feature_sets)
+    feature_sets = normalize_feature_sets(raw_feature_sets, normalization_stats)
     heights = [float(profile["actualHeight"]) for profile in profiles]
     _, metrics, predictions = select_models(feature_sets, heights)
 

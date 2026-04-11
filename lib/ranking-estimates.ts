@@ -17,8 +17,8 @@ type FemaleModelEstimate = {
   estimatedCup: string;
 };
 
-const FEMALE_IMAGE_MODEL_WEIGHT = 0.5;
-const MALE_IMAGE_MODEL_WEIGHT = 0.15;
+const FEMALE_IMAGE_MODEL_WEIGHT = 0.7;
+const MALE_IMAGE_MODEL_WEIGHT = 0.3;
 const diagnosisEntryByName = new Map(
   DIAGNOSIS_MODEL_ENTRIES.map((entry) => [entry.name, entry])
 );

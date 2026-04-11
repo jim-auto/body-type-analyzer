@@ -6,12 +6,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   AI_LOADING_MESSAGES,
   DIAGNOSIS_DISCLAIMERS,
+  DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE,
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
   type DiagnosisResult,
   type SilhouetteType,
   diagnose,
   extractDiagnosisFeatures,
+  isDiagnosisInputQualityError,
 } from "@/lib/image-analyzer";
 import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 
@@ -169,14 +171,18 @@ export default function AnalyzePage() {
       }
 
       runLoadingSequence(diagnose(features), runId);
-    } catch {
+    } catch (error) {
       if (runId !== analysisRunRef.current) {
         return;
       }
 
       setIsAnalyzing(false);
       setProgress(0);
-      setErrorMessage("画像の読み込みに失敗しました。別の画像でお試しください。");
+      setErrorMessage(
+        isDiagnosisInputQualityError(error)
+          ? DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE
+          : "画像の読み込みに失敗しました。別の画像でお試しください。"
+      );
     }
   };
 
