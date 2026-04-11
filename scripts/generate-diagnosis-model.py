@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import statistics
@@ -113,6 +114,66 @@ class Profile:
     use_for_height: bool = True
     use_for_cup: bool = True
     use_for_similarity: bool = True
+
+
+@dataclass(frozen=True)
+class FocusCropConfig:
+    sample_size: int = FOCUS_SAMPLE_SIZE
+    low_quantile: float = FOCUS_LOW_QUANTILE
+    high_quantile: float = FOCUS_HIGH_QUANTILE
+    min_width_ratio: float = FOCUS_MIN_WIDTH_RATIO
+    min_height_ratio: float = FOCUS_MIN_HEIGHT_RATIO
+    horizontal_padding_ratio: float = FOCUS_HORIZONTAL_PADDING_RATIO
+    vertical_padding_ratio: float = FOCUS_VERTICAL_PADDING_RATIO
+
+
+@dataclass(frozen=True)
+class PreprocessingPreset:
+    key: str
+    description: str
+    height_focus: FocusCropConfig | None
+    cup_focus: FocusCropConfig | None
+    similarity_focus: FocusCropConfig | None
+
+
+DEFAULT_FOCUS_CROP = FocusCropConfig()
+WIDE_HEIGHT_FOCUS_CROP = FocusCropConfig(
+    min_width_ratio=0.78,
+    min_height_ratio=0.92,
+    horizontal_padding_ratio=0.06,
+    vertical_padding_ratio=0.02,
+)
+PREPROCESSING_PRESETS: dict[str, PreprocessingPreset] = {
+    "focused-shared": PreprocessingPreset(
+        key="focused-shared",
+        description="Focused crop for height, cup, and similarity",
+        height_focus=DEFAULT_FOCUS_CROP,
+        cup_focus=DEFAULT_FOCUS_CROP,
+        similarity_focus=DEFAULT_FOCUS_CROP,
+    ),
+    "raw": PreprocessingPreset(
+        key="raw",
+        description="Raw image for height, cup, and similarity",
+        height_focus=None,
+        cup_focus=None,
+        similarity_focus=None,
+    ),
+    "focused-split-raw-height": PreprocessingPreset(
+        key="focused-split-raw-height",
+        description="Raw height, focused cup, focused similarity",
+        height_focus=None,
+        cup_focus=DEFAULT_FOCUS_CROP,
+        similarity_focus=DEFAULT_FOCUS_CROP,
+    ),
+    "focused-split-wide-height": PreprocessingPreset(
+        key="focused-split-wide-height",
+        description="Wide focused height, focused cup, focused similarity",
+        height_focus=WIDE_HEIGHT_FOCUS_CROP,
+        cup_focus=DEFAULT_FOCUS_CROP,
+        similarity_focus=DEFAULT_FOCUS_CROP,
+    ),
+}
+DEFAULT_PREPROCESSING_PRESET = PREPROCESSING_PRESETS["focused-split-raw-height"]
 
 
 def load_profiles() -> list[Profile]:
@@ -255,40 +316,43 @@ def expand_focus_range(
     return next_start, next_end
 
 
-def build_focused_image(gray_image: Image.Image) -> Image.Image:
-    sample = gray_image.resize((FOCUS_SAMPLE_SIZE, FOCUS_SAMPLE_SIZE), Image.Resampling.BILINEAR)
+def build_focused_image(gray_image: Image.Image, focus_crop: FocusCropConfig) -> Image.Image:
+    sample = gray_image.resize(
+        (focus_crop.sample_size, focus_crop.sample_size),
+        Image.Resampling.BILINEAR,
+    )
     values = [round(pixel / 255, 4) for pixel in sample.get_flattened_data()]
-    edge_values = edge_features(values, FOCUS_SAMPLE_SIZE)
-    row_weights = [0.0 for _ in range(FOCUS_SAMPLE_SIZE)]
-    column_weights = [0.0 for _ in range(FOCUS_SAMPLE_SIZE)]
+    edge_values = edge_features(values, focus_crop.sample_size)
+    row_weights = [0.0 for _ in range(focus_crop.sample_size)]
+    column_weights = [0.0 for _ in range(focus_crop.sample_size)]
 
-    for row_index in range(FOCUS_SAMPLE_SIZE):
-        for column_index in range(FOCUS_SAMPLE_SIZE):
-            energy = edge_values[row_index * FOCUS_SAMPLE_SIZE + column_index]
+    for row_index in range(focus_crop.sample_size):
+        for column_index in range(focus_crop.sample_size):
+            energy = edge_values[row_index * focus_crop.sample_size + column_index]
             row_weights[row_index] += energy
             column_weights[column_index] += energy
 
     top, bottom = get_weighted_bounds(
         row_weights,
-        FOCUS_LOW_QUANTILE,
-        FOCUS_HIGH_QUANTILE,
+        focus_crop.low_quantile,
+        focus_crop.high_quantile,
     )
     left, right = get_weighted_bounds(
         column_weights,
-        FOCUS_LOW_QUANTILE,
-        FOCUS_HIGH_QUANTILE,
+        focus_crop.low_quantile,
+        focus_crop.high_quantile,
     )
     focus_top, focus_bottom = expand_focus_range(
-        top / FOCUS_SAMPLE_SIZE,
-        (bottom + 1) / FOCUS_SAMPLE_SIZE,
-        FOCUS_MIN_HEIGHT_RATIO,
-        FOCUS_VERTICAL_PADDING_RATIO,
+        top / focus_crop.sample_size,
+        (bottom + 1) / focus_crop.sample_size,
+        focus_crop.min_height_ratio,
+        focus_crop.vertical_padding_ratio,
     )
     focus_left, focus_right = expand_focus_range(
-        left / FOCUS_SAMPLE_SIZE,
-        (right + 1) / FOCUS_SAMPLE_SIZE,
-        FOCUS_MIN_WIDTH_RATIO,
-        FOCUS_HORIZONTAL_PADDING_RATIO,
+        left / focus_crop.sample_size,
+        (right + 1) / focus_crop.sample_size,
+        focus_crop.min_width_ratio,
+        focus_crop.horizontal_padding_ratio,
     )
     crop_left = int(gray_image.width * focus_left)
     crop_top = int(gray_image.height * focus_top)
@@ -296,6 +360,47 @@ def build_focused_image(gray_image: Image.Image) -> Image.Image:
     crop_bottom = max(crop_top + 1, math.ceil(gray_image.height * focus_bottom))
 
     return gray_image.crop((crop_left, crop_top, crop_right, crop_bottom))
+
+
+def feature_group_for_name(feature_name: str) -> str:
+    if feature_name.startswith("height"):
+        return "height"
+
+    if feature_name.startswith("cup"):
+        return "cup"
+
+    return "similarity"
+
+
+def build_feature_sets(
+    gray_images: list[Image.Image],
+    preset: PreprocessingPreset,
+) -> dict[str, list[list[float]]]:
+    processed_images_by_group: dict[str, list[Image.Image]] = {}
+
+    for group_name, focus_crop in (
+        ("height", preset.height_focus),
+        ("cup", preset.cup_focus),
+        ("similarity", preset.similarity_focus),
+    ):
+        if focus_crop is None:
+            processed_images_by_group[group_name] = gray_images
+            continue
+
+        processed_images_by_group[group_name] = [
+            build_focused_image(image, focus_crop) for image in gray_images
+        ]
+
+    return {
+        feature_name: [
+            extract_features(
+                processed_images_by_group[feature_group_for_name(feature_name)][index],
+                specs,
+            )
+            for index in range(len(gray_images))
+        ]
+        for feature_name, specs in FEATURE_SETS.items()
+    }
 
 
 def to_grid(values: list[float], size: int) -> list[list[float]]:
@@ -862,18 +967,22 @@ def select_cup_models_for_generalization(
     return models, loocv_metrics, holdout_metrics
 
 
-def build_model() -> dict[str, object]:
+def build_strategy_label(prefix: str, focus_crop: FocusCropConfig | None) -> str:
+    mode = "focused" if focus_crop is not None else "raw"
+    return f"{mode} {prefix}"
+
+
+def build_similarity_label(focus_crop: FocusCropConfig | None) -> str:
+    mode = "focused" if focus_crop is not None else "raw"
+    return f"{mode} full grayscale 8x8 + top grayscale 8x8"
+
+
+def build_model(preset: PreprocessingPreset = DEFAULT_PREPROCESSING_PRESET) -> dict[str, object]:
     profiles = load_profiles()
     gray_images = [
-        build_focused_image(Image.open(resolve_image_path(profile.image)).convert("L"))
-        for profile in profiles
+        Image.open(resolve_image_path(profile.image)).convert("L") for profile in profiles
     ]
-    feature_sets = {
-        feature_name: [
-            extract_features(image, specs) for image in gray_images
-        ]
-        for feature_name, specs in FEATURE_SETS.items()
-    }
+    feature_sets = build_feature_sets(gray_images, preset)
     heights = [profile.actual_height for profile in profiles]
     cups = [profile.cup for profile in profiles]
     names = [profile.name for profile in profiles]
@@ -905,17 +1014,23 @@ def build_model() -> dict[str, object]:
         "metrics": {
             "trainingCount": len(profiles),
             "height": {
-                "strategy": "focused robust edge-enhanced kNN regressors",
+                "strategy": build_strategy_label(
+                    "robust edge-enhanced kNN regressors",
+                    preset.height_focus,
+                ),
                 **height_metrics,
                 "generalization": height_generalization,
             },
             "cup": {
-                "strategy": "focused robust edge-enhanced kNN classifiers",
+                "strategy": build_strategy_label(
+                    "robust edge-enhanced kNN classifiers",
+                    preset.cup_focus,
+                ),
                 **cup_metrics,
                 "generalization": cup_generalization,
             },
             "similarity": {
-                "feature": "focused full grayscale 8x8 + top grayscale 8x8",
+                "feature": build_similarity_label(preset.similarity_focus),
                 "trainingCount": len(similarity_indices),
                 "distance": build_pairwise_distance_stats_for_indices(
                     feature_sets["similarity"],
@@ -945,15 +1060,28 @@ def build_model() -> dict[str, object]:
     }
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--preset",
+        choices=sorted(PREPROCESSING_PRESETS.keys()),
+        default=DEFAULT_PREPROCESSING_PRESET.key,
+        help="Preprocessing preset to use when generating the diagnosis model",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
-    model = build_model()
+    args = parse_args()
+    preset = PREPROCESSING_PRESETS[args.preset]
+    model = build_model(preset)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(
         json.dumps(model, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     print(
-        f"Wrote {OUTPUT_PATH} with {model['metrics']['trainingCount']} training images",
+        f"Wrote {OUTPUT_PATH} with {model['metrics']['trainingCount']} training images using preset '{preset.key}'",
     )
 
 
