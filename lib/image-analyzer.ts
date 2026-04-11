@@ -65,6 +65,13 @@ const SIMILARITY_FEATURE_SPECS = [
   { region: "full", size: 8, mode: "gray" },
   { region: "top", size: 8, mode: "gray" },
 ] as const;
+const FOCUS_SAMPLE_SIZE = 64;
+const FOCUS_LOW_QUANTILE = 0.08;
+const FOCUS_HIGH_QUANTILE = 0.92;
+const FOCUS_MIN_WIDTH_RATIO = 0.68;
+const FOCUS_MIN_HEIGHT_RATIO = 0.88;
+const FOCUS_HORIZONTAL_PADDING_RATIO = 0.1;
+const FOCUS_VERTICAL_PADDING_RATIO = 0.04;
 
 export const AI_LOADING_MESSAGES = [
   "輪郭と明暗パターンを抽出中…",
@@ -87,13 +94,151 @@ export const DIAGNOSIS_DISCLAIMERS = [
 type FeatureRegion = keyof typeof REGION_BOUNDS;
 type FeatureMode = "gray" | "profile" | "edge";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
+type FocusRange = { start: number; end: number };
 
 function roundFeature(value: number): number {
   return Math.round(value * 10000) / 10000;
 }
 
+function getWeightedBounds(weights: number[], lowQuantile: number, highQuantile: number) {
+  const total = weights.reduce((sum, value) => sum + value, 0);
+
+  if (total <= 1e-9) {
+    return { start: 0, end: weights.length - 1 };
+  }
+
+  const lowTarget = total * lowQuantile;
+  const highTarget = total * highQuantile;
+  let cumulative = 0;
+  let start = 0;
+  let end = weights.length - 1;
+  let foundStart = false;
+
+  for (let index = 0; index < weights.length; index += 1) {
+    cumulative += weights[index] ?? 0;
+
+    if (!foundStart && cumulative >= lowTarget) {
+      start = index;
+      foundStart = true;
+    }
+
+    if (cumulative >= highTarget) {
+      end = index;
+      break;
+    }
+  }
+
+  return { start, end: Math.max(start, end) };
+}
+
+function expandFocusRange(
+  start: number,
+  end: number,
+  minSpan: number,
+  paddingRatio: number
+): FocusRange {
+  const center = (start + end) / 2;
+  const span = Math.max(minSpan, (end - start) * (1 + paddingRatio * 2));
+  let nextStart = Math.max(0, center - span / 2);
+  let nextEnd = Math.min(1, center + span / 2);
+
+  if (nextEnd - nextStart < span) {
+    if (nextStart === 0) {
+      nextEnd = Math.min(1, span);
+    } else {
+      nextStart = Math.max(0, 1 - span);
+    }
+  }
+
+  return { start: nextStart, end: nextEnd };
+}
+
+function createFocusedCanvas(image: HTMLImageElement): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+
+  if (!context) {
+    throw new Error("画像の読み込みに失敗しました");
+  }
+
+  canvas.width = FOCUS_SAMPLE_SIZE;
+  canvas.height = FOCUS_SAMPLE_SIZE;
+  context.drawImage(image, 0, 0, FOCUS_SAMPLE_SIZE, FOCUS_SAMPLE_SIZE);
+  const samplePixels = context.getImageData(0, 0, FOCUS_SAMPLE_SIZE, FOCUS_SAMPLE_SIZE).data;
+  const grayscale = grayscaleFromPixels(samplePixels);
+  const edgeValues = edgeFromGrayscale(grayscale, FOCUS_SAMPLE_SIZE);
+  const rowWeights = Array.from({ length: FOCUS_SAMPLE_SIZE }, () => 0);
+  const columnWeights = Array.from({ length: FOCUS_SAMPLE_SIZE }, () => 0);
+
+  for (let rowIndex = 0; rowIndex < FOCUS_SAMPLE_SIZE; rowIndex += 1) {
+    for (let columnIndex = 0; columnIndex < FOCUS_SAMPLE_SIZE; columnIndex += 1) {
+      const energy = edgeValues[rowIndex * FOCUS_SAMPLE_SIZE + columnIndex] ?? 0;
+
+      rowWeights[rowIndex] += energy;
+      columnWeights[columnIndex] += energy;
+    }
+  }
+
+  const rowBounds = getWeightedBounds(
+    rowWeights,
+    FOCUS_LOW_QUANTILE,
+    FOCUS_HIGH_QUANTILE
+  );
+  const columnBounds = getWeightedBounds(
+    columnWeights,
+    FOCUS_LOW_QUANTILE,
+    FOCUS_HIGH_QUANTILE
+  );
+  const verticalRange = expandFocusRange(
+    rowBounds.start / FOCUS_SAMPLE_SIZE,
+    (rowBounds.end + 1) / FOCUS_SAMPLE_SIZE,
+    FOCUS_MIN_HEIGHT_RATIO,
+    FOCUS_VERTICAL_PADDING_RATIO
+  );
+  const horizontalRange = expandFocusRange(
+    columnBounds.start / FOCUS_SAMPLE_SIZE,
+    (columnBounds.end + 1) / FOCUS_SAMPLE_SIZE,
+    FOCUS_MIN_WIDTH_RATIO,
+    FOCUS_HORIZONTAL_PADDING_RATIO
+  );
+  const sourceLeft = Math.floor(image.naturalWidth * horizontalRange.start);
+  const sourceTop = Math.floor(image.naturalHeight * verticalRange.start);
+  const sourceRight = Math.max(
+    sourceLeft + 1,
+    Math.ceil(image.naturalWidth * horizontalRange.end)
+  );
+  const sourceBottom = Math.max(
+    sourceTop + 1,
+    Math.ceil(image.naturalHeight * verticalRange.end)
+  );
+  const sourceWidth = sourceRight - sourceLeft;
+  const sourceHeight = sourceBottom - sourceTop;
+  const focusedCanvas = document.createElement("canvas");
+  const focusedContext = focusedCanvas.getContext("2d", { willReadFrequently: true });
+
+  if (!focusedContext) {
+    throw new Error("画像の読み込みに失敗しました");
+  }
+
+  focusedCanvas.width = sourceWidth;
+  focusedCanvas.height = sourceHeight;
+  focusedContext.drawImage(
+    image,
+    sourceLeft,
+    sourceTop,
+    sourceWidth,
+    sourceHeight,
+    0,
+    0,
+    sourceWidth,
+    sourceHeight
+  );
+
+  return focusedCanvas;
+}
+
 function drawRegion(
-  image: HTMLImageElement,
+  image: HTMLCanvasElement,
   region: FeatureRegion,
   size: number
 ): Uint8ClampedArray {
@@ -105,15 +250,15 @@ function drawRegion(
   }
 
   const [leftRatio, topRatio, rightRatio, bottomRatio] = REGION_BOUNDS[region];
-  const sourceLeft = Math.floor(image.naturalWidth * leftRatio);
-  const sourceTop = Math.floor(image.naturalHeight * topRatio);
+  const sourceLeft = Math.floor(image.width * leftRatio);
+  const sourceTop = Math.floor(image.height * topRatio);
   const sourceWidth = Math.max(
     1,
-    Math.floor(image.naturalWidth * rightRatio) - sourceLeft
+    Math.floor(image.width * rightRatio) - sourceLeft
   );
   const sourceHeight = Math.max(
     1,
-    Math.floor(image.naturalHeight * bottomRatio) - sourceTop
+    Math.floor(image.height * bottomRatio) - sourceTop
   );
 
   canvas.width = size;
@@ -188,7 +333,7 @@ function edgeFromGrayscale(grayscale: number[], size: number): number[] {
   return edgeValues;
 }
 
-function extractFeatureBlock(image: HTMLImageElement, spec: FeatureSpec): number[] {
+function extractFeatureBlock(image: HTMLCanvasElement, spec: FeatureSpec): number[] {
   const grayscale = grayscaleFromPixels(drawRegion(image, spec.region, spec.size));
 
   if (spec.mode === "profile") {
@@ -202,7 +347,7 @@ function extractFeatureBlock(image: HTMLImageElement, spec: FeatureSpec): number
   return grayscale;
 }
 
-function extractFeatures(image: HTMLImageElement, specs: readonly FeatureSpec[]): number[] {
+function extractFeatures(image: HTMLCanvasElement, specs: readonly FeatureSpec[]): number[] {
   return specs.flatMap((spec) => extractFeatureBlock(image, spec));
 }
 
@@ -227,21 +372,22 @@ export async function extractDiagnosisFeatures(
   file: File
 ): Promise<DiagnosisFeatures> {
   const image = await loadImage(file);
+  const focusedImage = createFocusedCanvas(image);
 
   return {
-    heightPrimary: extractFeatures(image, HEIGHT_FEATURE_SPECS[0]),
-    heightBalanced: extractFeatures(image, HEIGHT_FEATURE_SPECS[1]),
-    heightWide: extractFeatures(image, HEIGHT_FEATURE_SPECS[2]),
-    heightCenter: extractFeatures(image, HEIGHT_FEATURE_SPECS[3]),
-    heightProfile: extractFeatures(image, HEIGHT_FEATURE_SPECS[4]),
-    heightEdgeFull: extractFeatures(image, HEIGHT_FEATURE_SPECS[5]),
-    heightEdgeCenter: extractFeatures(image, HEIGHT_FEATURE_SPECS[6]),
-    cupPrimary: extractFeatures(image, CUP_FEATURE_SPECS[0]),
-    cupSecondary: extractFeatures(image, CUP_FEATURE_SPECS[1]),
-    cupCenter: extractFeatures(image, CUP_FEATURE_SPECS[2]),
-    cupProfile: extractFeatures(image, CUP_FEATURE_SPECS[3]),
-    cupEdgeTop: extractFeatures(image, CUP_FEATURE_SPECS[4]),
-    similarity: extractFeatures(image, SIMILARITY_FEATURE_SPECS),
+    heightPrimary: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[0]),
+    heightBalanced: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[1]),
+    heightWide: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[2]),
+    heightCenter: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[3]),
+    heightProfile: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[4]),
+    heightEdgeFull: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[5]),
+    heightEdgeCenter: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[6]),
+    cupPrimary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[0]),
+    cupSecondary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[1]),
+    cupCenter: extractFeatures(focusedImage, CUP_FEATURE_SPECS[2]),
+    cupProfile: extractFeatures(focusedImage, CUP_FEATURE_SPECS[3]),
+    cupEdgeTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[4]),
+    similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
   };
 }
 

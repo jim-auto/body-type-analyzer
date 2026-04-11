@@ -71,6 +71,13 @@ K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
 HOLDOUT_RATIO = 0.2
 MIN_HOLDOUT_BUCKET_SIZE = 4
+FOCUS_SAMPLE_SIZE = 64
+FOCUS_LOW_QUANTILE = 0.08
+FOCUS_HIGH_QUANTILE = 0.92
+FOCUS_MIN_WIDTH_RATIO = 0.68
+FOCUS_MIN_HEIGHT_RATIO = 0.88
+FOCUS_HORIZONTAL_PADDING_RATIO = 0.1
+FOCUS_VERTICAL_PADDING_RATIO = 0.04
 ROBUST_HEIGHT_MODELS = (
     ("heightPrimary", 5),
     ("heightEdgeFull", 15),
@@ -199,6 +206,96 @@ def crop_and_resize(gray_image: Image.Image, region_name: str, size: int) -> lis
     resized = cropped.resize((size, size), Image.Resampling.BILINEAR)
 
     return [round(pixel / 255, 4) for pixel in resized.get_flattened_data()]
+
+
+def get_weighted_bounds(weights: list[float], low_quantile: float, high_quantile: float) -> tuple[int, int]:
+    total = sum(weights)
+
+    if total <= 1e-9:
+        return 0, len(weights) - 1
+
+    low_target = total * low_quantile
+    high_target = total * high_quantile
+    cumulative = 0.0
+    start = 0
+    end = len(weights) - 1
+    found_start = False
+
+    for index, weight in enumerate(weights):
+        cumulative += weight
+
+        if not found_start and cumulative >= low_target:
+            start = index
+            found_start = True
+
+        if cumulative >= high_target:
+            end = index
+            break
+
+    return start, max(start, end)
+
+
+def expand_focus_range(
+    start: float,
+    end: float,
+    min_span: float,
+    padding_ratio: float,
+) -> tuple[float, float]:
+    center = (start + end) / 2
+    span = max(min_span, (end - start) * (1 + padding_ratio * 2))
+    next_start = max(0.0, center - span / 2)
+    next_end = min(1.0, center + span / 2)
+
+    if next_end - next_start < span:
+        if next_start == 0.0:
+            next_end = min(1.0, span)
+        else:
+            next_start = max(0.0, 1.0 - span)
+
+    return next_start, next_end
+
+
+def build_focused_image(gray_image: Image.Image) -> Image.Image:
+    sample = gray_image.resize((FOCUS_SAMPLE_SIZE, FOCUS_SAMPLE_SIZE), Image.Resampling.BILINEAR)
+    values = [round(pixel / 255, 4) for pixel in sample.get_flattened_data()]
+    edge_values = edge_features(values, FOCUS_SAMPLE_SIZE)
+    row_weights = [0.0 for _ in range(FOCUS_SAMPLE_SIZE)]
+    column_weights = [0.0 for _ in range(FOCUS_SAMPLE_SIZE)]
+
+    for row_index in range(FOCUS_SAMPLE_SIZE):
+        for column_index in range(FOCUS_SAMPLE_SIZE):
+            energy = edge_values[row_index * FOCUS_SAMPLE_SIZE + column_index]
+            row_weights[row_index] += energy
+            column_weights[column_index] += energy
+
+    top, bottom = get_weighted_bounds(
+        row_weights,
+        FOCUS_LOW_QUANTILE,
+        FOCUS_HIGH_QUANTILE,
+    )
+    left, right = get_weighted_bounds(
+        column_weights,
+        FOCUS_LOW_QUANTILE,
+        FOCUS_HIGH_QUANTILE,
+    )
+    focus_top, focus_bottom = expand_focus_range(
+        top / FOCUS_SAMPLE_SIZE,
+        (bottom + 1) / FOCUS_SAMPLE_SIZE,
+        FOCUS_MIN_HEIGHT_RATIO,
+        FOCUS_VERTICAL_PADDING_RATIO,
+    )
+    focus_left, focus_right = expand_focus_range(
+        left / FOCUS_SAMPLE_SIZE,
+        (right + 1) / FOCUS_SAMPLE_SIZE,
+        FOCUS_MIN_WIDTH_RATIO,
+        FOCUS_HORIZONTAL_PADDING_RATIO,
+    )
+    crop_left = int(gray_image.width * focus_left)
+    crop_top = int(gray_image.height * focus_top)
+    crop_right = max(crop_left + 1, math.ceil(gray_image.width * focus_right))
+    crop_bottom = max(crop_top + 1, math.ceil(gray_image.height * focus_bottom))
+
+    return gray_image.crop((crop_left, crop_top, crop_right, crop_bottom))
 
 
 def to_grid(values: list[float], size: int) -> list[list[float]]:
@@ -768,7 +865,8 @@ def select_cup_models_for_generalization(
 def build_model() -> dict[str, object]:
     profiles = load_profiles()
     gray_images = [
-        Image.open(resolve_image_path(profile.image)).convert("L") for profile in profiles
+        build_focused_image(Image.open(resolve_image_path(profile.image)).convert("L"))
+        for profile in profiles
     ]
     feature_sets = {
         feature_name: [
@@ -807,17 +905,17 @@ def build_model() -> dict[str, object]:
         "metrics": {
             "trainingCount": len(profiles),
             "height": {
-                "strategy": "fixed robust edge-enhanced kNN regressors",
+                "strategy": "focused robust edge-enhanced kNN regressors",
                 **height_metrics,
                 "generalization": height_generalization,
             },
             "cup": {
-                "strategy": "fixed robust edge-enhanced kNN classifiers",
+                "strategy": "focused robust edge-enhanced kNN classifiers",
                 **cup_metrics,
                 "generalization": cup_generalization,
             },
             "similarity": {
-                "feature": "full grayscale 8x8 + top grayscale 8x8",
+                "feature": "focused full grayscale 8x8 + top grayscale 8x8",
                 "trainingCount": len(similarity_indices),
                 "distance": build_pairwise_distance_stats_for_indices(
                     feature_sets["similarity"],
