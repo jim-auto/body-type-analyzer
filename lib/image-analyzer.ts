@@ -237,6 +237,21 @@ function createFocusedCanvas(image: HTMLImageElement): HTMLCanvasElement {
   return focusedCanvas;
 }
 
+function createSourceCanvas(image: HTMLImageElement): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+
+  if (!context) {
+    throw new Error("画像の読み込みに失敗しました");
+  }
+
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+
+  return canvas;
+}
+
 function drawRegion(
   image: HTMLCanvasElement,
   region: FeatureRegion,
@@ -372,16 +387,17 @@ export async function extractDiagnosisFeatures(
   file: File
 ): Promise<DiagnosisFeatures> {
   const image = await loadImage(file);
+  const sourceImage = createSourceCanvas(image);
   const focusedImage = createFocusedCanvas(image);
 
   return {
-    heightPrimary: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[0]),
-    heightBalanced: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[1]),
-    heightWide: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[2]),
-    heightCenter: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[3]),
-    heightProfile: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[4]),
-    heightEdgeFull: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[5]),
-    heightEdgeCenter: extractFeatures(focusedImage, HEIGHT_FEATURE_SPECS[6]),
+    heightPrimary: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[0]),
+    heightBalanced: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[1]),
+    heightWide: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[2]),
+    heightCenter: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[3]),
+    heightProfile: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[4]),
+    heightEdgeFull: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[5]),
+    heightEdgeCenter: extractFeatures(sourceImage, HEIGHT_FEATURE_SPECS[6]),
     cupPrimary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[0]),
     cupSecondary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[1]),
     cupCenter: extractFeatures(focusedImage, CUP_FEATURE_SPECS[2]),
