@@ -22,10 +22,10 @@
           "actualHeight": 166,
           "bust": 91,
           "cup": "F",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
-          "estimatedCup": "E",
-          "cupDiff": -1,
+          "estimatedHeight": 163,
+          "heightDiff": -3,
+          "estimatedCup": "G",
+          "cupDiff": 1,
           "score": 68
         },
         {
@@ -34,8 +34,8 @@
           "actualHeight": 166,
           "bust": 88,
           "cup": "F",
-          "estimatedHeight": 165,
-          "heightDiff": -1,
+          "estimatedHeight": 164,
+          "heightDiff": -2,
           "estimatedCup": "E",
           "cupDiff": -1,
           "score": 68
@@ -58,8 +58,8 @@
           "actualHeight": 165,
           "bust": 88,
           "cup": "F",
-          "estimatedHeight": 166,
-          "heightDiff": 1,
+          "estimatedHeight": 165,
+          "heightDiff": 0,
           "estimatedCup": "E",
           "cupDiff": -1,
           "score": 67
@@ -70,10 +70,10 @@
           "actualHeight": 169,
           "bust": 83,
           "cup": "E",
-          "estimatedHeight": 165,
-          "heightDiff": -4,
-          "estimatedCup": "D",
-          "cupDiff": -1,
+          "estimatedHeight": 166,
+          "heightDiff": -3,
+          "estimatedCup": "F",
+          "cupDiff": 1,
           "score": 67
         },
         {
@@ -82,8 +82,8 @@
           "actualHeight": 173,
           "bust": 82,
           "cup": "D",
-          "estimatedHeight": 166,
-          "heightDiff": -7,
+          "estimatedHeight": 165,
+          "heightDiff": -8,
           "estimatedCup": "C",
           "cupDiff": -1,
           "score": 67
@@ -94,8 +94,8 @@
           "actualHeight": 164,
           "bust": 89,
           "cup": "F",
-          "estimatedHeight": 162,
-          "heightDiff": -2,
+          "estimatedHeight": 163,
+          "heightDiff": -1,
           "estimatedCup": "E",
           "cupDiff": -1,
           "score": 66
@@ -108,8 +108,8 @@
           "cup": "E",
           "estimatedHeight": 164,
           "heightDiff": -3,
-          "estimatedCup": "B",
-          "cupDiff": -3,
+          "estimatedCup": "D",
+          "cupDiff": -1,
           "score": 66
         },
         {
@@ -180,8 +180,8 @@
           "cup": "D",
           "estimatedHeight": 163,
           "heightDiff": -7,
-          "estimatedCup": "D",
-          "cupDiff": 0,
+          "estimatedCup": "C",
+          "cupDiff": -1,
           "score": 64
         },
         {
@@ -190,8 +190,8 @@
           "actualHeight": 172,
           "bust": 83,
           "cup": "C",
-          "estimatedHeight": 164,
-          "heightDiff": -8,
+          "estimatedHeight": 165,
+          "heightDiff": -7,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 63
@@ -202,10 +202,10 @@
           "actualHeight": 163,
           "bust": 86,
           "cup": "E",
-          "estimatedHeight": 162,
-          "heightDiff": -1,
-          "estimatedCup": "E",
-          "cupDiff": 0,
+          "estimatedHeight": 163,
+          "heightDiff": 0,
+          "estimatedCup": "D",
+          "cupDiff": -1,
           "score": 62
         },
         {
@@ -286,8 +286,8 @@
           "actualHeight": 166,
           "bust": 85,
           "cup": "D",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
+          "estimatedHeight": 163,
+          "heightDiff": -3,
           "estimatedCup": "D",
           "cupDiff": 0,
           "score": 61
@@ -322,8 +322,8 @@
           "actualHeight": 161.5,
           "bust": 83,
           "cup": "E",
-          "estimatedHeight": 159,
-          "heightDiff": -2.5,
+          "estimatedHeight": 160,
+          "heightDiff": -1.5,
           "estimatedCup": "E",
           "cupDiff": 0,
           "score": 60
@@ -334,8 +334,8 @@
           "actualHeight": 161,
           "bust": 82,
           "cup": "E",
-          "estimatedHeight": 160,
-          "heightDiff": -1,
+          "estimatedHeight": 162,
+          "heightDiff": 1,
           "estimatedCup": "D",
           "cupDiff": -1,
           "score": 60
@@ -430,10 +430,10 @@
           "actualHeight": 158,
           "bust": 80,
           "cup": "E",
-          "estimatedHeight": 161,
-          "heightDiff": 3,
-          "estimatedCup": "E",
-          "cupDiff": 0,
+          "estimatedHeight": 160,
+          "heightDiff": 2,
+          "estimatedCup": "D",
+          "cupDiff": -1,
           "score": 57
         },
         {
@@ -456,8 +456,8 @@
           "cup": "D",
           "estimatedHeight": 162,
           "heightDiff": 1,
-          "estimatedCup": "E",
-          "cupDiff": 1,
+          "estimatedCup": "C",
+          "cupDiff": -1,
           "score": 56
         },
         {
@@ -468,8 +468,8 @@
           "cup": "D",
           "estimatedHeight": 162,
           "heightDiff": 1,
-          "estimatedCup": "D",
-          "cupDiff": 0,
+          "estimatedCup": "C",
+          "cupDiff": -1,
           "score": 56
         },
         {
@@ -490,8 +490,8 @@
           "actualHeight": 165,
           "bust": 80,
           "cup": "C",
-          "estimatedHeight": 160,
-          "heightDiff": -5,
+          "estimatedHeight": 162,
+          "heightDiff": -3,
           "estimatedCup": "B",
           "cupDiff": -1,
           "score": 56
@@ -502,8 +502,8 @@
           "actualHeight": 168,
           "bust": 82,
           "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": -7,
+          "estimatedHeight": 162,
+          "heightDiff": -6,
           "estimatedCup": "A",
           "cupDiff": -1,
           "score": 56
@@ -526,8 +526,8 @@
           "actualHeight": 168,
           "bust": 75,
           "cup": "B",
-          "estimatedHeight": 162,
-          "heightDiff": -6,
+          "estimatedHeight": 163,
+          "heightDiff": -5,
           "estimatedCup": "B",
           "cupDiff": 0,
           "score": 56
@@ -550,10 +550,10 @@
           "actualHeight": 160,
           "bust": 86,
           "cup": "D",
-          "estimatedHeight": 161,
-          "heightDiff": 1,
-          "estimatedCup": "D",
-          "cupDiff": 0,
+          "estimatedHeight": 162,
+          "heightDiff": 2,
+          "estimatedCup": "C",
+          "cupDiff": -1,
           "score": 55
         },
         {
@@ -610,8 +610,8 @@
           "actualHeight": 167,
           "bust": 80,
           "cup": "B",
-          "estimatedHeight": 164,
-          "heightDiff": -3,
+          "estimatedHeight": 162,
+          "heightDiff": -5,
           "estimatedCup": "C",
           "cupDiff": 1,
           "score": 55
@@ -622,8 +622,8 @@
           "actualHeight": 159,
           "bust": 87,
           "cup": "D",
-          "estimatedHeight": 161,
-          "heightDiff": 2,
+          "estimatedHeight": 162,
+          "heightDiff": 3,
           "estimatedCup": "D",
           "cupDiff": 0,
           "score": 54
@@ -658,8 +658,8 @@
           "actualHeight": 153,
           "bust": 88,
           "cup": "E",
-          "estimatedHeight": 158,
-          "heightDiff": 5,
+          "estimatedHeight": 159,
+          "heightDiff": 6,
           "estimatedCup": "E",
           "cupDiff": 0,
           "score": 53
@@ -670,8 +670,8 @@
           "actualHeight": 158,
           "bust": 88,
           "cup": "D",
-          "estimatedHeight": 159,
-          "heightDiff": 1,
+          "estimatedHeight": 161,
+          "heightDiff": 3,
           "estimatedCup": "E",
           "cupDiff": 1,
           "score": 53
@@ -694,8 +694,8 @@
           "actualHeight": 162,
           "bust": 88,
           "cup": "C",
-          "estimatedHeight": 163,
-          "heightDiff": 1,
+          "estimatedHeight": 161,
+          "heightDiff": -1,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 53
@@ -706,8 +706,8 @@
           "actualHeight": 161,
           "bust": 85,
           "cup": "C",
-          "estimatedHeight": 160,
-          "heightDiff": -1,
+          "estimatedHeight": 162,
+          "heightDiff": 1,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 53
@@ -718,8 +718,8 @@
           "actualHeight": 162,
           "bust": 82,
           "cup": "C",
-          "estimatedHeight": 163,
-          "heightDiff": 1,
+          "estimatedHeight": 162,
+          "heightDiff": 0,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 53
@@ -766,8 +766,8 @@
           "actualHeight": 165,
           "bust": 80,
           "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": -4,
+          "estimatedHeight": 162,
+          "heightDiff": -3,
           "estimatedCup": "C",
           "cupDiff": 1,
           "score": 53
@@ -790,8 +790,8 @@
           "actualHeight": 157,
           "bust": 84,
           "cup": "D",
-          "estimatedHeight": 160,
-          "heightDiff": 3,
+          "estimatedHeight": 161,
+          "heightDiff": 4,
           "estimatedCup": "D",
           "cupDiff": 0,
           "score": 52
@@ -862,8 +862,8 @@
           "actualHeight": 163,
           "bust": 78,
           "cup": "B",
-          "estimatedHeight": 163,
-          "heightDiff": 0,
+          "estimatedHeight": 162,
+          "heightDiff": -1,
           "estimatedCup": "C",
           "cupDiff": 1,
           "score": 51
@@ -874,8 +874,8 @@
           "actualHeight": 163,
           "bust": 75,
           "cup": "B",
-          "estimatedHeight": 162,
-          "heightDiff": -1,
+          "estimatedHeight": 164,
+          "heightDiff": 1,
           "estimatedCup": "D",
           "cupDiff": 2,
           "score": 51
@@ -970,10 +970,10 @@
           "actualHeight": 161,
           "bust": 76,
           "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": 0,
-          "estimatedCup": "D",
-          "cupDiff": 2,
+          "estimatedHeight": 162,
+          "heightDiff": 1,
+          "estimatedCup": "C",
+          "cupDiff": 1,
           "score": 49
         },
         {
@@ -1078,8 +1078,8 @@
           "actualHeight": 153,
           "bust": 80,
           "cup": "C",
-          "estimatedHeight": 159,
-          "heightDiff": 6,
+          "estimatedHeight": 160,
+          "heightDiff": 7,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 45
@@ -1271,28 +1271,40 @@
           "score": 167
         },
         {
+          "name": "おのののか",
+          "image": "/images/ono_nonoka.jpg",
+          "actualHeight": 169,
+          "bust": 83,
+          "cup": "E",
+          "estimatedHeight": 166,
+          "heightDiff": -3,
+          "estimatedCup": "F",
+          "cupDiff": 1,
+          "score": 166
+        },
+        {
           "name": "SHIHO",
           "image": "/images/shiho_a1fbfb6f.jpg",
           "actualHeight": 173,
           "bust": 82,
           "cup": "D",
-          "estimatedHeight": 166,
-          "heightDiff": -7,
+          "estimatedHeight": 165,
+          "heightDiff": -8,
           "estimatedCup": "C",
           "cupDiff": -1,
-          "score": 166
+          "score": 165
         },
         {
-          "name": "綾瀬はるか",
-          "image": "/images/ayase_haruka.jpg",
-          "actualHeight": 165,
-          "bust": 88,
-          "cup": "F",
-          "estimatedHeight": 166,
-          "heightDiff": 1,
-          "estimatedCup": "E",
-          "cupDiff": -1,
-          "score": 166
+          "name": "しほの涼",
+          "image": "/images/shihono_ryo.jpg",
+          "actualHeight": 172,
+          "bust": 83,
+          "cup": "C",
+          "estimatedHeight": 165,
+          "heightDiff": -7,
+          "estimatedCup": "D",
+          "cupDiff": 1,
+          "score": 165
         },
         {
           "name": "菜々緒",
@@ -1316,18 +1328,6 @@
           "heightDiff": -6,
           "estimatedCup": "C",
           "cupDiff": 0,
-          "score": 165
-        },
-        {
-          "name": "おのののか",
-          "image": "/images/ono_nonoka.jpg",
-          "actualHeight": 169,
-          "bust": 83,
-          "cup": "E",
-          "estimatedHeight": 165,
-          "heightDiff": -4,
-          "estimatedCup": "D",
-          "cupDiff": -1,
           "score": 165
         },
         {
@@ -1367,10 +1367,10 @@
           "score": 165
         },
         {
-          "name": "井上和香",
-          "image": "/images/inoue_waka.jpg",
+          "name": "泉里香",
+          "image": "/images/izumi_rika.jpg",
           "actualHeight": 166,
-          "bust": 88,
+          "bust": 81,
           "cup": "F",
           "estimatedHeight": 165,
           "heightDiff": -1,
@@ -1379,13 +1379,13 @@
           "score": 165
         },
         {
-          "name": "泉里香",
-          "image": "/images/izumi_rika.jpg",
-          "actualHeight": 166,
-          "bust": 81,
+          "name": "綾瀬はるか",
+          "image": "/images/ayase_haruka.jpg",
+          "actualHeight": 165,
+          "bust": 88,
           "cup": "F",
           "estimatedHeight": 165,
-          "heightDiff": -1,
+          "heightDiff": 0,
           "estimatedCup": "E",
           "cupDiff": -1,
           "score": 165
@@ -1439,18 +1439,6 @@
           "score": 165
         },
         {
-          "name": "しほの涼",
-          "image": "/images/shihono_ryo.jpg",
-          "actualHeight": 172,
-          "bust": 83,
-          "cup": "C",
-          "estimatedHeight": 164,
-          "heightDiff": -8,
-          "estimatedCup": "D",
-          "cupDiff": 1,
-          "score": 164
-        },
-        {
           "name": "佐々木希",
           "image": "/images/sasaki_nozomi.jpg",
           "actualHeight": 168,
@@ -1463,18 +1451,6 @@
           "score": 164
         },
         {
-          "name": "新垣結衣",
-          "image": "/images/aragaki_yui.jpg",
-          "actualHeight": 167,
-          "bust": 80,
-          "cup": "B",
-          "estimatedHeight": 164,
-          "heightDiff": -3,
-          "estimatedCup": "C",
-          "cupDiff": 1,
-          "score": 164
-        },
-        {
           "name": "馬場ふみか",
           "image": "/images/baba_fumika.jpg",
           "actualHeight": 167,
@@ -1482,8 +1458,20 @@
           "cup": "E",
           "estimatedHeight": 164,
           "heightDiff": -3,
-          "estimatedCup": "B",
-          "cupDiff": -3,
+          "estimatedCup": "D",
+          "cupDiff": -1,
+          "score": 164
+        },
+        {
+          "name": "井上和香",
+          "image": "/images/inoue_waka.jpg",
+          "actualHeight": 166,
+          "bust": 88,
+          "cup": "F",
+          "estimatedHeight": 164,
+          "heightDiff": -2,
+          "estimatedCup": "E",
+          "cupDiff": -1,
           "score": 164
         },
         {
@@ -1523,6 +1511,18 @@
           "score": 164
         },
         {
+          "name": "戸田恵梨香",
+          "image": "/images/jp_e688b8e794b0_ef825ecd.jpg",
+          "actualHeight": 163,
+          "bust": 75,
+          "cup": "B",
+          "estimatedHeight": 164,
+          "heightDiff": 1,
+          "estimatedCup": "D",
+          "cupDiff": 2,
+          "score": 164
+        },
+        {
           "name": "稲森美優",
           "image": "/images/inamori_miyu.jpg",
           "actualHeight": 170,
@@ -1530,8 +1530,44 @@
           "cup": "D",
           "estimatedHeight": 163,
           "heightDiff": -7,
+          "estimatedCup": "C",
+          "cupDiff": -1,
+          "score": 163
+        },
+        {
+          "name": "安井まゆ",
+          "image": "/images/yasui_mayu.jpg",
+          "actualHeight": 168,
+          "bust": 75,
+          "cup": "B",
+          "estimatedHeight": 163,
+          "heightDiff": -5,
+          "estimatedCup": "B",
+          "cupDiff": 0,
+          "score": 163
+        },
+        {
+          "name": "スザンヌ",
+          "image": "/images/ov_e382b9e382b6_36ca17f1.jpg",
+          "actualHeight": 166,
+          "bust": 85,
+          "cup": "D",
+          "estimatedHeight": 163,
+          "heightDiff": -3,
           "estimatedCup": "D",
           "cupDiff": 0,
+          "score": 163
+        },
+        {
+          "name": "小池栄子",
+          "image": "/images/koike_eiko.jpg",
+          "actualHeight": 166,
+          "bust": 91,
+          "cup": "F",
+          "estimatedHeight": 163,
+          "heightDiff": -3,
+          "estimatedCup": "G",
+          "cupDiff": 1,
           "score": 163
         },
         {
@@ -1544,6 +1580,30 @@
           "heightDiff": -2,
           "estimatedCup": "C",
           "cupDiff": 0,
+          "score": 163
+        },
+        {
+          "name": "筧美和子",
+          "image": "/images/jp_e7ada7e7be8e_e114a8b4.jpg",
+          "actualHeight": 164,
+          "bust": 89,
+          "cup": "F",
+          "estimatedHeight": 163,
+          "heightDiff": -1,
+          "estimatedCup": "E",
+          "cupDiff": -1,
+          "score": 163
+        },
+        {
+          "name": "インリン・オブ・ジョイトイ",
+          "image": "/images/jp_e382a4e383b3_308a9da1.jpg",
+          "actualHeight": 163,
+          "bust": 86,
+          "cup": "E",
+          "estimatedHeight": 163,
+          "heightDiff": 0,
+          "estimatedCup": "D",
+          "cupDiff": -1,
           "score": 163
         },
         {
@@ -1568,18 +1628,6 @@
           "heightDiff": 0,
           "estimatedCup": "D",
           "cupDiff": 0,
-          "score": 163
-        },
-        {
-          "name": "にわみきほ",
-          "image": "/images/jp_e381abe3828f_db249532.jpg",
-          "actualHeight": 163,
-          "bust": 78,
-          "cup": "B",
-          "estimatedHeight": 163,
-          "heightDiff": 0,
-          "estimatedCup": "C",
-          "cupDiff": 1,
           "score": 163
         },
         {
@@ -1631,63 +1679,27 @@
           "score": 163
         },
         {
-          "name": "フォンチー",
-          "image": "/images/phongchi.jpg",
-          "actualHeight": 162,
-          "bust": 88,
-          "cup": "C",
-          "estimatedHeight": 163,
-          "heightDiff": 1,
-          "estimatedCup": "D",
-          "cupDiff": 1,
-          "score": 163
-        },
-        {
-          "name": "磯貝花音",
-          "image": "/images/isogai_kanon.jpg",
-          "actualHeight": 162,
-          "bust": 82,
-          "cup": "C",
-          "estimatedHeight": 163,
-          "heightDiff": 1,
-          "estimatedCup": "D",
-          "cupDiff": 1,
-          "score": 163
-        },
-        {
-          "name": "安井まゆ",
-          "image": "/images/yasui_mayu.jpg",
+          "name": "菊地優里",
+          "image": "/images/kikuchi_yuri.jpg",
           "actualHeight": 168,
-          "bust": 75,
+          "bust": 82,
           "cup": "B",
           "estimatedHeight": 162,
           "heightDiff": -6,
-          "estimatedCup": "B",
-          "cupDiff": 0,
-          "score": 162
-        },
-        {
-          "name": "スザンヌ",
-          "image": "/images/ov_e382b9e382b6_36ca17f1.jpg",
-          "actualHeight": 166,
-          "bust": 85,
-          "cup": "D",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
-          "estimatedCup": "D",
-          "cupDiff": 0,
-          "score": 162
-        },
-        {
-          "name": "小池栄子",
-          "image": "/images/koike_eiko.jpg",
-          "actualHeight": 166,
-          "bust": 91,
-          "cup": "F",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
-          "estimatedCup": "E",
+          "estimatedCup": "A",
           "cupDiff": -1,
+          "score": 162
+        },
+        {
+          "name": "新垣結衣",
+          "image": "/images/aragaki_yui.jpg",
+          "actualHeight": 167,
+          "bust": 80,
+          "cup": "B",
+          "estimatedHeight": 162,
+          "heightDiff": -5,
+          "estimatedCup": "C",
+          "cupDiff": 1,
           "score": 162
         },
         {
@@ -1703,39 +1715,39 @@
           "score": 162
         },
         {
-          "name": "筧美和子",
-          "image": "/images/jp_e7ada7e7be8e_e114a8b4.jpg",
-          "actualHeight": 164,
-          "bust": 89,
-          "cup": "F",
+          "name": "伊藤裕子",
+          "image": "/images/ito_yuko.jpg",
+          "actualHeight": 165,
+          "bust": 80,
+          "cup": "C",
           "estimatedHeight": 162,
-          "heightDiff": -2,
-          "estimatedCup": "E",
+          "heightDiff": -3,
+          "estimatedCup": "B",
           "cupDiff": -1,
           "score": 162
         },
         {
-          "name": "インリン・オブ・ジョイトイ",
-          "image": "/images/jp_e382a4e383b3_308a9da1.jpg",
-          "actualHeight": 163,
-          "bust": 86,
-          "cup": "E",
+          "name": "広瀬アリス",
+          "image": "/images/hirose_alice.jpg",
+          "actualHeight": 165,
+          "bust": 80,
+          "cup": "B",
           "estimatedHeight": 162,
-          "heightDiff": -1,
-          "estimatedCup": "E",
-          "cupDiff": 0,
+          "heightDiff": -3,
+          "estimatedCup": "C",
+          "cupDiff": 1,
           "score": 162
         },
         {
-          "name": "戸田恵梨香",
-          "image": "/images/jp_e688b8e794b0_ef825ecd.jpg",
+          "name": "にわみきほ",
+          "image": "/images/jp_e381abe3828f_db249532.jpg",
           "actualHeight": 163,
-          "bust": 75,
+          "bust": 78,
           "cup": "B",
           "estimatedHeight": 162,
           "heightDiff": -1,
-          "estimatedCup": "D",
-          "cupDiff": 2,
+          "estimatedCup": "C",
+          "cupDiff": 1,
           "score": 162
         },
         {
@@ -1748,6 +1760,18 @@
           "heightDiff": 0,
           "estimatedCup": "D",
           "cupDiff": -1,
+          "score": 162
+        },
+        {
+          "name": "磯貝花音",
+          "image": "/images/isogai_kanon.jpg",
+          "actualHeight": 162,
+          "bust": 82,
+          "cup": "C",
+          "estimatedHeight": 162,
+          "heightDiff": 0,
+          "estimatedCup": "D",
+          "cupDiff": 1,
           "score": 162
         },
         {
@@ -1818,7 +1842,19 @@
           "cup": "D",
           "estimatedHeight": 162,
           "heightDiff": 1,
-          "estimatedCup": "E",
+          "estimatedCup": "C",
+          "cupDiff": -1,
+          "score": 162
+        },
+        {
+          "name": "ビビアン・スー",
+          "image": "/images/jp_e38393e38393_ce0d325a.jpg",
+          "actualHeight": 161,
+          "bust": 85,
+          "cup": "C",
+          "estimatedHeight": 162,
+          "heightDiff": 1,
+          "estimatedCup": "D",
           "cupDiff": 1,
           "score": 162
         },
@@ -1830,8 +1866,44 @@
           "cup": "D",
           "estimatedHeight": 162,
           "heightDiff": 1,
+          "estimatedCup": "C",
+          "cupDiff": -1,
+          "score": 162
+        },
+        {
+          "name": "前田敦子",
+          "image": "/images/jp_e5898de794b0_0448449e.jpg",
+          "actualHeight": 161,
+          "bust": 76,
+          "cup": "B",
+          "estimatedHeight": 162,
+          "heightDiff": 1,
+          "estimatedCup": "C",
+          "cupDiff": 1,
+          "score": 162
+        },
+        {
+          "name": "中村アン",
+          "image": "/images/nakamura_anne.jpg",
+          "actualHeight": 161,
+          "bust": 82,
+          "cup": "E",
+          "estimatedHeight": 162,
+          "heightDiff": 1,
           "estimatedCup": "D",
-          "cupDiff": 0,
+          "cupDiff": -1,
+          "score": 162
+        },
+        {
+          "name": "ホラン千秋",
+          "image": "/images/jp_e3839be383a9_3a8053c9.jpg",
+          "actualHeight": 160,
+          "bust": 86,
+          "cup": "D",
+          "estimatedHeight": 162,
+          "heightDiff": 2,
+          "estimatedCup": "C",
+          "cupDiff": -1,
           "score": 162
         },
         {
@@ -1847,6 +1919,18 @@
           "score": 162
         },
         {
+          "name": "安枝瞳",
+          "image": "/images/yasueda_hitomi.jpg",
+          "actualHeight": 159,
+          "bust": 87,
+          "cup": "D",
+          "estimatedHeight": 162,
+          "heightDiff": 3,
+          "estimatedCup": "D",
+          "cupDiff": 0,
+          "score": 162
+        },
+        {
           "name": "渡辺麻友",
           "image": "/images/jp_e6b8a1e8beba_fa03a65f.jpg",
           "actualHeight": 156,
@@ -1859,26 +1943,14 @@
           "score": 162
         },
         {
-          "name": "菊地優里",
-          "image": "/images/kikuchi_yuri.jpg",
-          "actualHeight": 168,
-          "bust": 82,
-          "cup": "B",
+          "name": "フォンチー",
+          "image": "/images/phongchi.jpg",
+          "actualHeight": 162,
+          "bust": 88,
+          "cup": "C",
           "estimatedHeight": 161,
-          "heightDiff": -7,
-          "estimatedCup": "A",
-          "cupDiff": -1,
-          "score": 161
-        },
-        {
-          "name": "広瀬アリス",
-          "image": "/images/hirose_alice.jpg",
-          "actualHeight": 165,
-          "bust": 80,
-          "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": -4,
-          "estimatedCup": "C",
+          "heightDiff": -1,
+          "estimatedCup": "D",
           "cupDiff": 1,
           "score": 161
         },
@@ -1907,30 +1979,6 @@
           "score": 161
         },
         {
-          "name": "前田敦子",
-          "image": "/images/jp_e5898de794b0_0448449e.jpg",
-          "actualHeight": 161,
-          "bust": 76,
-          "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": 0,
-          "estimatedCup": "D",
-          "cupDiff": 2,
-          "score": 161
-        },
-        {
-          "name": "ホラン千秋",
-          "image": "/images/jp_e3839be383a9_3a8053c9.jpg",
-          "actualHeight": 160,
-          "bust": 86,
-          "cup": "D",
-          "estimatedHeight": 161,
-          "heightDiff": 1,
-          "estimatedCup": "D",
-          "cupDiff": 0,
-          "score": 161
-        },
-        {
           "name": "伊原六花",
           "image": "/images/ihara_rikka.jpg",
           "actualHeight": 160,
@@ -1955,27 +2003,15 @@
           "score": 161
         },
         {
-          "name": "安枝瞳",
-          "image": "/images/yasueda_hitomi.jpg",
-          "actualHeight": 159,
-          "bust": 87,
-          "cup": "D",
-          "estimatedHeight": 161,
-          "heightDiff": 2,
-          "estimatedCup": "D",
-          "cupDiff": 0,
-          "score": 161
-        },
-        {
-          "name": "きゃりーぱみゅぱみゅ",
-          "image": "/images/jp_e3818de38283_2a186bc9.jpg",
+          "name": "井上真央",
+          "image": "/images/inoue_mao.jpg",
           "actualHeight": 158,
-          "bust": 80,
-          "cup": "E",
+          "bust": 88,
+          "cup": "D",
           "estimatedHeight": 161,
           "heightDiff": 3,
           "estimatedCup": "E",
-          "cupDiff": 0,
+          "cupDiff": 1,
           "score": 161
         },
         {
@@ -1991,39 +2027,27 @@
           "score": 161
         },
         {
-          "name": "伊藤裕子",
-          "image": "/images/ito_yuko.jpg",
-          "actualHeight": 165,
-          "bust": 80,
-          "cup": "C",
-          "estimatedHeight": 160,
-          "heightDiff": -5,
-          "estimatedCup": "B",
-          "cupDiff": -1,
-          "score": 160
-        },
-        {
-          "name": "ビビアン・スー",
-          "image": "/images/jp_e38393e38393_ce0d325a.jpg",
-          "actualHeight": 161,
-          "bust": 85,
-          "cup": "C",
-          "estimatedHeight": 160,
-          "heightDiff": -1,
+          "name": "茜紬うた",
+          "image": "/images/jp_e88c9ce7b4ac_be3e200d.jpg",
+          "actualHeight": 157,
+          "bust": 84,
+          "cup": "D",
+          "estimatedHeight": 161,
+          "heightDiff": 4,
           "estimatedCup": "D",
-          "cupDiff": 1,
-          "score": 160
+          "cupDiff": 0,
+          "score": 161
         },
         {
-          "name": "中村アン",
-          "image": "/images/nakamura_anne.jpg",
-          "actualHeight": 161,
-          "bust": 82,
+          "name": "ダレノガレ明美",
+          "image": "/images/jp_e38380e383ac_b44f2260.jpg",
+          "actualHeight": 161.5,
+          "bust": 83,
           "cup": "E",
           "estimatedHeight": 160,
-          "heightDiff": -1,
-          "estimatedCup": "D",
-          "cupDiff": -1,
+          "heightDiff": -1.5,
+          "estimatedCup": "E",
+          "cupDiff": 0,
           "score": 160
         },
         {
@@ -2099,15 +2123,15 @@
           "score": 160
         },
         {
-          "name": "茜紬うた",
-          "image": "/images/jp_e88c9ce7b4ac_be3e200d.jpg",
-          "actualHeight": 157,
-          "bust": 84,
-          "cup": "D",
+          "name": "きゃりーぱみゅぱみゅ",
+          "image": "/images/jp_e3818de38283_2a186bc9.jpg",
+          "actualHeight": 158,
+          "bust": 80,
+          "cup": "E",
           "estimatedHeight": 160,
-          "heightDiff": 3,
+          "heightDiff": 2,
           "estimatedCup": "D",
-          "cupDiff": 0,
+          "cupDiff": -1,
           "score": 160
         },
         {
@@ -2118,6 +2142,18 @@
           "cup": "C",
           "estimatedHeight": 160,
           "heightDiff": 6,
+          "estimatedCup": "D",
+          "cupDiff": 1,
+          "score": 160
+        },
+        {
+          "name": "河路由希子",
+          "image": "/images/jp_e6b2b3e8b7af_19e424df.jpg",
+          "actualHeight": 153,
+          "bust": 80,
+          "cup": "C",
+          "estimatedHeight": 160,
+          "heightDiff": 7,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 160
@@ -2135,18 +2171,6 @@
           "score": 160
         },
         {
-          "name": "ダレノガレ明美",
-          "image": "/images/jp_e38380e383ac_b44f2260.jpg",
-          "actualHeight": 161.5,
-          "bust": 83,
-          "cup": "E",
-          "estimatedHeight": 159,
-          "heightDiff": -2.5,
-          "estimatedCup": "E",
-          "cupDiff": 0,
-          "score": 159
-        },
-        {
           "name": "ソラ豆琴美",
           "image": "https://ui-avatars.com/api/?name=%E3%82%BD%E3%83%A9%E8%B1%86%E7%90%B4%E7%BE%8E&size=300&background=random&color=fff&bold=true",
           "actualHeight": 159,
@@ -2156,18 +2180,6 @@
           "heightDiff": 0,
           "estimatedCup": "C",
           "cupDiff": 0,
-          "score": 159
-        },
-        {
-          "name": "井上真央",
-          "image": "/images/inoue_mao.jpg",
-          "actualHeight": 158,
-          "bust": 88,
-          "cup": "D",
-          "estimatedHeight": 159,
-          "heightDiff": 1,
-          "estimatedCup": "E",
-          "cupDiff": 1,
           "score": 159
         },
         {
@@ -2183,15 +2195,15 @@
           "score": 159
         },
         {
-          "name": "河路由希子",
-          "image": "/images/jp_e6b2b3e8b7af_19e424df.jpg",
+          "name": "くぼたみか",
+          "image": "/images/kubota_mika.jpg",
           "actualHeight": 153,
-          "bust": 80,
-          "cup": "C",
+          "bust": 88,
+          "cup": "E",
           "estimatedHeight": 159,
           "heightDiff": 6,
-          "estimatedCup": "D",
-          "cupDiff": 1,
+          "estimatedCup": "E",
+          "cupDiff": 0,
           "score": 159
         },
         {
@@ -2239,18 +2251,6 @@
           "estimatedHeight": 158,
           "heightDiff": 1,
           "estimatedCup": "C",
-          "cupDiff": 0,
-          "score": 158
-        },
-        {
-          "name": "くぼたみか",
-          "image": "/images/kubota_mika.jpg",
-          "actualHeight": 153,
-          "bust": 88,
-          "cup": "E",
-          "estimatedHeight": 158,
-          "heightDiff": 5,
-          "estimatedCup": "E",
           "cupDiff": 0,
           "score": 158
         },
@@ -2417,6 +2417,18 @@
       "title": "AI推定カップ数ランキング",
       "ranking": [
         {
+          "name": "小池栄子",
+          "image": "/images/koike_eiko.jpg",
+          "actualHeight": 166,
+          "bust": 91,
+          "cup": "F",
+          "estimatedHeight": 163,
+          "heightDiff": -3,
+          "estimatedCup": "G",
+          "cupDiff": 1,
+          "score": 7
+        },
+        {
           "name": "あんり",
           "image": "https://ui-avatars.com/api/?name=%E3%81%82%E3%82%93%E3%82%8A&size=300&background=random&color=fff&bold=true",
           "actualHeight": 156,
@@ -2441,6 +2453,18 @@
           "score": 6
         },
         {
+          "name": "おのののか",
+          "image": "/images/ono_nonoka.jpg",
+          "actualHeight": 169,
+          "bust": 83,
+          "cup": "E",
+          "estimatedHeight": 166,
+          "heightDiff": -3,
+          "estimatedCup": "F",
+          "cupDiff": 1,
+          "score": 6
+        },
+        {
           "name": "篠崎愛",
           "image": "/images/shinozaki_ai.jpg",
           "actualHeight": 160,
@@ -2450,18 +2474,6 @@
           "heightDiff": 1,
           "estimatedCup": "E",
           "cupDiff": -2,
-          "score": 5
-        },
-        {
-          "name": "小池栄子",
-          "image": "/images/koike_eiko.jpg",
-          "actualHeight": 166,
-          "bust": 91,
-          "cup": "F",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
-          "estimatedCup": "E",
-          "cupDiff": -1,
           "score": 5
         },
         {
@@ -2482,8 +2494,8 @@
           "actualHeight": 164,
           "bust": 89,
           "cup": "F",
-          "estimatedHeight": 162,
-          "heightDiff": -2,
+          "estimatedHeight": 163,
+          "heightDiff": -1,
           "estimatedCup": "E",
           "cupDiff": -1,
           "score": 5
@@ -2506,8 +2518,8 @@
           "actualHeight": 166,
           "bust": 88,
           "cup": "F",
-          "estimatedHeight": 165,
-          "heightDiff": -1,
+          "estimatedHeight": 164,
+          "heightDiff": -2,
           "estimatedCup": "E",
           "cupDiff": -1,
           "score": 5
@@ -2518,8 +2530,8 @@
           "actualHeight": 165,
           "bust": 88,
           "cup": "F",
-          "estimatedHeight": 166,
-          "heightDiff": 1,
+          "estimatedHeight": 165,
+          "heightDiff": 0,
           "estimatedCup": "E",
           "cupDiff": -1,
           "score": 5
@@ -2530,8 +2542,8 @@
           "actualHeight": 158,
           "bust": 88,
           "cup": "D",
-          "estimatedHeight": 159,
-          "heightDiff": 1,
+          "estimatedHeight": 161,
+          "heightDiff": 3,
           "estimatedCup": "E",
           "cupDiff": 1,
           "score": 5
@@ -2554,20 +2566,8 @@
           "actualHeight": 153,
           "bust": 88,
           "cup": "E",
-          "estimatedHeight": 158,
-          "heightDiff": 5,
-          "estimatedCup": "E",
-          "cupDiff": 0,
-          "score": 5
-        },
-        {
-          "name": "インリン・オブ・ジョイトイ",
-          "image": "/images/jp_e382a4e383b3_308a9da1.jpg",
-          "actualHeight": 163,
-          "bust": 86,
-          "cup": "E",
-          "estimatedHeight": 162,
-          "heightDiff": -1,
+          "estimatedHeight": 159,
+          "heightDiff": 6,
           "estimatedCup": "E",
           "cupDiff": 0,
           "score": 5
@@ -2590,22 +2590,10 @@
           "actualHeight": 161.5,
           "bust": 83,
           "cup": "E",
-          "estimatedHeight": 159,
-          "heightDiff": -2.5,
+          "estimatedHeight": 160,
+          "heightDiff": -1.5,
           "estimatedCup": "E",
           "cupDiff": 0,
-          "score": 5
-        },
-        {
-          "name": "こもりやさくら",
-          "image": "/images/komoriya_sakura.jpg",
-          "actualHeight": 161,
-          "bust": 82,
-          "cup": "D",
-          "estimatedHeight": 162,
-          "heightDiff": 1,
-          "estimatedCup": "E",
-          "cupDiff": 1,
           "score": 5
         },
         {
@@ -2618,18 +2606,6 @@
           "heightDiff": -1,
           "estimatedCup": "E",
           "cupDiff": -1,
-          "score": 5
-        },
-        {
-          "name": "きゃりーぱみゅぱみゅ",
-          "image": "/images/jp_e3818de38283_2a186bc9.jpg",
-          "actualHeight": 158,
-          "bust": 80,
-          "cup": "E",
-          "estimatedHeight": 161,
-          "heightDiff": 3,
-          "estimatedCup": "E",
-          "cupDiff": 0,
           "score": 5
         },
         {
@@ -2650,8 +2626,8 @@
           "actualHeight": 162,
           "bust": 88,
           "cup": "C",
-          "estimatedHeight": 163,
-          "heightDiff": 1,
+          "estimatedHeight": 161,
+          "heightDiff": -1,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 4
@@ -2674,8 +2650,8 @@
           "actualHeight": 159,
           "bust": 87,
           "cup": "D",
-          "estimatedHeight": 161,
-          "heightDiff": 2,
+          "estimatedHeight": 162,
+          "heightDiff": 3,
           "estimatedCup": "D",
           "cupDiff": 0,
           "score": 4
@@ -2690,6 +2666,18 @@
           "heightDiff": -2,
           "estimatedCup": "D",
           "cupDiff": 1,
+          "score": 4
+        },
+        {
+          "name": "インリン・オブ・ジョイトイ",
+          "image": "/images/jp_e382a4e383b3_308a9da1.jpg",
+          "actualHeight": 163,
+          "bust": 86,
+          "cup": "E",
+          "estimatedHeight": 163,
+          "heightDiff": 0,
+          "estimatedCup": "D",
+          "cupDiff": -1,
           "score": 4
         },
         {
@@ -2714,18 +2702,6 @@
           "heightDiff": 0,
           "estimatedCup": "D",
           "cupDiff": -1,
-          "score": 4
-        },
-        {
-          "name": "ホラン千秋",
-          "image": "/images/jp_e3839be383a9_3a8053c9.jpg",
-          "actualHeight": 160,
-          "bust": 86,
-          "cup": "D",
-          "estimatedHeight": 161,
-          "heightDiff": 1,
-          "estimatedCup": "D",
-          "cupDiff": 0,
           "score": 4
         },
         {
@@ -2758,8 +2734,8 @@
           "actualHeight": 166,
           "bust": 85,
           "cup": "D",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
+          "estimatedHeight": 163,
+          "heightDiff": -3,
           "estimatedCup": "D",
           "cupDiff": 0,
           "score": 4
@@ -2782,8 +2758,8 @@
           "actualHeight": 161,
           "bust": 85,
           "cup": "C",
-          "estimatedHeight": 160,
-          "heightDiff": -1,
+          "estimatedHeight": 162,
+          "heightDiff": 1,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 4
@@ -2830,8 +2806,8 @@
           "actualHeight": 157,
           "bust": 84,
           "cup": "D",
-          "estimatedHeight": 160,
-          "heightDiff": 3,
+          "estimatedHeight": 161,
+          "heightDiff": 4,
           "estimatedCup": "D",
           "cupDiff": 0,
           "score": 4
@@ -2842,32 +2818,20 @@
           "actualHeight": 172,
           "bust": 83,
           "cup": "C",
-          "estimatedHeight": 164,
-          "heightDiff": -8,
+          "estimatedHeight": 165,
+          "heightDiff": -7,
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 4
         },
         {
-          "name": "稲森美優",
-          "image": "/images/inamori_miyu.jpg",
-          "actualHeight": 170,
-          "bust": 83,
-          "cup": "D",
-          "estimatedHeight": 163,
-          "heightDiff": -7,
-          "estimatedCup": "D",
-          "cupDiff": 0,
-          "score": 4
-        },
-        {
-          "name": "おのののか",
-          "image": "/images/ono_nonoka.jpg",
-          "actualHeight": 169,
+          "name": "馬場ふみか",
+          "image": "/images/baba_fumika.jpg",
+          "actualHeight": 167,
           "bust": 83,
           "cup": "E",
-          "estimatedHeight": 165,
-          "heightDiff": -4,
+          "estimatedHeight": 164,
+          "heightDiff": -3,
           "estimatedCup": "D",
           "cupDiff": -1,
           "score": 4
@@ -2926,22 +2890,10 @@
           "actualHeight": 162,
           "bust": 82,
           "cup": "C",
-          "estimatedHeight": 163,
-          "heightDiff": 1,
+          "estimatedHeight": 162,
+          "heightDiff": 0,
           "estimatedCup": "D",
           "cupDiff": 1,
-          "score": 4
-        },
-        {
-          "name": "安田美沙子",
-          "image": "/images/yasuda_misako.jpg",
-          "actualHeight": 161,
-          "bust": 82,
-          "cup": "D",
-          "estimatedHeight": 162,
-          "heightDiff": 1,
-          "estimatedCup": "D",
-          "cupDiff": 0,
           "score": 4
         },
         {
@@ -2950,8 +2902,8 @@
           "actualHeight": 161,
           "bust": 82,
           "cup": "E",
-          "estimatedHeight": 160,
-          "heightDiff": -1,
+          "estimatedHeight": 162,
+          "heightDiff": 1,
           "estimatedCup": "D",
           "cupDiff": -1,
           "score": 4
@@ -2969,27 +2921,27 @@
           "score": 4
         },
         {
+          "name": "きゃりーぱみゅぱみゅ",
+          "image": "/images/jp_e3818de38283_2a186bc9.jpg",
+          "actualHeight": 158,
+          "bust": 80,
+          "cup": "E",
+          "estimatedHeight": 160,
+          "heightDiff": 2,
+          "estimatedCup": "D",
+          "cupDiff": -1,
+          "score": 4
+        },
+        {
           "name": "河路由希子",
           "image": "/images/jp_e6b2b3e8b7af_19e424df.jpg",
           "actualHeight": 153,
           "bust": 80,
           "cup": "C",
-          "estimatedHeight": 159,
-          "heightDiff": 6,
+          "estimatedHeight": 160,
+          "heightDiff": 7,
           "estimatedCup": "D",
           "cupDiff": 1,
-          "score": 4
-        },
-        {
-          "name": "前田敦子",
-          "image": "/images/jp_e5898de794b0_0448449e.jpg",
-          "actualHeight": 161,
-          "bust": 76,
-          "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": 0,
-          "estimatedCup": "D",
-          "cupDiff": 2,
           "score": 4
         },
         {
@@ -2998,8 +2950,8 @@
           "actualHeight": 163,
           "bust": 75,
           "cup": "B",
-          "estimatedHeight": 162,
-          "heightDiff": -1,
+          "estimatedHeight": 164,
+          "heightDiff": 1,
           "estimatedCup": "D",
           "cupDiff": 2,
           "score": 4
@@ -3015,6 +2967,18 @@
           "estimatedCup": "D",
           "cupDiff": 1,
           "score": 4
+        },
+        {
+          "name": "ホラン千秋",
+          "image": "/images/jp_e3839be383a9_3a8053c9.jpg",
+          "actualHeight": 160,
+          "bust": 86,
+          "cup": "D",
+          "estimatedHeight": 162,
+          "heightDiff": 2,
+          "estimatedCup": "C",
+          "cupDiff": -1,
+          "score": 3
         },
         {
           "name": "あいだあい",
@@ -3065,6 +3029,18 @@
           "score": 3
         },
         {
+          "name": "稲森美優",
+          "image": "/images/inamori_miyu.jpg",
+          "actualHeight": 170,
+          "bust": 83,
+          "cup": "D",
+          "estimatedHeight": 163,
+          "heightDiff": -7,
+          "estimatedCup": "C",
+          "cupDiff": -1,
+          "score": 3
+        },
+        {
           "name": "永瀬麻帆",
           "image": "https://ui-avatars.com/api/?name=%E6%B0%B8%E7%80%AC%E9%BA%BB%E5%B8%86&size=300&background=random&color=fff&bold=true",
           "actualHeight": 158,
@@ -3082,8 +3058,8 @@
           "actualHeight": 173,
           "bust": 82,
           "cup": "D",
-          "estimatedHeight": 166,
-          "heightDiff": -7,
+          "estimatedHeight": 165,
+          "heightDiff": -8,
           "estimatedCup": "C",
           "cupDiff": -1,
           "score": 3
@@ -3098,6 +3074,30 @@
           "heightDiff": -2,
           "estimatedCup": "C",
           "cupDiff": 0,
+          "score": 3
+        },
+        {
+          "name": "こもりやさくら",
+          "image": "/images/komoriya_sakura.jpg",
+          "actualHeight": 161,
+          "bust": 82,
+          "cup": "D",
+          "estimatedHeight": 162,
+          "heightDiff": 1,
+          "estimatedCup": "C",
+          "cupDiff": -1,
+          "score": 3
+        },
+        {
+          "name": "安田美沙子",
+          "image": "/images/yasuda_misako.jpg",
+          "actualHeight": 161,
+          "bust": 82,
+          "cup": "D",
+          "estimatedHeight": 162,
+          "heightDiff": 1,
+          "estimatedCup": "C",
+          "cupDiff": -1,
           "score": 3
         },
         {
@@ -3202,8 +3202,8 @@
           "actualHeight": 167,
           "bust": 80,
           "cup": "B",
-          "estimatedHeight": 164,
-          "heightDiff": -3,
+          "estimatedHeight": 162,
+          "heightDiff": -5,
           "estimatedCup": "C",
           "cupDiff": 1,
           "score": 3
@@ -3226,8 +3226,8 @@
           "actualHeight": 165,
           "bust": 80,
           "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": -4,
+          "estimatedHeight": 162,
+          "heightDiff": -3,
           "estimatedCup": "C",
           "cupDiff": 1,
           "score": 3
@@ -3310,8 +3310,20 @@
           "actualHeight": 163,
           "bust": 78,
           "cup": "B",
-          "estimatedHeight": 163,
-          "heightDiff": 0,
+          "estimatedHeight": 162,
+          "heightDiff": -1,
+          "estimatedCup": "C",
+          "cupDiff": 1,
+          "score": 3
+        },
+        {
+          "name": "前田敦子",
+          "image": "/images/jp_e5898de794b0_0448449e.jpg",
+          "actualHeight": 161,
+          "bust": 76,
+          "cup": "B",
+          "estimatedHeight": 162,
+          "heightDiff": 1,
           "estimatedCup": "C",
           "cupDiff": 1,
           "score": 3
@@ -3351,18 +3363,6 @@
           "estimatedCup": "C",
           "cupDiff": 1,
           "score": 3
-        },
-        {
-          "name": "馬場ふみか",
-          "image": "/images/baba_fumika.jpg",
-          "actualHeight": 167,
-          "bust": 83,
-          "cup": "E",
-          "estimatedHeight": 164,
-          "heightDiff": -3,
-          "estimatedCup": "B",
-          "cupDiff": -3,
-          "score": 2
         },
         {
           "name": "井原亜美",
@@ -3430,8 +3430,8 @@
           "actualHeight": 165,
           "bust": 80,
           "cup": "C",
-          "estimatedHeight": 160,
-          "heightDiff": -5,
+          "estimatedHeight": 162,
+          "heightDiff": -3,
           "estimatedCup": "B",
           "cupDiff": -1,
           "score": 2
@@ -3538,8 +3538,8 @@
           "actualHeight": 168,
           "bust": 75,
           "cup": "B",
-          "estimatedHeight": 162,
-          "heightDiff": -6,
+          "estimatedHeight": 163,
+          "heightDiff": -5,
           "estimatedCup": "B",
           "cupDiff": 0,
           "score": 2
@@ -3550,8 +3550,8 @@
           "actualHeight": 168,
           "bust": 82,
           "cup": "B",
-          "estimatedHeight": 161,
-          "heightDiff": -7,
+          "estimatedHeight": 162,
+          "heightDiff": -6,
           "estimatedCup": "A",
           "cupDiff": -1,
           "score": 1

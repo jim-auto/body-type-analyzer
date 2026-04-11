@@ -87,14 +87,13 @@ FOCUS_MIN_HEIGHT_RATIO = 0.88
 FOCUS_HORIZONTAL_PADDING_RATIO = 0.1
 FOCUS_VERTICAL_PADDING_RATIO = 0.04
 ROBUST_HEIGHT_MODELS = (
-    ("heightPrimary", 5),
-    ("heightEdgeFull", 15),
-    ("heightEdgeCenter", 9),
+    ("heightBalanced", 7),
+    ("heightHistFull", 9),
 )
 ROBUST_CUP_MODELS = (
     ("cupSecondary", 3),
-    ("cupCenter", 5),
-    ("cupEdgeTop", 5),
+    ("cupEdgeTop", 3),
+    ("cupHistTop", 13),
 )
 TRUSTED_LOCAL_SOURCES = {
     "talent-databank",
