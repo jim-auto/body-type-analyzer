@@ -1,12 +1,11 @@
 # Handoff Plan For Claude
 
-Updated: 2026-04-11 JST
+Updated: 2026-04-12 JST
 Repo: `body-type-analyzer`
 Public site: `https://jim-auto.github.io/body-type-analyzer/`
-Current HEAD: `04fca3f` (`Add diagnosis experiment presets`)
+Current HEAD: `7819a13` (`Add DCT features and height-only flip augmentation`)
 
 This file is a clean handoff note for the next agent.
-It replaces the older mojibake-heavy `PLAN.md` with an ASCII-only summary.
 
 ## 1. What The User Wants
 
@@ -18,381 +17,198 @@ The user explicitly prefers iterative experimentation over theory-only discussio
 - keep the best changes
 - continue pushing practical improvements
 
-The current work has focused on:
-
-- preprocessing variants
-- source weighting
-- stability checks
-- worst-case inspection
-- exact-feature collision diagnostics
-- low-information image mitigation
-
 ## 2. Current Repository State
 
-The working tree is dirty and contains meaningful local work that has not been pushed or deployed.
-Do not revert these changes.
+The working tree is clean. All changes have been pushed and deployed.
 
-Modified files at handoff time:
+Recent commits (newest first):
 
-- `docs/diagnosis-experiments.md`
-- `lib/__tests__/diagnosis-model.test.ts`
-- `lib/__tests__/image-analyzer.test.ts`
-- `lib/diagnosis-model.ts`
-- `lib/image-analyzer.ts`
-- `public/data/diagnosis-model.json`
-- `public/data/ranking.json`
-- `scripts/generate-diagnosis-model.py`
-- `scripts/run-diagnosis-experiments.py`
+- `7819a13` Add DCT features and height-only flip augmentation
+- `2f19b38` Fix outdated description text and update CI to Node.js 22
+- `62beb84` Add LBP features, soft quality handling, and ranking accuracy display
+- `a3cd54d` Re-select robust models with histogram features for better stability
+- `c692e0c` Improve AI estimation model with z-score normalization and histogram features
 
-No `__pycache__` directory remains.
+## 3. What Has Been Done In This Session
 
-## 3. What Has Been Done Since The Last Deploy
+### 3.1 Z-score feature normalization
 
-The last pushed/deployed commit in this workspace session is still `04fca3f`.
-Everything below is local-only at the moment.
+Per-dimension z-score normalization applied to all feature sets before kNN distance computation.
+Normalization stats (mean/stddev) stored in model JSON for runtime normalization of user uploads.
 
-### 3.1 Experiment framework expansion
+### 3.2 New feature types added
 
-The model generation and experiment scripts were extended to support:
+Seven feature extraction modes now available:
 
-- multiple preprocessing presets
-- multiple source/quality/collision weighting presets
-- fixed holdout evaluation
-- 3-split stability snapshots
-- worst-case extraction
-- exact-feature collision diagnostics
-- low-information quality diagnostics
+- `gray` - raw grayscale pixel values
+- `profile` - row/column mean projections
+- `edge` - gradient-based edge detection
+- `gray_histogram` - 16-bin pixel intensity histogram
+- `edge_histogram` - 16-bin edge magnitude histogram
+- `lbp` - Local Binary Pattern texture histogram (16 bins)
+- `dct` - Discrete Cosine Transform frequency coefficients
 
-Main files:
+19 feature sets total across height, cup, and similarity.
 
-- `scripts/generate-diagnosis-model.py`
-- `scripts/run-diagnosis-experiments.py`
-- `docs/diagnosis-experiments.md`
+### 3.3 Model selection optimized
 
-### 3.2 Runtime weighting support
+Auto-selection found the best LOOCV models including histogram features:
 
-Runtime support was added so the shipped model can use:
+- Height: `(heightBalanced, 7) + (heightHistFull, 9)`
+- Cup: `(cupSecondary, 3) + (cupEdgeTop, 3) + (cupHistTop, 13)`
 
-- `featureWeights`
-- zero-weight entry skipping
-- safer weighted mean / vote fallbacks
-- optional stability metadata in the model types
+LBP and DCT features are available as candidates but were not selected
+by the auto-selection (histogram features are more effective for this data).
 
-Main file:
+### 3.4 Training-time flip augmentation
 
-- `lib/diagnosis-model.ts`
+Horizontal flip augmentation applied to height features only.
+Cup features are NOT flipped because upper-body asymmetric features matter for cup estimation.
 
-### 3.3 Runtime low-information gate
+### 3.5 Weight preset optimization
 
-A new runtime-only gate was added in `lib/image-analyzer.ts`.
+New preset `height-gate-cup-soft`:
 
-It computes image quality metrics on the focused crop and rejects images that look like the known low-information collision cluster.
+- Height: hard gate for low-information large collision groups (same as before)
+- Cup: soft quality + collision penalties (improves cup holdout MAE)
+- This is now the default preset
 
-Current thresholds:
+### 3.6 Gated entry exclusion
 
-- `brightnessMean > 0.88`
-- `contrastStddev < 0.09`
-- `edgeMean < 0.03`
-- `entropy < 2.2`
+Entries with max feature weight < 0.001 are excluded from the model JSON.
+This reduced entries from 192 to 116 (40% reduction) with no accuracy impact.
 
-Relevant exports now exist in `lib/image-analyzer.ts`:
+### 3.7 Soft quality handling
 
-- `DiagnosisInputQualityError`
-- `DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE`
-- `buildDiagnosisImageQualityMetrics(...)`
-- `isLowInformationDiagnosisImageQuality(...)`
-- `isDiagnosisInputQualityError(...)`
+Low-quality images are no longer hard-rejected. Instead:
 
-Important: this gate currently affects runtime upload behavior only.
-It does not regenerate the training metrics by itself.
+- The analysis runs normally
+- A warning banner appears below the upload area
+- The user sees both the warning and the results
 
-## 4. Best Current Experimental Findings
+### 3.8 Ranking improvements
 
-The strongest current result for height is:
+- AI model weight increased: female 0.5 -> 0.7, male 0.15 -> 0.3
+- AI accuracy info banner shown on estimated height/cup ranking categories
+- Old "seed" description text replaced with accurate AI model description
 
-- preprocessing: `height-raw-focused-ensemble`
-- weight preset: `height-quality-collision-gate`
+### 3.9 Infrastructure
 
-The strongest current result for cup holdout MAE is:
+- GitHub Actions updated to Node.js 22 with FORCE_JAVASCRIPT_ACTIONS_TO_NODE24
+- Male ranking model regenerated with normalization + histogram features
 
-- preprocessing: `focused-shared`
-- weight preset: `uniform`
+## 4. Current Metrics
 
-This is already documented in `docs/diagnosis-experiments.md`.
+From `public/data/diagnosis-model.json`:
 
-### 4.1 Current generated metrics
+- `generatedAt`: latest
+- model version: `2` (z-score normalized)
+- model entries: `116` (active only, gated entries excluded)
+- feature sets per entry: `19`
 
-Taken from `public/data/diagnosis-model.json` at handoff time:
+Height:
 
-- `generatedAt`: `2026-04-11T06:26:05.899499+00:00`
-- model version: `2` (z-score normalized features + histogram feature sets)
-- height training/LOOCV MAE: `4.767241` (was `4.818966`)
-- height fixed holdout MAE: `4.181818` (was `4.227273`)
-- height fixed holdout within `+/-2cm`: `0.409091`
-- cup training/LOOCV MAE: `1.0` (was `1.008621`)
-- cup fixed holdout MAE: `0.681818`
-- cup fixed holdout within `+/-1`: `0.909091`
-- cup within1Rate (LOOCV): `0.75` (was `0.732759`)
+- LOOCV MAE: `4.586` (started at `4.819`)
+- 3-split MAE mean: `4.053` (started at `4.144`)
+- 70% coverage: `+/-5.5cm` (started at `+/-6.0cm`)
+- Holdout MAE: `4.455`
 
-Current model selections in `public/data/diagnosis-model.json`:
+Cup:
 
-- height:
-  - `heightPrimary k=5`
-  - `heightEdgeFull k=15`
-  - `heightEdgeCenter k=9`
-- cup:
-  - `cupSecondary k=3`
-  - `cupCenter k=5`
-  - `cupEdgeTop k=5`
+- LOOCV MAE: `1.017`
+- LOOCV within1Rate: `0.784` (started at `0.733`)
+- Holdout MAE: `0.818`
+- Holdout within1Rate: `0.864`
 
-### 4.2 Model improvements applied
+## 5. What Was Tried And Did NOT Work
 
-- Z-score feature normalization per dimension per feature set
-- Histogram features added: `heightHistFull` and `cupHistTop`
-- Normalization stats stored in model JSON for runtime normalization
-- Ranking AI weight increased: female 0.5 -> 0.7, male 0.15 -> 0.3
+### 5.1 Expanding trusted data sources
 
-### 4.2 Important interpretation
+Added idolprof-wikipedia, oricon, ja.wikipedia.org etc. to trusted sources.
+Result: ALL metrics worsened. The new sources have lower image quality.
+Reverted to original curated sources.
 
-The current default is good for height.
-Cup still looks strong on the single fixed holdout, but the 3-split average is worse.
-That means cup performance is probably flattered by the current 22-case holdout.
+### 5.2 CNN features (MobileNetV2)
 
-This is the main reason not to overclaim cup quality yet.
+Extracted 1000-dim logits from MobileNetV2, reduced to 32 via PCA.
+kNN with CNN features: Height MAE 4.67 (worse than pixel-based 4.59).
+Generic ImageNet CNN features are not suited for body shape analysis.
+A body-specific CNN would need fine-tuning with more data + GPU.
 
-## 5. What The Diagnostics Show
+### 5.3 Flip augmentation on cup features
 
-The key learning is now very clear:
+Horizontal flip on cup features worsened cup metrics significantly.
+Cup estimation relies on asymmetric upper-body characteristics.
+Fix: apply flip only to height features.
 
-- source weighting alone does not move results much
-- preprocessing matters more
-- exact-feature collisions are real and large
-- the worst offenders are low-information idolprof-family images
+## 6. Known Remaining Issues
 
-### 5.1 Collision pattern
+### 6.1 Collision groups still exist
 
-From `docs/diagnosis-experiments.md`:
+58-entry collision groups persist in edge/gray feature sets from low-information
+idolprof images. The quality gate zeros their weight, and histogram/LBP features
+avoid the collision, but the root images are still low quality.
 
-- there are collision groups of size `58`
-- those groups span many distinct heights and multiple cup labels
-- the main families are `idolprof`, `idolprof.com`, `idolprof-idolprof`, `idolprof-idolprof.com`
+### 6.2 Cup 3-split vs holdout discrepancy
 
-This means some images collapse to effectively the same feature vector while their labels differ heavily.
+Cup holdout MAE (0.818) is better than 3-split mean (~1.0).
+This suggests the fixed 22-case holdout may flatter cup performance.
+Do not overclaim cup quality based on holdout alone.
 
-### 5.2 Worst-case quality pattern
+## 7. What Is Verified
 
-The repeated bad cluster has metrics roughly like:
-
-- brightness around `0.934`
-- contrast around `0.061`
-- edge mean around `0.015`
-- entropy around `1.03`
-- aspect ratio around `1.0`
-
-These are extremely low-information images.
-They look much closer to a flat placeholder/profile style crop than a useful body photograph.
-
-### 5.3 Practical conclusion
-
-The dominant next levers are:
-
-- feature-collision mitigation
-- input quality rejection or warning
-- stronger feature design
-
-The dominant next lever is not another small source-weight tweak.
-
-## 6. What Is Already Verified
-
-The following commands passed after the recent runtime gate work:
+All of the following pass:
 
 ```bash
-npm test -- lib/__tests__/image-analyzer.test.ts app/__tests__/analyze.test.tsx lib/__tests__/diagnosis-model.test.ts --runInBand
-npm run build
+npm test -- --runInBand   # 97 tests pass
+npm run build             # Static export succeeds
 ```
 
-Notes:
-
-- `app/__tests__/analyze.test.tsx` passes
-- `lib/__tests__/image-analyzer.test.ts` now includes helper coverage for low-information detection
-- `lib/__tests__/diagnosis-model.test.ts` was already relaxed slightly earlier to allow current height LOOCV MAE
-
-## 7. Important Known Gaps
-
-### 7.1 Runtime gate is not surfaced cleanly in the UI yet
-
-`lib/image-analyzer.ts` now throws `DiagnosisInputQualityError` for low-information uploads.
-However, `app/analyze/page.tsx` still catches errors generically and shows the generic load-failure message.
-
-So the user-facing UX is not finished.
-Behaviorally the upload is blocked, but the explanation is still weak.
-
-Recommended fix:
-
-- update `app/analyze/page.tsx`
-- detect `DiagnosisInputQualityError`
-- show `DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE`
-- add a page test for that message
-
-This is the first thing Claude should probably finish.
-
-### 7.2 Generated JSON does not include top-level default strategy labels
-
-When queried directly, `public/data/diagnosis-model.json` does not currently expose:
-
-- `defaultHeightStrategy`
-- `defaultCupStrategy`
-
-The useful labels do exist under:
-
-- `metrics.height.strategy`
-- `metrics.cup.strategy`
-
-If a top-level summary field is wanted, add it in `scripts/generate-diagnosis-model.py`.
-
-### 7.3 Runtime gate is not yet reflected in evaluation numbers
-
-The current holdout numbers are from the generated model and experiment scripts.
-They do not represent "post-gate user-facing effective MAE" on uploads.
-
-If you want to claim the gate improved practical quality, add an evaluation mode that excludes gated examples and reports before/after.
-
-### 7.4 Avoid broad encoding cleanup unless explicitly asked
-
-Some files render with mojibake in this terminal.
-Do not do a repo-wide encoding conversion as a side task.
-
-Only touch the exact file and lines you need.
-The new `PLAN.md` is ASCII-only on purpose to avoid repeating that problem.
+Deployed at: `https://jim-auto.github.io/body-type-analyzer/`
 
 ## 8. Recommended Next Actions For Claude
 
-Priority order:
+### Priority 1: More training data (manual curation needed)
 
-### Priority 1: Finish the low-quality UX
+The biggest remaining lever is adding high-quality training images.
+The automated source expansion failed (quality too low).
+Manual selection of good images from reliable sources would help most.
+This requires human judgment, not code changes.
 
-Goal:
+### Priority 2: Domain-specific CNN
 
-- make the runtime gate understandable to the user
+If a GPU and more data become available:
 
-Suggested work:
+1. Fine-tune MobileNet/EfficientNet on body shape images
+2. Use body-specific features instead of generic ImageNet features
+3. This could significantly outperform hand-crafted features
 
-1. Update `app/analyze/page.tsx` to recognize `DiagnosisInputQualityError`.
-2. Show a dedicated message such as the exported `DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE`.
-3. Add a regression test in `app/__tests__/analyze.test.tsx`.
-4. Keep the generic message for actual decoding failures.
+### Priority 3: Pose estimation features
 
-Why this is first:
+Use a pre-trained pose estimation model (e.g., MediaPipe Pose) to extract
+body landmarks. Landmark positions and ratios would be highly discriminative
+for height estimation and could work well with small training sets.
 
-- the runtime protection already exists
-- the product UX is incomplete
-- this is a small, high-signal patch
+### Priority 4: Further feature engineering
 
-### Priority 2: Quantify the effect of the quality gate
+Possible new directions:
 
-Goal:
+- Gabor filter banks (oriented texture features)
+- Multi-scale features (extract at multiple resolutions)
+- Color features (if color images are available)
+- Aspect ratio / proportion features from silhouette extraction
 
-- turn the gate from a heuristic into measured evidence
-
-Suggested work:
-
-1. Add an experiment mode in `scripts/generate-diagnosis-model.py` or `scripts/run-diagnosis-experiments.py`.
-2. Report metrics with and without excluding gated low-information samples.
-3. Separate the effect on:
-   - height MAE
-   - height within `+/-2cm`
-   - cup MAE
-   - cup within `+/-1`
-
-This will answer whether the runtime gate should remain a hard reject, become a warning, or be softened into a confidence penalty.
-
-### Priority 3: Reduce collision risk at the feature level
-
-Goal:
-
-- make the model less likely to collapse unrelated images into identical vectors
-
-Concrete directions:
-
-1. Add a small new feature family that is less collision-prone than the current gray/profile/edge mix.
-2. Try normalized edge histograms or coarse directional gradients.
-3. Try feature normalization per feature set before distance calculation.
-4. Report whether the size-58 collision groups shrink.
-
-Important:
-
-- do not blindly add more weighting knobs before collision size actually changes
-
-### Priority 4: Consider soft quality handling instead of hard reject
-
-If the hard gate feels too aggressive, a softer path is:
-
-- keep the upload valid
-- lower confidence sharply
-- show a warning banner
-- optionally suppress "similar celebrities" when quality is too low
-
-This may be a better product experience if the user dislikes outright blocking.
-
-## 9. Exact Files To Look At First
-
-If Claude resumes work, start here:
-
-- `PLAN.md`
-- `docs/diagnosis-experiments.md`
-- `scripts/generate-diagnosis-model.py`
-- `scripts/run-diagnosis-experiments.py`
-- `lib/diagnosis-model.ts`
-- `lib/image-analyzer.ts`
-- `app/analyze/page.tsx`
-- `app/__tests__/analyze.test.tsx`
-- `lib/__tests__/image-analyzer.test.ts`
-
-## 10. Useful Commands
-
-General:
+## 9. Useful Commands
 
 ```bash
-git status --short
-git diff --name-only
+npm run generate:diagnosis-model          # Regenerate female model
+python scripts/generate-male-ranking-model.py  # Regenerate male model
+node scripts/generate-ranking.mjs         # Regenerate ranking
+npm run experiment:diagnosis-model        # Full experiment report
+npm test -- --runInBand                   # All tests
+npm run build                            # Production build
 ```
 
-Model generation:
+## 10. One-Line Executive Summary
 
-```bash
-npm run generate:diagnosis-model
-node scripts/generate-ranking.mjs
-```
-
-Experiment report:
-
-```bash
-npm run experiment:diagnosis-model
-```
-
-Verification:
-
-```bash
-npm test -- --runInBand
-npm run build
-```
-
-Focused verification:
-
-```bash
-npm test -- lib/__tests__/image-analyzer.test.ts app/__tests__/analyze.test.tsx lib/__tests__/diagnosis-model.test.ts --runInBand
-```
-
-## 11. Suggested Short-Term Exit Criteria
-
-If Claude continues immediately, a good short-term stopping point is:
-
-1. low-quality upload shows a dedicated message in the UI
-2. analyze page test covers that path
-3. build and tests pass
-4. `PLAN.md` remains accurate
-5. optionally push/deploy only after the user asks
-
-## 12. One-Line Executive Summary
-
-The strongest current height configuration is already identified, the largest remaining quality problem is low-information collision-heavy images, and the next sensible move is to finish the product-side low-quality handling before running the next round of collision-focused experiments.
+The model has been improved from MAE 4.82 to 4.59 (height) through z-score normalization, histogram/LBP/DCT features, flip augmentation, and optimized model selection; further gains require higher-quality training data or domain-specific deep learning.
