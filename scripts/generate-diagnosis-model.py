@@ -38,6 +38,7 @@ FEATURE_SETS = {
     "heightEdgeCenter": [("fullCenter", 8, "edge"), ("lowCenter", 8, "edge")],
     "heightHistFull": [("full", 8, "gray_histogram"), ("full", 8, "edge_histogram")],
     "heightLbpFull": [("full", 8, "lbp"), ("fullCenter", 8, "lbp")],
+    "heightDctFull": [("full", 12, "dct")],
     "cupPrimary": [("top", 8, "gray"), ("top", 12, "gray")],
     "cupSecondary": [("top", 8, "gray"), ("mid", 6, "gray")],
     "cupCenter": [("topCenter", 10, "gray"), ("torsoCenter", 8, "gray")],
@@ -45,6 +46,7 @@ FEATURE_SETS = {
     "cupEdgeTop": [("top", 10, "edge")],
     "cupHistTop": [("top", 8, "gray_histogram"), ("top", 8, "edge_histogram")],
     "cupLbpTop": [("top", 8, "lbp"), ("topCenter", 8, "lbp")],
+    "cupDctTop": [("top", 12, "dct")],
     "similarity": [("full", 8, "gray"), ("top", 8, "gray")],
 }
 ORICON_HEIGHT_ALLOWLIST = {
@@ -66,6 +68,7 @@ HEIGHT_FEATURE_CANDIDATES = (
     "heightEdgeCenter",
     "heightHistFull",
     "heightLbpFull",
+    "heightDctFull",
 )
 CUP_FEATURE_CANDIDATES = (
     "cupPrimary",
@@ -75,6 +78,7 @@ CUP_FEATURE_CANDIDATES = (
     "cupEdgeTop",
     "cupHistTop",
     "cupLbpTop",
+    "cupDctTop",
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
@@ -693,19 +697,44 @@ def build_feature_sets(
         "similarity": preset.similarity_variants,
     }
 
-    return {
-        feature_name: [
+    flipped_images_by_variant: dict[str, list[Image.Image]] = {
+        variant_key: [image.transpose(Image.Transpose.FLIP_LEFT_RIGHT) for image in images]
+        for variant_key, images in processed_images_by_variant.items()
+    }
+
+    def build_vectors_for_feature(
+        feature_name: str,
+        specs: list[tuple[str, int, str]],
+    ) -> list[list[float]]:
+        group = feature_group_for_name(feature_name)
+        use_flip = group == "height"
+
+        return [
             average_feature_vectors(
                 [
                     extract_features(
                         processed_images_by_variant[variant_key][index],
                         specs,
                     )
-                    for variant_key in variants_by_group[feature_group_for_name(feature_name)]
+                    for variant_key in variants_by_group[group]
                 ]
+                + (
+                    [
+                        extract_features(
+                            flipped_images_by_variant[variant_key][index],
+                            specs,
+                        )
+                        for variant_key in variants_by_group[group]
+                    ]
+                    if use_flip
+                    else []
+                )
             )
             for index in range(len(gray_images))
         ]
+
+    return {
+        feature_name: build_vectors_for_feature(feature_name, specs)
         for feature_name, specs in FEATURE_SETS.items()
     }
 
@@ -772,6 +801,37 @@ def edge_features(values: list[float], size: int) -> list[float]:
     return edges
 
 
+def dct_1d(vector: list[float]) -> list[float]:
+    n = len(vector)
+    result: list[float] = []
+
+    for k in range(n):
+        total = 0.0
+
+        for i in range(n):
+            total += vector[i] * math.cos(math.pi * k * (2 * i + 1) / (2 * n))
+
+        result.append(round(total * math.sqrt(2 / n), 4))
+
+    return result
+
+
+def dct_features(values: list[float], size: int, coeff_count: int = 8) -> list[float]:
+    """Extract low-frequency 2D DCT coefficients as features."""
+    grid = to_grid(values, size)
+    row_dct = [dct_1d(row) for row in grid]
+    col_transposed = [[row_dct[r][c] for r in range(size)] for c in range(size)]
+    full_dct = [dct_1d(col) for col in col_transposed]
+
+    coefficients: list[float] = []
+
+    for row in range(min(coeff_count, size)):
+        for col in range(min(coeff_count, size)):
+            coefficients.append(full_dct[col][row])
+
+    return coefficients[:coeff_count * coeff_count]
+
+
 def lbp_features(values: list[float], size: int, bin_count: int = 16) -> list[float]:
     """Simplified Local Binary Pattern histogram."""
     patterns: list[int] = []
@@ -836,6 +896,9 @@ def extract_feature_block(gray_image: Image.Image, region_name: str, size: int, 
 
     if mode == "lbp":
         return lbp_features(values, size)
+
+    if mode == "dct":
+        return dct_features(values, size)
 
     return values
 
