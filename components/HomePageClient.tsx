@@ -234,8 +234,7 @@ export default function HomePageClient({
             あなたのスタイルも診断してみる？
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
-            推定値は公開データをもとに補正しつつ、画像診断は seed
-            乱数ベースでそれっぽく返します。
+            画像から特徴量を抽出し、学習プロフィール画像の近傍比較で身長とカップを推定します。
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <Link
