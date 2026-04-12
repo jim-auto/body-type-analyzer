@@ -68,6 +68,7 @@ const mockFeatures: DiagnosisFeatures = {
   heightEdgeCenter: [0.1, 0.2, 0.3],
   heightHistFull: [0.1, 0.2, 0.3],
   heightLbpFull: [0.1, 0.2, 0.3],
+  heightDctFull: [0.1, 0.2, 0.3],
   cupPrimary: [0.4, 0.5, 0.6],
   cupSecondary: [0.4, 0.5, 0.6],
   cupCenter: [0.4, 0.5, 0.6],
@@ -75,6 +76,7 @@ const mockFeatures: DiagnosisFeatures = {
   cupEdgeTop: [0.4, 0.5, 0.6],
   cupHistTop: [0.4, 0.5, 0.6],
   cupLbpTop: [0.4, 0.5, 0.6],
+  cupDctTop: [0.4, 0.5, 0.6],
   similarity: [0.7, 0.8, 0.9],
 };
 

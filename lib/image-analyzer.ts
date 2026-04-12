@@ -50,6 +50,7 @@ const HEIGHT_FEATURE_SPECS = [
     { region: "full", size: 8, mode: "lbp" },
     { region: "fullCenter", size: 8, mode: "lbp" },
   ],
+  [{ region: "full", size: 12, mode: "dct" }],
 ] as const;
 const CUP_FEATURE_SPECS = [
   [
@@ -77,6 +78,7 @@ const CUP_FEATURE_SPECS = [
     { region: "top", size: 8, mode: "lbp" },
     { region: "topCenter", size: 8, mode: "lbp" },
   ],
+  [{ region: "top", size: 12, mode: "dct" }],
 ] as const;
 const SIMILARITY_FEATURE_SPECS = [
   { region: "full", size: 8, mode: "gray" },
@@ -116,7 +118,7 @@ export const DIAGNOSIS_DISCLAIMERS = [
 ] as const;
 
 type FeatureRegion = keyof typeof REGION_BOUNDS;
-type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram" | "lbp";
+type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram" | "lbp" | "dct";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
 type FocusRange = { start: number; end: number };
 type FocusCropConfig = {
@@ -482,6 +484,48 @@ function lbpFromGrayscale(grayscale: number[], size: number, binCount = 16): num
   return bins.map((count) => roundFeature(count / total));
 }
 
+function dct1d(vector: number[]): number[] {
+  const n = vector.length;
+  const scale = Math.sqrt(2 / n);
+
+  return Array.from({ length: n }, (_, k) => {
+    let total = 0;
+
+    for (let i = 0; i < n; i += 1) {
+      total += (vector[i] ?? 0) * Math.cos((Math.PI * k * (2 * i + 1)) / (2 * n));
+    }
+
+    return roundFeature(total * scale);
+  });
+}
+
+function dctFromGrayscale(grayscale: number[], size: number, coeffCount = 8): number[] {
+  const grid: number[][] = [];
+
+  for (let r = 0; r < size; r += 1) {
+    grid.push(grayscale.slice(r * size, (r + 1) * size));
+  }
+
+  const rowDct = grid.map((row) => dct1d(row));
+  const colTransposed: number[][] = [];
+
+  for (let c = 0; c < size; c += 1) {
+    colTransposed.push(Array.from({ length: size }, (_, r) => rowDct[r]?.[c] ?? 0));
+  }
+
+  const fullDct = colTransposed.map((col) => dct1d(col));
+  const coefficients: number[] = [];
+  const limit = Math.min(coeffCount, size);
+
+  for (let row = 0; row < limit; row += 1) {
+    for (let col = 0; col < limit; col += 1) {
+      coefficients.push(fullDct[col]?.[row] ?? 0);
+    }
+  }
+
+  return coefficients.slice(0, coeffCount * coeffCount);
+}
+
 function histogramFromValues(values: number[], binCount = 16): number[] {
   const bins = Array.from({ length: binCount }, () => 0);
 
@@ -516,6 +560,10 @@ function extractFeatureBlock(image: HTMLCanvasElement, spec: FeatureSpec): numbe
 
   if (spec.mode === "lbp") {
     return lbpFromGrayscale(grayscale, spec.size);
+  }
+
+  if (spec.mode === "dct") {
+    return dctFromGrayscale(grayscale, spec.size);
   }
 
   return grayscale;
@@ -645,6 +693,7 @@ export async function extractDiagnosisFeatures(
     heightEdgeCenter: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[6]),
     heightHistFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[7]),
     heightLbpFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[8]),
+    heightDctFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[9]),
     cupPrimary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[0]),
     cupSecondary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[1]),
     cupCenter: extractFeatures(focusedImage, CUP_FEATURE_SPECS[2]),
@@ -652,6 +701,7 @@ export async function extractDiagnosisFeatures(
     cupEdgeTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[4]),
     cupHistTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[5]),
     cupLbpTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[6]),
+    cupDctTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[7]),
     similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
   };
 
