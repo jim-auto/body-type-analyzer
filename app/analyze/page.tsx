@@ -292,33 +292,6 @@ export default function AnalyzePage() {
           </div>
         </section>
 
-        <div className="mx-auto flex w-full max-w-sm rounded-full bg-slate-100 p-1 shadow-inner">
-          <button
-            type="button"
-            onClick={() => setGender("female")}
-            aria-pressed={gender === "female"}
-            className={`flex-1 rounded-full px-5 py-3 text-base font-bold transition ${
-              gender === "female"
-                ? "bg-pink-500 text-white shadow-lg shadow-pink-200 ring-1 ring-pink-300"
-                : "text-slate-500 hover:bg-white/80"
-            }`}
-          >
-            女性
-          </button>
-          <button
-            type="button"
-            onClick={() => setGender("male")}
-            aria-pressed={gender === "male"}
-            className={`flex-1 rounded-full px-5 py-3 text-base font-bold transition ${
-              gender === "male"
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 ring-1 ring-blue-300"
-                : "text-slate-500 hover:bg-white/80"
-            }`}
-          >
-            男性
-          </button>
-        </div>
-
         <section
           id="model-performance"
           aria-label="モデル性能"
@@ -386,6 +359,33 @@ export default function AnalyzePage() {
                   {selectedFileName}
                 </span>
               ) : null}
+            </div>
+
+            <div className="mb-5 flex w-full rounded-full bg-slate-100 p-1 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setGender("female")}
+                aria-pressed={gender === "female"}
+                className={`flex-1 rounded-full px-4 py-2.5 text-sm font-bold transition ${
+                  gender === "female"
+                    ? "bg-pink-500 text-white shadow-md"
+                    : "text-slate-500 hover:bg-white/80"
+                }`}
+              >
+                女性
+              </button>
+              <button
+                type="button"
+                onClick={() => setGender("male")}
+                aria-pressed={gender === "male"}
+                className={`flex-1 rounded-full px-4 py-2.5 text-sm font-bold transition ${
+                  gender === "male"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-slate-500 hover:bg-white/80"
+                }`}
+              >
+                男性
+              </button>
             </div>
 
             <label
