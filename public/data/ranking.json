@@ -72,8 +72,8 @@
           "cup": "E",
           "estimatedHeight": 165,
           "heightDiff": -4,
-          "estimatedCup": "D",
-          "cupDiff": -1,
+          "estimatedCup": "E",
+          "cupDiff": 0,
           "score": 67
         },
         {
@@ -672,8 +672,8 @@
           "cup": "D",
           "estimatedHeight": 161,
           "heightDiff": 3,
-          "estimatedCup": "E",
-          "cupDiff": 1,
+          "estimatedCup": "D",
+          "cupDiff": 0,
           "score": 53
         },
         {
@@ -1362,8 +1362,8 @@
           "cup": "E",
           "estimatedHeight": 165,
           "heightDiff": -4,
-          "estimatedCup": "D",
-          "cupDiff": -1,
+          "estimatedCup": "E",
+          "cupDiff": 0,
           "score": 165
         },
         {
@@ -1986,8 +1986,8 @@
           "cup": "D",
           "estimatedHeight": 161,
           "heightDiff": 3,
-          "estimatedCup": "E",
-          "cupDiff": 1,
+          "estimatedCup": "D",
+          "cupDiff": 0,
           "score": 161
         },
         {
@@ -2561,18 +2561,6 @@
           "score": 5
         },
         {
-          "name": "井上真央",
-          "image": "/images/inoue_mao.jpg",
-          "actualHeight": 158,
-          "bust": 88,
-          "cup": "D",
-          "estimatedHeight": 161,
-          "heightDiff": 3,
-          "estimatedCup": "E",
-          "cupDiff": 1,
-          "score": 5
-        },
-        {
           "name": "yunocy",
           "image": "/images/yunocy.jpg",
           "actualHeight": 157,
@@ -2705,6 +2693,18 @@
           "score": 5
         },
         {
+          "name": "おのののか",
+          "image": "/images/ono_nonoka.jpg",
+          "actualHeight": 169,
+          "bust": 83,
+          "cup": "E",
+          "estimatedHeight": 165,
+          "heightDiff": -4,
+          "estimatedCup": "E",
+          "cupDiff": 0,
+          "score": 5
+        },
+        {
           "name": "馬場ふみか",
           "image": "/images/baba_fumika.jpg",
           "actualHeight": 167,
@@ -2813,6 +2813,18 @@
           "score": 5
         },
         {
+          "name": "井上真央",
+          "image": "/images/inoue_mao.jpg",
+          "actualHeight": 158,
+          "bust": 88,
+          "cup": "D",
+          "estimatedHeight": 161,
+          "heightDiff": 3,
+          "estimatedCup": "D",
+          "cupDiff": 0,
+          "score": 4
+        },
+        {
           "name": "逢坂南",
           "image": "https://ui-avatars.com/api/?name=%E9%80%A2%E5%9D%82%E5%8D%97&size=300&background=random&color=fff&bold=true",
           "actualHeight": 156,
@@ -2906,18 +2918,6 @@
           "heightDiff": -7,
           "estimatedCup": "D",
           "cupDiff": 1,
-          "score": 4
-        },
-        {
-          "name": "おのののか",
-          "image": "/images/ono_nonoka.jpg",
-          "actualHeight": 169,
-          "bust": 83,
-          "cup": "E",
-          "estimatedHeight": 165,
-          "heightDiff": -4,
-          "estimatedCup": "D",
-          "cupDiff": -1,
           "score": 4
         },
         {

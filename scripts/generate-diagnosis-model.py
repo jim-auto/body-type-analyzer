@@ -113,7 +113,7 @@ ROBUST_HEIGHT_MODELS = (
 ROBUST_CUP_MODELS = (
     ("cupSecondary", 3),
     ("cupHistTop", 13),
-    ("cupPose", 5),
+    ("cupPose", 1),
 )
 TRUSTED_LOCAL_SOURCES = {
     "talent-databank",
