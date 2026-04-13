@@ -43,6 +43,7 @@ export type DiagnosisFeatures = {
   cupLbpTop: number[];
   cupDctTop: number[];
   cupHogTop: number[];
+  cupPose: number[];
   similarity: number[];
 };
 

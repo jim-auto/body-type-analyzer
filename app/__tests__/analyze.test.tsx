@@ -85,6 +85,7 @@ const mockFeatures: DiagnosisFeatures = {
   cupLbpTop: [0.4, 0.5, 0.6],
   cupDctTop: [0.4, 0.5, 0.6],
   cupHogTop: [0.4, 0.5, 0.6],
+  cupPose: [0.4, 0.5, 0.6],
   similarity: [0.7, 0.8, 0.9],
 };
 

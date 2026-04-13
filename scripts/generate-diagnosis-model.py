@@ -53,6 +53,7 @@ FEATURE_SETS = {
     "cupLbpTop": [("top", 8, "lbp"), ("topCenter", 8, "lbp")],
     "cupDctTop": [("top", 12, "dct")],
     "cupHogTop": [("top", 8, "hog"), ("topCenter", 8, "hog")],
+    "cupPose": [],
     "similarity": [("full", 8, "gray"), ("top", 8, "gray")],
 }
 ORICON_HEIGHT_ALLOWLIST = {
@@ -88,6 +89,7 @@ CUP_FEATURE_CANDIDATES = (
     "cupLbpTop",
     "cupDctTop",
     "cupHogTop",
+    "cupPose",
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
@@ -110,8 +112,8 @@ ROBUST_HEIGHT_MODELS = (
 )
 ROBUST_CUP_MODELS = (
     ("cupSecondary", 3),
-    ("cupEdgeTop", 3),
     ("cupHistTop", 13),
+    ("cupPose", 5),
 )
 TRUSTED_LOCAL_SOURCES = {
     "talent-databank",
@@ -2274,6 +2276,7 @@ def prepare_model_inputs(
     raw_feature_sets = build_feature_sets(gray_images, preset)
     pose_features, pose_detected = build_pose_features(rgb_images)
     raw_feature_sets["heightPose"] = pose_features
+    raw_feature_sets["cupPose"] = pose_features
     normalization_stats = compute_normalization_stats(raw_feature_sets)
     feature_sets = normalize_feature_sets(raw_feature_sets, normalization_stats)
     profile_source_weights = [
@@ -2301,6 +2304,7 @@ def prepare_model_inputs(
     for index, detected in enumerate(pose_detected):
         if not detected:
             feature_weight_sets["heightPose"][index] = 0.0
+            feature_weight_sets["cupPose"][index] = 0.0
 
     return {
         "profiles": profiles,

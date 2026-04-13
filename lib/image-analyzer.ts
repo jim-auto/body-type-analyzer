@@ -845,6 +845,7 @@ export async function extractDiagnosisFeatures(
     cupLbpTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[6]),
     cupDctTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[7]),
     cupHogTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[8]),
+    cupPose: poseFeatures,
     similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
   };
 
