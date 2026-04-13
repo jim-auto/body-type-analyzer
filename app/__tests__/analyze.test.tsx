@@ -9,10 +9,13 @@ import {
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
   diagnose,
+  diagnoseMale,
   extractDiagnosisFeatures,
+  extractMaleDiagnosisFeatures,
   type DiagnosisFeatures,
   type DiagnosisFeatureResult,
   type DiagnosisResult,
+  type MaleDiagnosisResult,
 } from "@/lib/image-analyzer";
 
 jest.mock("@/lib/image-analyzer", () => {
@@ -21,7 +24,9 @@ jest.mock("@/lib/image-analyzer", () => {
   return {
     ...actual,
     extractDiagnosisFeatures: jest.fn(),
+    extractMaleDiagnosisFeatures: jest.fn(),
     diagnose: jest.fn(),
+    diagnoseMale: jest.fn(),
   };
 });
 
@@ -83,8 +88,25 @@ const mockFeatures: DiagnosisFeatures = {
   similarity: [0.7, 0.8, 0.9],
 };
 
+const mockMaleResult: MaleDiagnosisResult = {
+  estimatedHeight: 178,
+  heightDeviation: 62,
+  confidence: 35,
+  similarCelebrities: [
+    {
+      name: "福山雅治",
+      image: "/images/fukuyama_masaharu.jpg",
+      similarity: 88,
+      actualHeight: 181,
+      cup: "A",
+    },
+  ],
+};
+
 const mockedExtractDiagnosisFeatures = jest.mocked(extractDiagnosisFeatures);
+const mockedExtractMaleDiagnosisFeatures = jest.mocked(extractMaleDiagnosisFeatures);
 const mockedDiagnose = jest.mocked(diagnose);
+const mockedDiagnoseMale = jest.mocked(diagnoseMale);
 const mockCreateObjectUrl = jest.fn(() => "blob:preview-url");
 const mockRevokeObjectUrl = jest.fn();
 
@@ -130,6 +152,11 @@ const mockFeatureResult: DiagnosisFeatureResult = {
 beforeEach(() => {
   jest.useFakeTimers();
   mockedExtractDiagnosisFeatures.mockResolvedValue(mockFeatureResult);
+  mockedExtractMaleDiagnosisFeatures.mockResolvedValue({
+    features: { heightPrimary: [0.1], similarity: [0.2] },
+    isLowQuality: false,
+  });
+  mockedDiagnoseMale.mockReturnValue(mockMaleResult);
   mockedDiagnose.mockReturnValue(mockResult);
   mockCreateObjectUrl.mockReturnValue("blob:preview-url");
   Object.defineProperty(URL, "createObjectURL", {
@@ -407,5 +434,44 @@ describe("AnalyzePage", () => {
     DIAGNOSIS_DISCLAIMERS.forEach((disclaimer) => {
       expect(screen.getByText(disclaimer)).toBeInTheDocument();
     });
+  });
+
+  test("性別トグルが表示される", () => {
+    renderPage();
+
+    expect(screen.getByText("女性")).toBeInTheDocument();
+    expect(screen.getByText("男性")).toBeInTheDocument();
+  });
+
+  test("男性モードで診断すると身長のみ表示される", async () => {
+    renderPage();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("男性"));
+    });
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(screen.getByText("診断結果")).toBeInTheDocument();
+    expect(screen.getByText("178")).toBeInTheDocument();
+    expect(screen.queryByText("推定カップ")).not.toBeInTheDocument();
+    expect(screen.queryByText("シルエットタイプ")).not.toBeInTheDocument();
+    expect(mockedExtractMaleDiagnosisFeatures).toHaveBeenCalledTimes(1);
+  });
+
+  test("男性モードで類似有名人にカップが表示されない", async () => {
+    renderPage();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("男性"));
+    });
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(screen.getByText("福山雅治")).toBeInTheDocument();
+    expect(screen.getByText("181cm")).toBeInTheDocument();
+    expect(screen.queryByText("推定カップ")).not.toBeInTheDocument();
   });
 });
