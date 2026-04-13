@@ -1,7 +1,9 @@
 import diagnosisModelJson from "../public/data/diagnosis-model.json" with { type: "json" };
+import maleDiagnosisModelJson from "../public/data/male-diagnosis-model.json" with { type: "json" };
 
 import {
   FEMALE_STATS,
+  MALE_STATS,
   calculateCupDeviation,
   calculateDeviation,
 } from "./statistics.ts";
@@ -218,10 +220,41 @@ type DiagnoseOptions = {
 
 const diagnosisModel = diagnosisModelJson as DiagnosisModel;
 
+export type MaleDiagnosisModelEntry = {
+  name: string;
+  image: string;
+  actualHeight: number;
+  featureSets: Record<string, number[]>;
+};
+
+export type MaleDiagnosisModel = {
+  version: number;
+  generatedAt: string;
+  normalization?: Record<string, { mean: number[]; stddev: number[] }>;
+  metrics: {
+    trainingCount: number;
+    height: HeightMetrics;
+    similarity: SimilarityMetrics;
+  };
+  entries: MaleDiagnosisModelEntry[];
+};
+
+export type MaleDiagnosisResult = {
+  estimatedHeight: number;
+  heightDeviation: number;
+  confidence: number;
+  similarCelebrities: SimilarCelebrity[];
+};
+
+const maleDiagnosisModel = maleDiagnosisModelJson as unknown as MaleDiagnosisModel;
+
 export const DIAGNOSIS_MODEL = diagnosisModel;
 export const DIAGNOSIS_MODEL_ENTRIES = diagnosisModel.entries;
 export const DIAGNOSIS_MODEL_METRICS = diagnosisModel.metrics;
 export const DIAGNOSIS_MODEL_NORMALIZATION = diagnosisModel.normalization;
+export const MALE_DIAGNOSIS_MODEL = maleDiagnosisModel;
+export const MALE_DIAGNOSIS_MODEL_ENTRIES = maleDiagnosisModel.entries;
+export const MALE_DIAGNOSIS_MODEL_METRICS = maleDiagnosisModel.metrics;
 
 export function normalizeFeatures(
   features: DiagnosisFeatures,
@@ -585,6 +618,149 @@ export function diagnoseFromFeatures(
     similarCelebrity: similarCelebrities[0]?.name ?? DIAGNOSIS_MODEL_ENTRIES[0].name,
     similarCelebrities,
   };
+}
+
+function getMaleNeighbors(
+  targetFeatures: number[],
+  featureSetName: string,
+  neighborCount: number,
+  stats?: DistanceStats,
+  excludeName?: string
+): Neighbor[] {
+  return MALE_DIAGNOSIS_MODEL_ENTRIES
+    .filter((entry) => entry.name !== excludeName)
+    .map((entry) => {
+      const entryFeatures = entry.featureSets[featureSetName];
+
+      if (!entryFeatures) {
+        return null;
+      }
+
+      const distance = euclideanDistance(targetFeatures, entryFeatures);
+
+      return {
+        entry: {
+          ...entry,
+          cup: "A" as DiagnosisCup,
+          silhouetteType: "I" as SilhouetteType,
+          availability: { height: true, cup: false, similarity: true },
+          sourceWeights: { height: 1, cup: 0, similarity: 1 },
+        },
+        distance,
+        weight: 1 / ((distance + 1e-6) ** 2),
+        distanceScore: stats ? normalizeDistance(distance, stats) : 1 / (1 + distance),
+      };
+    })
+    .filter((n): n is Neighbor => n !== null)
+    .sort(
+      (left, right) =>
+        left.distance - right.distance ||
+        (left.entry.name < right.entry.name ? -1 : left.entry.name > right.entry.name ? 1 : 0)
+    )
+    .slice(0, neighborCount);
+}
+
+export function diagnoseMaleFromFeatures(
+  features: Record<string, number[]>,
+  options?: DiagnoseOptions
+): MaleDiagnosisResult {
+  const models = MALE_DIAGNOSIS_MODEL_METRICS.height.models;
+  const modelPredictions = models.map((model) => {
+    const targetFeatures = features[model.featureSet];
+
+    if (!targetFeatures) {
+      return { neighbors: [] as Neighbor[], prediction: 175 };
+    }
+
+    const neighbors = getMaleNeighbors(
+      targetFeatures,
+      model.featureSet,
+      model.k,
+      undefined,
+      options?.excludeName
+    );
+
+    return {
+      neighbors,
+      prediction: weightedMean(neighbors, (entry) => entry.actualHeight),
+    };
+  });
+
+  const predictions = modelPredictions.map((m) => m.prediction).sort((a, b) => a - b);
+  const median =
+    predictions.length % 2 === 1
+      ? predictions[(predictions.length - 1) / 2]
+      : (predictions[predictions.length / 2 - 1] + predictions[predictions.length / 2]) / 2;
+  const estimatedHeight = clamp(Math.round(median), HEIGHT_MIN, HEIGHT_MAX);
+  const heightNeighbors = modelPredictions.flatMap((m) => m.neighbors);
+
+  const similarityFeatures = features.similarity;
+  const similarCelebrities: SimilarCelebrity[] = similarityFeatures
+    ? getMaleNeighbors(
+        similarityFeatures,
+        "similarity",
+        MAX_SIMILAR_CELEBRITIES,
+        MALE_DIAGNOSIS_MODEL_METRICS.similarity.distance,
+        options?.excludeName
+      ).map((neighbor) => ({
+        name: neighbor.entry.name,
+        image: neighbor.entry.image,
+        similarity: clamp(Math.round(62 + neighbor.distanceScore * 34), 62, 96),
+        actualHeight: neighbor.entry.actualHeight,
+        cup: "A" as DiagnosisCup,
+      }))
+    : [];
+
+  const heightScore = averageDistanceScore(heightNeighbors);
+  const similarityScore = (similarCelebrities[0]?.similarity ?? 62) / 100;
+
+  return {
+    estimatedHeight,
+    heightDeviation: clamp(
+      calculateDeviation(estimatedHeight, MALE_STATS.height.mean, MALE_STATS.height.stddev),
+      DEVIATION_MIN,
+      DEVIATION_MAX
+    ),
+    confidence: clamp(
+      Math.round((heightScore * 0.6 + similarityScore * 0.4) * 100),
+      CONFIDENCE_MIN,
+      CONFIDENCE_MAX
+    ),
+    similarCelebrities,
+  };
+}
+
+export function normalizeMaleFeatures(
+  features: Record<string, number[]>
+): Record<string, number[]> {
+  const normalization = maleDiagnosisModel.normalization;
+
+  if (!normalization) {
+    return features;
+  }
+
+  const result: Record<string, number[]> = {};
+
+  for (const [key, values] of Object.entries(features)) {
+    const stats = normalization[key];
+
+    if (!stats) {
+      result[key] = values;
+      continue;
+    }
+
+    result[key] = values.map((value, index) => {
+      const stddev = stats.stddev[index];
+
+      if (stddev === undefined || stddev <= 1e-9) {
+        return 0;
+      }
+
+      return Math.round(((value - stats.mean[index]) / stddev) * 10000) / 10000;
+    });
+  }
+
+  return result;
 }
 
 export function evaluateDiagnosisModel(): DiagnosisModelEvaluation {

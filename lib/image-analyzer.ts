@@ -1,9 +1,13 @@
 import {
   DIAGNOSIS_MODEL_METRICS,
+  MALE_DIAGNOSIS_MODEL_METRICS,
+  diagnoseMaleFromFeatures,
   diagnoseFromFeatures,
   normalizeFeatures,
+  normalizeMaleFeatures,
   type DiagnosisFeatures,
   type DiagnosisResult,
+  type MaleDiagnosisResult,
   type SilhouetteType,
 } from "./diagnosis-model.ts";
 
@@ -116,6 +120,7 @@ export const AI_LOADING_MESSAGES = [
 ] as const;
 
 export const DIAGNOSIS_MODEL_SUMMARY = `学習プロフィール画像${DIAGNOSIS_MODEL_METRICS.trainingCount}枚の近傍比較モデル`;
+export const MALE_DIAGNOSIS_MODEL_SUMMARY = `学習プロフィール画像${MALE_DIAGNOSIS_MODEL_METRICS.trainingCount}枚の近傍比較モデル`;
 export const DIAGNOSIS_VALIDATION_LABEL = `固定テスト: 身長の7割が±${DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0}cm以内 / カップの7割が±${DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0}カップ以内`;
 
 export const DIAGNOSIS_DISCLAIMERS = [
@@ -847,6 +852,37 @@ export async function extractDiagnosisFeatures(
     features: normalizeFeatures(rawFeatures),
     isLowQuality,
   };
+}
+
+export async function extractMaleDiagnosisFeatures(
+  file: File
+): Promise<{ features: Record<string, number[]>; isLowQuality: boolean }> {
+  const image = await loadImage(file);
+  const sourceImage = createSourceCanvas(image);
+  const focusedImage = createFocusedCanvas(image, DEFAULT_FOCUS_CROP);
+  const focusedQualityMetrics = buildDiagnosisImageQualityMetrics(focusedImage);
+  const isLowQuality = isLowInformationDiagnosisImageQuality(focusedQualityMetrics);
+
+  const rawFeatures: Record<string, number[]> = {
+    heightPrimary: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[0]),
+    heightBalanced: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[1]),
+    heightWide: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[2]),
+    heightCenter: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[3]),
+    heightProfile: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[4]),
+    heightHistFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[7]),
+    heightDctFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[9]),
+    heightHogFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[10]),
+    similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
+  };
+
+  return {
+    features: normalizeMaleFeatures(rawFeatures),
+    isLowQuality,
+  };
+}
+
+export function diagnoseMale(features: Record<string, number[]>): MaleDiagnosisResult {
+  return diagnoseMaleFromFeatures(features);
 }
 
 export function diagnose(features: DiagnosisFeatures): DiagnosisResult {

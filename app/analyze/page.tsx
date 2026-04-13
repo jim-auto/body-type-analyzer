@@ -9,12 +9,18 @@ import {
   DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE,
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
+  MALE_DIAGNOSIS_MODEL_SUMMARY,
   type DiagnosisResult,
+  type MaleDiagnosisResult,
   type SilhouetteType,
   diagnose,
+  diagnoseMale,
   extractDiagnosisFeatures,
+  extractMaleDiagnosisFeatures,
 } from "@/lib/image-analyzer";
-import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
+import { DIAGNOSIS_MODEL_METRICS, MALE_DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
+
+type Gender = "female" | "male";
 
 const MESSAGE_INTERVAL_MS = 1500;
 
@@ -84,6 +90,7 @@ const PERFORMANCE_SUMMARIES = [
 ] as const;
 
 export default function AnalyzePage() {
+  const [gender, setGender] = useState<Gender>("female");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [isDragActive, setIsDragActive] = useState(false);
@@ -91,6 +98,7 @@ export default function AnalyzePage() {
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
+  const [maleResult, setMaleResult] = useState<MaleDiagnosisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLowQuality, setIsLowQuality] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
@@ -159,20 +167,46 @@ export default function AnalyzePage() {
     setSelectedFileName(file.name);
     setErrorMessage(null);
     setResult(null);
+    setMaleResult(null);
     setIsLowQuality(false);
     setIsAnalyzing(true);
     setLoadingMessageIndex(0);
     setProgress(8);
 
     try {
-      const { features, isLowQuality: lowQuality } = await extractDiagnosisFeatures(file);
+      if (gender === "male") {
+        const { features, isLowQuality: lowQuality } = await extractMaleDiagnosisFeatures(file);
 
-      if (runId !== analysisRunRef.current) {
-        return;
+        if (runId !== analysisRunRef.current) {
+          return;
+        }
+
+        setIsLowQuality(lowQuality);
+        const maleRes = diagnoseMale(features);
+        setMaleResult(maleRes);
+        runLoadingSequence(
+          {
+            estimatedHeight: maleRes.estimatedHeight,
+            estimatedCup: "A",
+            heightDeviation: maleRes.heightDeviation,
+            cupDeviation: 50,
+            silhouetteType: "I",
+            confidence: maleRes.confidence,
+            similarCelebrity: maleRes.similarCelebrities[0]?.name ?? "",
+            similarCelebrities: maleRes.similarCelebrities,
+          },
+          runId
+        );
+      } else {
+        const { features, isLowQuality: lowQuality } = await extractDiagnosisFeatures(file);
+
+        if (runId !== analysisRunRef.current) {
+          return;
+        }
+
+        setIsLowQuality(lowQuality);
+        runLoadingSequence(diagnose(features), runId);
       }
-
-      setIsLowQuality(lowQuality);
-      runLoadingSequence(diagnose(features), runId);
     } catch {
       if (runId !== analysisRunRef.current) {
         return;
@@ -242,21 +276,48 @@ export default function AnalyzePage() {
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
                   画像を1枚アップロードすると、学習プロフィール画像から近い特徴を探して
-                  身長とカップサイズを推定します。
+                  {gender === "female" ? "身長とカップサイズを推定します。" : "身長を推定します。"}
                 </p>
               </div>
             </div>
 
             <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-                {DIAGNOSIS_MODEL_SUMMARY}
+                {gender === "female" ? DIAGNOSIS_MODEL_SUMMARY : MALE_DIAGNOSIS_MODEL_SUMMARY}
               </div>
               <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 sm:col-span-2">
-                {DIAGNOSIS_VALIDATION_LABEL}
+                {gender === "female" ? DIAGNOSIS_VALIDATION_LABEL : `固定テスト: 身長の7割が±${MALE_DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0}cm以内`}
               </div>
             </div>
           </div>
         </section>
+
+        <div className="mx-auto flex w-full max-w-sm rounded-full bg-slate-100 p-1 shadow-inner">
+          <button
+            type="button"
+            onClick={() => setGender("female")}
+            aria-pressed={gender === "female"}
+            className={`flex-1 rounded-full px-5 py-3 text-base font-bold transition ${
+              gender === "female"
+                ? "bg-pink-500 text-white shadow-lg shadow-pink-200 ring-1 ring-pink-300"
+                : "text-slate-500 hover:bg-white/80"
+            }`}
+          >
+            女性
+          </button>
+          <button
+            type="button"
+            onClick={() => setGender("male")}
+            aria-pressed={gender === "male"}
+            className={`flex-1 rounded-full px-5 py-3 text-base font-bold transition ${
+              gender === "male"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 ring-1 ring-blue-300"
+                : "text-slate-500 hover:bg-white/80"
+            }`}
+          >
+            男性
+          </button>
+        </div>
 
         <section
           id="model-performance"
@@ -462,39 +523,43 @@ export default function AnalyzePage() {
                     </span>
                   </article>
 
-                  <article className="rounded-[1.5rem] bg-rose-50 px-5 py-5 text-slate-900 ring-1 ring-rose-100">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-500">
-                      推定カップ
-                    </p>
-                    <p className="mt-3 text-4xl font-black">
-                      {result.estimatedCup}
-                      <span className="ml-1 text-xl font-bold text-slate-500">
-                        カップ
+                  {gender === "female" ? (
+                    <article className="rounded-[1.5rem] bg-rose-50 px-5 py-5 text-slate-900 ring-1 ring-rose-100">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-500">
+                        推定カップ
+                      </p>
+                      <p className="mt-3 text-4xl font-black">
+                        {result.estimatedCup}
+                        <span className="ml-1 text-xl font-bold text-slate-500">
+                          カップ
+                        </span>
+                      </p>
+                      <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-sm font-semibold text-rose-500 ring-1 ring-rose-100">
+                        偏差値 {result.cupDeviation}
                       </span>
-                    </p>
-                    <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-sm font-semibold text-rose-500 ring-1 ring-rose-100">
-                      偏差値 {result.cupDeviation}
-                    </span>
-                  </article>
+                    </article>
+                  ) : null}
 
-                  <article className="rounded-[1.5rem] border border-slate-200 bg-white px-5 py-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                      シルエットタイプ
-                    </p>
-                    <div className="mt-3 flex items-center gap-3">
-                      <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl font-black text-amber-700">
-                        {result.silhouetteType}
-                      </span>
-                      <div>
-                        <p className="text-lg font-bold text-slate-900">
-                          {silhouetteLabels[result.silhouetteType]}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          推定身長と推定カップの組み合わせから分類しています。
-                        </p>
+                  {gender === "female" ? (
+                    <article className="rounded-[1.5rem] border border-slate-200 bg-white px-5 py-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        シルエットタイプ
+                      </p>
+                      <div className="mt-3 flex items-center gap-3">
+                        <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl font-black text-amber-700">
+                          {result.silhouetteType}
+                        </span>
+                        <div>
+                          <p className="text-lg font-bold text-slate-900">
+                            {silhouetteLabels[result.silhouetteType]}
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            推定身長と推定カップの組み合わせから分類しています。
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </article>
+                    </article>
+                  ) : null}
 
                   <article className="rounded-[1.5rem] border border-slate-200 bg-white px-5 py-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -580,7 +645,9 @@ export default function AnalyzePage() {
                           {celebrity.name}
                         </p>
                         <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-500 ring-1 ring-slate-200">
-                          {celebrity.actualHeight}cm / {celebrity.cup}カップ
+                          {gender === "female"
+                            ? `${celebrity.actualHeight}cm / ${celebrity.cup}カップ`
+                            : `${celebrity.actualHeight}cm`}
                         </span>
                       </div>
                       <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
