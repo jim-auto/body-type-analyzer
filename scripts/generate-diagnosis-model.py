@@ -381,7 +381,7 @@ SOURCE_WEIGHT_PRESETS: dict[str, SourceWeightPreset] = {
         key="height-gate-cup-soft",
         description="Height hard gate with cup soft quality-collision penalties",
         family_weights={
-            "manual": TaskSourceWeights(height=0.0, cup=0.0, similarity=1.0),
+            "manual": TaskSourceWeights(height=1.0, cup=1.0, similarity=1.0),
         },
         quality_strength=0.7,
         collision_power=1.0,
