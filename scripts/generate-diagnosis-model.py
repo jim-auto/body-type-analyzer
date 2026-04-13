@@ -123,6 +123,7 @@ TRUSTED_LOCAL_SOURCES = {
     "media-iz.com",
     "mache.tv",
     "y6nvocam.gdl-entertainment.tokyo",
+    "manual",
 }
 CURATED_LOCAL_HEIGHT_SOURCES = set(TRUSTED_LOCAL_SOURCES)
 CURATED_LOCAL_CUP_SOURCES = set(TRUSTED_LOCAL_SOURCES)
