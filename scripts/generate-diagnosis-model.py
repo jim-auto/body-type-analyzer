@@ -380,7 +380,9 @@ SOURCE_WEIGHT_PRESETS: dict[str, SourceWeightPreset] = {
     "height-gate-cup-soft": SourceWeightPreset(
         key="height-gate-cup-soft",
         description="Height hard gate with cup soft quality-collision penalties",
-        family_weights={},
+        family_weights={
+            "manual": TaskSourceWeights(height=0.0, cup=0.0, similarity=1.0),
+        },
         quality_strength=0.7,
         collision_power=1.0,
         quality_gate_threshold=0.25,
@@ -490,6 +492,9 @@ def source_family_for_profile(profile: Profile) -> str:
 
     if source.startswith("idolprof-"):
         return "idolprof-derived"
+
+    if source == "manual":
+        return "manual"
 
     if source in TRUSTED_LOCAL_SOURCES:
         return "trusted-local"

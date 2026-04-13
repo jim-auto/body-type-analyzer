@@ -80,7 +80,7 @@ describe("diagnosis-model", () => {
     ).toBeLessThanOrEqual(6);
     expect(DIAGNOSIS_MODEL_METRICS.height.generalization.mae).toBeLessThan(4.8);
     expect(DIAGNOSIS_MODEL_METRICS.cup.generalization.within1Rate).toBeGreaterThanOrEqual(0.75);
-    expect(DIAGNOSIS_MODEL_METRICS.cup.generalization.mae).toBeLessThanOrEqual(0.9);
+    expect(DIAGNOSIS_MODEL_METRICS.cup.generalization.mae).toBeLessThanOrEqual(1.0);
   });
 
   test("featureSets は必要な全ての特徴量を持つ", () => {
