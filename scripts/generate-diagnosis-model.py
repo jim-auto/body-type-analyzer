@@ -11,7 +11,10 @@ from datetime import datetime, timezone
 from itertools import combinations, product
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
+
+POSE_MODEL_PATH = Path(__file__).resolve().parents[1] / "local-data" / "pose_landmarker_lite.task"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = REPO_ROOT / "public" / "data" / "diagnosis-model.json"
@@ -39,6 +42,8 @@ FEATURE_SETS = {
     "heightHistFull": [("full", 8, "gray_histogram"), ("full", 8, "edge_histogram")],
     "heightLbpFull": [("full", 8, "lbp"), ("fullCenter", 8, "lbp")],
     "heightDctFull": [("full", 12, "dct")],
+    "heightHogFull": [("full", 8, "hog"), ("fullCenter", 8, "hog")],
+    "heightPose": [],
     "cupPrimary": [("top", 8, "gray"), ("top", 12, "gray")],
     "cupSecondary": [("top", 8, "gray"), ("mid", 6, "gray")],
     "cupCenter": [("topCenter", 10, "gray"), ("torsoCenter", 8, "gray")],
@@ -47,6 +52,7 @@ FEATURE_SETS = {
     "cupHistTop": [("top", 8, "gray_histogram"), ("top", 8, "edge_histogram")],
     "cupLbpTop": [("top", 8, "lbp"), ("topCenter", 8, "lbp")],
     "cupDctTop": [("top", 12, "dct")],
+    "cupHogTop": [("top", 8, "hog"), ("topCenter", 8, "hog")],
     "similarity": [("full", 8, "gray"), ("top", 8, "gray")],
 }
 ORICON_HEIGHT_ALLOWLIST = {
@@ -69,6 +75,8 @@ HEIGHT_FEATURE_CANDIDATES = (
     "heightHistFull",
     "heightLbpFull",
     "heightDctFull",
+    "heightHogFull",
+    "heightPose",
 )
 CUP_FEATURE_CANDIDATES = (
     "cupPrimary",
@@ -79,6 +87,7 @@ CUP_FEATURE_CANDIDATES = (
     "cupHistTop",
     "cupLbpTop",
     "cupDctTop",
+    "cupHogTop",
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
@@ -95,8 +104,9 @@ FOCUS_MIN_HEIGHT_RATIO = 0.88
 FOCUS_HORIZONTAL_PADDING_RATIO = 0.1
 FOCUS_VERTICAL_PADDING_RATIO = 0.04
 ROBUST_HEIGHT_MODELS = (
-    ("heightBalanced", 7),
+    ("heightPrimary", 5),
     ("heightHistFull", 9),
+    ("heightDctFull", 15),
 )
 ROBUST_CUP_MODELS = (
     ("cupSecondary", 3),
@@ -832,6 +842,27 @@ def dct_features(values: list[float], size: int, coeff_count: int = 8) -> list[f
     return coefficients[:coeff_count * coeff_count]
 
 
+def hog_features(values: list[float], size: int, bin_count: int = 8) -> list[float]:
+    """Simplified Histogram of Oriented Gradients."""
+    bins = [0.0] * bin_count
+
+    for row in range(size):
+        for col in range(size):
+            left = values[row * size + max(0, col - 1)]
+            right = values[row * size + min(size - 1, col + 1)]
+            up = values[max(0, row - 1) * size + col]
+            down = values[min(size - 1, row + 1) * size + col]
+            gx = right - left
+            gy = down - up
+            magnitude = math.sqrt(gx * gx + gy * gy)
+            angle = math.atan2(gy, gx) + math.pi
+            bin_index = min(int(angle / (2 * math.pi) * bin_count), bin_count - 1)
+            bins[bin_index] += magnitude
+
+    total = sum(bins) if sum(bins) > 0 else 1
+    return [round(b / total, 4) for b in bins]
+
+
 def lbp_features(values: list[float], size: int, bin_count: int = 16) -> list[float]:
     """Simplified Local Binary Pattern histogram."""
     patterns: list[int] = []
@@ -900,6 +931,9 @@ def extract_feature_block(gray_image: Image.Image, region_name: str, size: int, 
     if mode == "dct":
         return dct_features(values, size)
 
+    if mode == "hog":
+        return hog_features(values, size)
+
     return values
 
 
@@ -914,6 +948,102 @@ def extract_features(gray_image: Image.Image, specs: list[tuple[str, int, str]])
 
 def euclidean_distance(left: list[float], right: list[float]) -> float:
     return math.sqrt(sum((l - r) ** 2 for l, r in zip(left, right, strict=True)))
+
+
+def landmark_distance(landmarks, a: int, b: int) -> float:
+    return math.sqrt(
+        (landmarks[a].x - landmarks[b].x) ** 2
+        + (landmarks[a].y - landmarks[b].y) ** 2
+    )
+
+
+def extract_pose_features_from_image(rgb_image: Image.Image, landmarker) -> list[float] | None:
+    import mediapipe as mp_lib
+
+    mp_image = mp_lib.Image(
+        image_format=mp_lib.ImageFormat.SRGB,
+        data=np.array(rgb_image),
+    )
+    result = landmarker.detect(mp_image)
+
+    if not result.pose_landmarks:
+        return None
+
+    lm = result.pose_landmarks[0]
+    shoulder_w = landmark_distance(lm, 11, 12)
+    hip_w = landmark_distance(lm, 23, 24)
+    torso_l = (landmark_distance(lm, 11, 23) + landmark_distance(lm, 12, 24)) / 2
+    left_leg = landmark_distance(lm, 23, 25) + landmark_distance(lm, 25, 27)
+    right_leg = landmark_distance(lm, 24, 26) + landmark_distance(lm, 26, 28)
+    leg_l = (left_leg + right_leg) / 2
+    arm_l = (landmark_distance(lm, 11, 13) + landmark_distance(lm, 12, 14)) / 2
+    nose_y = lm[0].y
+    ankle_y = (lm[27].y + lm[28].y) / 2
+    body_span = max(0.001, ankle_y - nose_y)
+
+    return [
+        round(shoulder_w, 4),
+        round(hip_w, 4),
+        round(torso_l, 4),
+        round(leg_l, 4),
+        round(body_span, 4),
+        round(shoulder_w / max(hip_w, 0.001), 4),
+        round(leg_l / max(torso_l, 0.001), 4),
+        round(torso_l / body_span, 4),
+        round(leg_l / body_span, 4),
+        round(arm_l, 4),
+        round(shoulder_w / body_span, 4),
+        round(hip_w / body_span, 4),
+    ]
+
+
+POSE_FEATURE_DIM = 12
+POSE_ZERO_FEATURES = [0.0] * POSE_FEATURE_DIM
+
+
+def build_pose_features(
+    rgb_images: list[Image.Image],
+) -> tuple[list[list[float]], list[bool]]:
+    try:
+        from mediapipe.tasks.python import vision as mp_vision, BaseOptions as MpBaseOptions
+    except ImportError:
+        print("mediapipe not available, skipping pose features")
+        return (
+            [list(POSE_ZERO_FEATURES) for _ in rgb_images],
+            [False] * len(rgb_images),
+        )
+
+    if not POSE_MODEL_PATH.exists():
+        print(f"Pose model not found at {POSE_MODEL_PATH}, skipping pose features")
+        return (
+            [list(POSE_ZERO_FEATURES) for _ in rgb_images],
+            [False] * len(rgb_images),
+        )
+
+    options = mp_vision.PoseLandmarkerOptions(
+        base_options=MpBaseOptions(model_asset_path=str(POSE_MODEL_PATH)),
+        running_mode=mp_vision.RunningMode.IMAGE,
+        min_pose_detection_confidence=0.2,
+    )
+    landmarker = mp_vision.PoseLandmarker.create_from_options(options)
+    features: list[list[float]] = []
+    detected: list[bool] = []
+
+    for rgb_image in rgb_images:
+        pose_feats = extract_pose_features_from_image(rgb_image, landmarker)
+
+        if pose_feats is not None:
+            features.append(pose_feats)
+            detected.append(True)
+        else:
+            features.append(list(POSE_ZERO_FEATURES))
+            detected.append(False)
+
+    landmarker.close()
+    detected_count = sum(detected)
+    print(f"Pose detection: {detected_count}/{len(rgb_images)} ({detected_count * 100 // len(rgb_images)}%)")
+
+    return features, detected
 
 
 def compute_normalization_stats(
@@ -2131,10 +2261,13 @@ def prepare_model_inputs(
     source_weight_preset: SourceWeightPreset,
 ) -> dict[str, object]:
     profiles = load_profiles()
-    gray_images = [
-        Image.open(resolve_image_path(profile.image)).convert("L") for profile in profiles
+    rgb_images = [
+        Image.open(resolve_image_path(profile.image)).convert("RGB") for profile in profiles
     ]
+    gray_images = [img.convert("L") for img in rgb_images]
     raw_feature_sets = build_feature_sets(gray_images, preset)
+    pose_features, pose_detected = build_pose_features(rgb_images)
+    raw_feature_sets["heightPose"] = pose_features
     normalization_stats = compute_normalization_stats(raw_feature_sets)
     feature_sets = normalize_feature_sets(raw_feature_sets, normalization_stats)
     profile_source_weights = [
@@ -2157,6 +2290,11 @@ def prepare_model_inputs(
         profile_source_weights,
         source_weight_preset,
     )
+
+    # Zero out pose weights for entries without detected pose
+    for index, detected in enumerate(pose_detected):
+        if not detected:
+            feature_weight_sets["heightPose"][index] = 0.0
 
     return {
         "profiles": profiles,

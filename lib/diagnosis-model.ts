@@ -30,6 +30,8 @@ export type DiagnosisFeatures = {
   heightHistFull: number[];
   heightLbpFull: number[];
   heightDctFull: number[];
+  heightHogFull: number[];
+  heightPose: number[];
   cupPrimary: number[];
   cupSecondary: number[];
   cupCenter: number[];
@@ -38,6 +40,7 @@ export type DiagnosisFeatures = {
   cupHistTop: number[];
   cupLbpTop: number[];
   cupDctTop: number[];
+  cupHogTop: number[];
   similarity: number[];
 };
 

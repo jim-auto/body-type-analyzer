@@ -51,6 +51,10 @@ const HEIGHT_FEATURE_SPECS = [
     { region: "fullCenter", size: 8, mode: "lbp" },
   ],
   [{ region: "full", size: 12, mode: "dct" }],
+  [
+    { region: "full", size: 8, mode: "hog" },
+    { region: "fullCenter", size: 8, mode: "hog" },
+  ],
 ] as const;
 const CUP_FEATURE_SPECS = [
   [
@@ -79,6 +83,10 @@ const CUP_FEATURE_SPECS = [
     { region: "topCenter", size: 8, mode: "lbp" },
   ],
   [{ region: "top", size: 12, mode: "dct" }],
+  [
+    { region: "top", size: 8, mode: "hog" },
+    { region: "topCenter", size: 8, mode: "hog" },
+  ],
 ] as const;
 const SIMILARITY_FEATURE_SPECS = [
   { region: "full", size: 8, mode: "gray" },
@@ -118,7 +126,7 @@ export const DIAGNOSIS_DISCLAIMERS = [
 ] as const;
 
 type FeatureRegion = keyof typeof REGION_BOUNDS;
-type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram" | "lbp" | "dct";
+type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram" | "lbp" | "dct" | "hog";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
 type FocusRange = { start: number; end: number };
 type FocusCropConfig = {
@@ -484,6 +492,33 @@ function lbpFromGrayscale(grayscale: number[], size: number, binCount = 16): num
   return bins.map((count) => roundFeature(count / total));
 }
 
+function hogFromGrayscale(grayscale: number[], size: number, binCount = 8): number[] {
+  const bins = Array.from({ length: binCount }, () => 0);
+
+  for (let row = 0; row < size; row += 1) {
+    for (let col = 0; col < size; col += 1) {
+      const left = grayscale[row * size + Math.max(0, col - 1)] ?? 0;
+      const right = grayscale[row * size + Math.min(size - 1, col + 1)] ?? 0;
+      const up = grayscale[Math.max(0, row - 1) * size + col] ?? 0;
+      const down = grayscale[Math.min(size - 1, row + 1) * size + col] ?? 0;
+      const gx = right - left;
+      const gy = down - up;
+      const magnitude = Math.sqrt(gx * gx + gy * gy);
+      const angle = Math.atan2(gy, gx) + Math.PI;
+      const binIndex = Math.min(
+        Math.floor((angle / (2 * Math.PI)) * binCount),
+        binCount - 1
+      );
+
+      bins[binIndex] += magnitude;
+    }
+  }
+
+  const total = bins.reduce((sum, b) => sum + b, 0) || 1;
+
+  return bins.map((b) => roundFeature(b / total));
+}
+
 function dct1d(vector: number[]): number[] {
   const n = vector.length;
   const scale = Math.sqrt(2 / n);
@@ -564,6 +599,10 @@ function extractFeatureBlock(image: HTMLCanvasElement, spec: FeatureSpec): numbe
 
   if (spec.mode === "dct") {
     return dctFromGrayscale(grayscale, spec.size);
+  }
+
+  if (spec.mode === "hog") {
+    return hogFromGrayscale(grayscale, spec.size);
   }
 
   return grayscale;
@@ -668,6 +707,100 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
+const POSE_FEATURE_DIM = 12;
+const POSE_ZERO_FEATURES = Array.from({ length: POSE_FEATURE_DIM }, () => 0);
+
+function landmarkDistance(
+  landmarks: Array<{ x: number; y: number }>,
+  a: number,
+  b: number
+): number {
+  const la = landmarks[a]!;
+  const lb = landmarks[b]!;
+
+  return Math.sqrt((la.x - lb.x) ** 2 + (la.y - lb.y) ** 2);
+}
+
+function computePoseFeatures(
+  landmarks: Array<{ x: number; y: number }>
+): number[] {
+  const shoulderW = landmarkDistance(landmarks, 11, 12);
+  const hipW = landmarkDistance(landmarks, 23, 24);
+  const torsoL =
+    (landmarkDistance(landmarks, 11, 23) + landmarkDistance(landmarks, 12, 24)) /
+    2;
+  const leftLeg =
+    landmarkDistance(landmarks, 23, 25) + landmarkDistance(landmarks, 25, 27);
+  const rightLeg =
+    landmarkDistance(landmarks, 24, 26) + landmarkDistance(landmarks, 26, 28);
+  const legL = (leftLeg + rightLeg) / 2;
+  const armL =
+    (landmarkDistance(landmarks, 11, 13) + landmarkDistance(landmarks, 12, 14)) /
+    2;
+  const noseY = landmarks[0]!.y;
+  const ankleY = (landmarks[27]!.y + landmarks[28]!.y) / 2;
+  const bodySpan = Math.max(0.001, ankleY - noseY);
+
+  return [
+    roundFeature(shoulderW),
+    roundFeature(hipW),
+    roundFeature(torsoL),
+    roundFeature(legL),
+    roundFeature(bodySpan),
+    roundFeature(shoulderW / Math.max(hipW, 0.001)),
+    roundFeature(legL / Math.max(torsoL, 0.001)),
+    roundFeature(torsoL / bodySpan),
+    roundFeature(legL / bodySpan),
+    roundFeature(armL),
+    roundFeature(shoulderW / bodySpan),
+    roundFeature(hipW / bodySpan),
+  ];
+}
+
+async function extractPoseFeatures(
+  image: HTMLImageElement
+): Promise<number[]> {
+  try {
+    const { PoseLandmarker, FilesetResolver } = await import(
+      "@mediapipe/tasks-vision"
+    );
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+    const landmarker = await PoseLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath:
+          "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+      },
+      runningMode: "IMAGE",
+      minPoseDetectionConfidence: 0.2,
+    });
+
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return POSE_ZERO_FEATURES;
+    }
+
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    context.drawImage(image, 0, 0);
+
+    const result = landmarker.detect(canvas);
+
+    landmarker.close();
+
+    if (!result.landmarks || result.landmarks.length === 0) {
+      return POSE_ZERO_FEATURES;
+    }
+
+    return computePoseFeatures(result.landmarks[0]);
+  } catch {
+    return POSE_ZERO_FEATURES;
+  }
+}
+
 export type DiagnosisFeatureResult = {
   features: DiagnosisFeatures;
   isLowQuality: boolean;
@@ -683,6 +816,8 @@ export async function extractDiagnosisFeatures(
 
   const isLowQuality = isLowInformationDiagnosisImageQuality(focusedQualityMetrics);
 
+  const poseFeatures = await extractPoseFeatures(image);
+
   const rawFeatures: DiagnosisFeatures = {
     heightPrimary: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[0]),
     heightBalanced: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[1]),
@@ -694,6 +829,8 @@ export async function extractDiagnosisFeatures(
     heightHistFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[7]),
     heightLbpFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[8]),
     heightDctFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[9]),
+    heightHogFull: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[10]),
+    heightPose: poseFeatures,
     cupPrimary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[0]),
     cupSecondary: extractFeatures(focusedImage, CUP_FEATURE_SPECS[1]),
     cupCenter: extractFeatures(focusedImage, CUP_FEATURE_SPECS[2]),
@@ -702,6 +839,7 @@ export async function extractDiagnosisFeatures(
     cupHistTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[5]),
     cupLbpTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[6]),
     cupDctTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[7]),
+    cupHogTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[8]),
     similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
   };
 
