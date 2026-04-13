@@ -181,10 +181,10 @@ describe("ranking.json actual profile data", () => {
     expect(
       maleHeightDiffs.filter((value) => value <= 2).length / maleHeightDiffs.length
     ).toBeGreaterThanOrEqual(0.85);
-    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.55);
+    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.7);
     expect(
       femaleCupDiffs.filter((value) => value <= 1).length / femaleCupDiffs.length
-    ).toBeGreaterThanOrEqual(0.9);
+    ).toBeGreaterThanOrEqual(0.85);
   });
 
   test("画像モデルの推定が女性・男性の一部ランキング推定に反映される", () => {

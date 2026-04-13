@@ -426,7 +426,13 @@ function voteCups(predictions: DiagnosisCup[]): {
   winningShare: number;
 } {
   const indices = predictions.map((p) => getCupIndex(p));
-  const avg = indices.reduce((sum, i) => sum + i, 0) / indices.length;
+  let avg = indices.reduce((sum, i) => sum + i, 0) / indices.length;
+  const maxIdx = Math.max(...indices);
+
+  if (maxIdx >= 5) {
+    avg += (maxIdx - avg) * 0.35;
+  }
+
   const roundedIndex = clamp(Math.round(avg), 0, DIAGNOSIS_CUP_ORDER.length - 1);
   const cup = DIAGNOSIS_CUP_ORDER[roundedIndex];
   const matching = predictions.filter((p) => p === cup).length;

@@ -1341,9 +1341,15 @@ def median_rounded(values: list[float]) -> int:
 
 
 def vote_cups(predictions: list[str]) -> str:
-    """Average cup indices from each model's prediction, then round."""
+    """Average cup indices with boost when models disagree toward large cups."""
     indices = [CUP_ORDER.index(p) for p in predictions]
     avg = sum(indices) / len(indices)
+    max_idx = max(indices)
+
+    if max_idx >= 5:  # At least one model predicts F+
+        boost = (max_idx - avg) * 0.35
+        avg += boost
+
     rounded = max(0, min(len(CUP_ORDER) - 1, js_round(avg)))
     return CUP_ORDER[rounded]
 
