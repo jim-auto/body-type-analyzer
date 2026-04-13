@@ -425,31 +425,15 @@ function voteCups(predictions: DiagnosisCup[]): {
   cup: DiagnosisCup;
   winningShare: number;
 } {
-  const scores = new Map<DiagnosisCup, number>(
-    DIAGNOSIS_CUP_ORDER.map((cup) => [cup, 0])
-  );
-
-  predictions.forEach((prediction) => {
-    scores.set(prediction, (scores.get(prediction) ?? 0) + 1);
-  });
-
-  const totalVotes = predictions.length;
-  const cup = DIAGNOSIS_CUP_ORDER.reduce((bestCup, currentCup) => {
-    const currentScore = scores.get(currentCup) ?? 0;
-    const bestScore = scores.get(bestCup) ?? 0;
-
-    if (currentScore !== bestScore) {
-      return currentScore > bestScore ? currentCup : bestCup;
-    }
-
-    return Math.abs(getCupIndex(currentCup) - 3) < Math.abs(getCupIndex(bestCup) - 3)
-      ? currentCup
-      : bestCup;
-  }, DIAGNOSIS_CUP_ORDER[0]);
+  const indices = predictions.map((p) => getCupIndex(p));
+  const avg = indices.reduce((sum, i) => sum + i, 0) / indices.length;
+  const roundedIndex = clamp(Math.round(avg), 0, DIAGNOSIS_CUP_ORDER.length - 1);
+  const cup = DIAGNOSIS_CUP_ORDER[roundedIndex];
+  const matching = predictions.filter((p) => p === cup).length;
 
   return {
     cup,
-    winningShare: (scores.get(cup) ?? 0) / totalVotes,
+    winningShare: matching / predictions.length,
   };
 }
 

@@ -1341,12 +1341,11 @@ def median_rounded(values: list[float]) -> int:
 
 
 def vote_cups(predictions: list[str]) -> str:
-    scores = {cup: 0 for cup in CUP_ORDER}
-
-    for prediction in predictions:
-        scores[prediction] += 1
-
-    return max(CUP_ORDER, key=lambda cup: (scores[cup], -abs(CUP_ORDER.index(cup) - 3)))
+    """Average cup indices from each model's prediction, then round."""
+    indices = [CUP_ORDER.index(p) for p in predictions]
+    avg = sum(indices) / len(indices)
+    rounded = max(0, min(len(CUP_ORDER) - 1, js_round(avg)))
+    return CUP_ORDER[rounded]
 
 
 def evaluate_height_models(
