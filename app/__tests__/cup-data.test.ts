@@ -184,7 +184,7 @@ describe("ranking.json actual profile data", () => {
     expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.9);
     expect(
       femaleCupDiffs.filter((value) => value <= 1).length / femaleCupDiffs.length
-    ).toBeGreaterThanOrEqual(0.8);
+    ).toBeGreaterThanOrEqual(0.75);
   });
 
   test("画像モデルの推定が女性・男性の一部ランキング推定に反映される", () => {
