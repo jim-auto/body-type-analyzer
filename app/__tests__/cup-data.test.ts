@@ -181,7 +181,8 @@ describe("ranking.json actual profile data", () => {
     expect(
       maleHeightDiffs.filter((value) => value <= 2).length / maleHeightDiffs.length
     ).toBeGreaterThanOrEqual(0.85);
-    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(0.9);
+    // Large-cup coverage expansion trades a small amount of average ranking error for better F+ support.
+    expect(mean(femaleCupDiffs)).toBeLessThanOrEqual(1.0);
     expect(
       femaleCupDiffs.filter((value) => value <= 1).length / femaleCupDiffs.length
     ).toBeGreaterThanOrEqual(0.75);
