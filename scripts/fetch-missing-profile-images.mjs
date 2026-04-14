@@ -7,6 +7,8 @@ import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
 
 const THROTTLE_MS = Number(process.env.THROTTLE_MS ?? 1200);
+const TARGET_LIMIT = Number(process.env.LIMIT ?? 0);
+const FLUSH_EVERY = Number(process.env.FLUSH_EVERY ?? 25);
 const USER_AGENT = "body-type-analyzer/1.0 (local task automation)";
 const execFileAsync = promisify(execFile);
 
@@ -120,6 +122,52 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function hasLatin(value) {
+  return /[A-Za-z]/.test(value);
+}
+
+function normalizeText(value) {
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s\p{P}\p{S}]+/gu, "");
+}
+
+function matchesWholeLatinWord(text, value) {
+  return new RegExp(
+    `(^|[^A-Za-z0-9])${escapeRegex(value)}([^A-Za-z0-9]|$)`,
+    "i"
+  ).test(text);
+}
+
+function titleMatchesVariantExactly(title, variant) {
+  if (!variant) {
+    return false;
+  }
+
+  if (hasLatin(variant)) {
+    return title.trim().localeCompare(variant, undefined, {
+      sensitivity: "accent",
+    }) === 0;
+  }
+
+  return normalizeText(title) === normalizeText(variant);
+}
+
+function titleStartsWithVariant(title, variant) {
+  if (!variant) {
+    return false;
+  }
+
+  if (hasLatin(variant)) {
+    return new RegExp(`^${escapeRegex(variant)}([^A-Za-z0-9]|$)`, "i").test(
+      title.trim()
+    );
+  }
+
+  return normalizeText(title).startsWith(normalizeText(variant));
+}
+
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -134,13 +182,43 @@ function buildSummaryUrl(language, title) {
   )}`;
 }
 
+function buildSearchUrl(language, query) {
+  const url = new URL(`https://${language}.wikipedia.org/w/api.php`);
+  url.searchParams.set("action", "query");
+  url.searchParams.set("format", "json");
+  url.searchParams.set("formatversion", "2");
+  url.searchParams.set("generator", "search");
+  url.searchParams.set("gsrlimit", "5");
+  url.searchParams.set("prop", "pageimages");
+  url.searchParams.set("pithumbsize", "400");
+  url.searchParams.set("gsrsearch", query);
+  return url.toString();
+}
+
 function getSummarySource(payload) {
-  return payload?.thumbnail?.source ?? payload?.originalimage?.source ?? null;
+  const candidates = [payload?.thumbnail?.source, payload?.originalimage?.source];
+  return candidates.find((source) => isUsableImageSource(source)) ?? null;
 }
 
 function shouldConvertPng(sourceUrl) {
   const lower = sourceUrl.toLowerCase();
   return !lower.includes("logo") && !lower.includes(".svg.png");
+}
+
+function isUsableImageSource(sourceUrl) {
+  if (!sourceUrl || typeof sourceUrl !== "string") {
+    return false;
+  }
+
+  const lower = sourceUrl.toLowerCase();
+
+  return !(
+    lower.includes(".svg.png") ||
+    lower.includes("logo") ||
+    lower.includes("flag_of_") ||
+    lower.includes("replace_this_image") ||
+    lower.includes("gthumb")
+  );
 }
 
 async function throttledFetch(url, attempt = 0) {
@@ -206,6 +284,61 @@ async function lookupByTitles(language, titles) {
   return null;
 }
 
+function getSearchSource(payload, variants) {
+  const pages = payload?.query?.pages ?? [];
+
+  const scored = pages
+    .map((page) => {
+      const source = page?.thumbnail?.source ?? null;
+      const title = String(page?.title ?? "");
+
+      if (!isUsableImageSource(source)) {
+        return null;
+      }
+
+      let score = 0;
+
+      for (const variant of variants) {
+        if (titleMatchesVariantExactly(title, variant)) {
+          score = Math.max(score, 3);
+        } else if (titleStartsWithVariant(title, variant)) {
+          score = Math.max(score, 2);
+        } else if (
+          !hasLatin(variant) &&
+          normalizeText(title).includes(normalizeText(variant))
+        ) {
+          score = Math.max(score, 1);
+        } else if (hasLatin(variant) && matchesWholeLatinWord(title, variant)) {
+          score = Math.max(score, 1);
+        }
+      }
+
+      if (score === 0) {
+        return null;
+      }
+
+      return { score, source, title };
+    })
+    .filter(Boolean)
+    .sort((left, right) => right.score - left.score);
+
+  return scored[0] ?? null;
+}
+
+async function lookupBySearch(language, queries, variants) {
+  for (const query of queries) {
+    const response = await throttledFetch(buildSearchUrl(language, query));
+    const payload = await response.json();
+    const result = getSearchSource(payload, variants);
+
+    if (result) {
+      return { source: result.source, locator: `${language}:search:${query}` };
+    }
+  }
+
+  return null;
+}
+
 function stripParenthetical(value) {
   return value
     .replace(/\([^)]*\)/g, " ")
@@ -249,10 +382,6 @@ function buildSearchQueries(name, gender) {
   }
 
   return unique(queries);
-}
-
-function hasLatin(value) {
-  return /[A-Za-z]/.test(value);
 }
 
 function makeFilename(name) {
@@ -307,11 +436,17 @@ async function loadProfiles() {
 
 async function resolveImageSource(target) {
   const jaTitles = target.jaTitles ?? [target.name];
+  const jaSearch = target.jaSearch ?? [target.name];
   const enTitles = target.enTitles ?? [];
+  const enSearch = target.enSearch ?? enTitles;
+  const jaVariants = unique([...jaTitles, ...jaSearch]);
+  const enVariants = unique([...enTitles, ...enSearch]);
 
   return (
     (await lookupByTitles("ja", jaTitles)) ??
-    (enTitles.length > 0 ? await lookupByTitles("en", enTitles) : null)
+    (await lookupBySearch("ja", jaSearch, jaVariants)) ??
+    (enTitles.length > 0 ? await lookupByTitles("en", enTitles) : null) ??
+    (enSearch.length > 0 ? await lookupBySearch("en", enSearch, enVariants) : null)
   );
 }
 
@@ -410,6 +545,15 @@ async function updateFetchSourceProfiles(replacements) {
   await fs.writeFile(FETCH_SOURCE_PROFILES_PATH, updated);
 }
 
+async function flushReplacements(replacements) {
+  if (replacements.size === 0) {
+    return;
+  }
+
+  await updateSourceProfiles(replacements);
+  await updateFetchSourceProfiles(replacements);
+}
+
 async function main() {
   const { femaleProfilePool, maleProfilePool } = await loadProfiles();
 
@@ -438,13 +582,33 @@ async function main() {
   const targets = [...femaleTargets, ...maleTargets].filter(
     (target) => onlyNames.size === 0 || onlyNames.has(target.name)
   );
+  const limitedTargets =
+    TARGET_LIMIT > 0 ? targets.slice(0, TARGET_LIMIT) : targets;
   const replacements = new Map();
   const failures = [];
+  let downloadedCount = 0;
+  let reusedCount = 0;
 
-  for (const target of targets) {
+  for (const target of limitedTargets) {
     const outputPath = path.join(IMAGES_DIR, `${target.filename}.jpg`);
+    const imagePath = `/images/${target.filename}.jpg`;
 
     try {
+      try {
+        await fs.access(outputPath);
+        replacements.set(target.name, imagePath);
+        reusedCount += 1;
+
+        if (replacements.size % FLUSH_EVERY === 0) {
+          await flushReplacements(replacements);
+        }
+
+        console.log(`${target.name} -> cached`);
+        continue;
+      } catch {
+        // Download the image when the cached file does not exist yet.
+      }
+
       const resolved = await resolveImageSource(target);
 
       if (!resolved) {
@@ -454,7 +618,13 @@ async function main() {
       }
 
       await downloadImage(resolved.source, outputPath);
-      replacements.set(target.name, `/images/${target.filename}.jpg`);
+      replacements.set(target.name, imagePath);
+      downloadedCount += 1;
+
+      if (replacements.size % FLUSH_EVERY === 0) {
+        await flushReplacements(replacements);
+      }
+
       console.log(`${target.name} -> ${resolved.locator}`);
     } catch (error) {
       failures.push({
@@ -465,16 +635,16 @@ async function main() {
     }
   }
 
-  if (replacements.size > 0) {
-    await updateSourceProfiles(replacements);
-    await updateFetchSourceProfiles(replacements);
-  }
+  await flushReplacements(replacements);
 
   console.log(
     JSON.stringify(
       {
-        requested: targets.length,
+        requested: limitedTargets.length,
+        totalTargets: targets.length,
         updated: replacements.size,
+        downloaded: downloadedCount,
+        reused: reusedCount,
         failed: failures.length,
         failures,
       },
