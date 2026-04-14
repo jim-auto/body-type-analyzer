@@ -1,55 +1,64 @@
 # Handoff Plan For Claude
 
-Updated: 2026-04-13 JST
+Updated: 2026-04-14 JST
 Repo: `body-type-analyzer`
 Public site: `https://jim-auto.github.io/body-type-analyzer/`
 
 ## 1. Current Model Performance
 
-Female (116 entries, 22 feature sets):
+Female (149 entries, 22+ feature sets):
 
-- Height LOOCV MAE: `4.560cm`, 3-split: `3.992cm`, 70% coverage: `+/-5.0cm`
-- Cup LOOCV MAE: `1.017`, within1Rate: `78.4%`
+- Height LOOCV MAE: `4.89cm`, 3-split: `~4.4cm`
+- Cup G MAE: `1.07` (within1 71%), Cup F MAE: `0.81` (within1 81%)
+- Cup distribution balanced: A:26, B:31, C:18, D:19, E:11, F:16, G:14, H:14
 - Height models: `heightPrimary k=5 + heightHistFull k=9 + heightDctFull k=15`
-- Cup models: `cupSecondary k=3 + cupEdgeTop k=3 + cupHistTop k=13`
+- Cup models: `cupSecondary k=3 + cupHistTop k=13 + cupPose k=1`
 
 Male (66 entries, 9 feature sets):
 
-- Height LOOCV MAE: `4.152cm`
-- Height models: `heightProfile k=3 + heightHistFull k=15 + heightHogFull k=3`
+- Height LOOCV MAE: `4.15cm`
 
-## 2. Feature Extraction (9 modes)
+## 2. Key Architecture Changes in This Session
 
-`gray`, `profile`, `edge`, `gray_histogram`, `edge_histogram`, `lbp`, `dct`, `hog`, `pose`
-
-## 3. Key Architecture
-
-- Z-score normalization per feature dimension
-- Height-only horizontal flip augmentation at training time
-- Gated entry exclusion (low-quality entries removed from model JSON)
+- Z-score normalization, histogram/LBP/DCT/HOG features, pose features
+- Height-only horizontal flip augmentation
+- Gender selection on AI diagnosis page (female/male)
 - Soft quality handling (warning banner instead of hard reject)
-- Gender selection on AI diagnosis page (female: height+cup, male: height only)
-- MediaPipe Pose features (Python + browser CDN lazy load)
-- Weight preset: `height-gate-cup-soft`
-- AI ranking weight: female 0.7, male 0.3
-- Ranking UI shows AI accuracy info banner
+- Cup ensemble: index averaging with large-cup boost (0.35 factor)
+- 35 gravure/model images auto-collected via Playwright+Bing
+- Gated entry exclusion from model JSON
 
-## 4. What Was Tried And Did NOT Work
+## 3. Cup Prediction Architecture
 
-- Expanding trusted data sources (lower quality worsened metrics)
-- CNN features / MobileNetV2 (generic ImageNet features worse than hand-crafted)
-- Flip augmentation on cup features (asymmetric features matter)
+Three models vote by averaging cup indices:
+1. `cupSecondary k=3` - pixel features (good for A-E)
+2. `cupHistTop k=13` - histogram features (style-semi-invariant)
+3. `cupPose k=1` - body proportions from MediaPipe (style-invariant, good for F-H)
 
-## 5. What Would Move The Needle
+When any model predicts F+, a boost factor (0.35) pulls the average upward.
+This prevents the A-D majority in training data from dominating large-cup predictions.
 
-1. High-quality training image curation (requires human judgment)
-2. Domain-specific CNN fine-tuning (requires GPU + large dataset)
+## 4. What Was Tried
+
+- CNN features (MobileNetV2): worse than hand-crafted
+- Expanding trusted data sources: quality too low
+- Class-balanced kNN voting: too aggressive
+- Regression-only cup prediction: hurt A-B accuracy
+- Various pose weight ratios: trade-off between A-B and G-H
+
+## 5. Image Collection Pipeline
+
+```bash
+# Playwright + Bing image search (automated)
+python scripts/add-busty-profiles.py  # batch add profiles
+# Images downloaded to local-data/training-images/ (gitignored)
+```
 
 ## 6. Verification
 
 ```bash
-npm test -- --runInBand   # 100 tests pass
-npm run build             # Static export succeeds
+npm test -- --runInBand   # 100 tests
+npm run build
 ```
 
 ## 7. Useful Commands
@@ -58,5 +67,4 @@ npm run build             # Static export succeeds
 npm run generate:diagnosis-model
 python scripts/generate-male-ranking-model.py
 node scripts/generate-ranking.mjs
-npm run experiment:diagnosis-model
 ```
