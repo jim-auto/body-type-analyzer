@@ -44,7 +44,6 @@ const knownAmbiguousImageNames = [
   "MALIA.",
   "衛藤美彩",
   "鎌倉美咲",
-  "マギー",
   "若槻千夏",
   "向井理",
   "中村倫也",

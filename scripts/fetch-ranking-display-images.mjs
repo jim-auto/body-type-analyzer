@@ -20,6 +20,8 @@ const FETCH_SOURCE_PROFILES_PATH = path.join(
   "fetch-source-profiles.mjs"
 );
 const IMAGES_DIR = path.join(process.cwd(), "public", "images");
+const IDOLPROF_SEARCH_URL =
+  "https://idolprof.com/wp-json/wp/v2/yada_wiki?search=%s&per_page=5";
 
 const FEMALE_IDOLPROF_NAMES = [
   "松本さゆき",
@@ -182,6 +184,18 @@ function decodeHtmlEntities(value) {
     .replace(/&#x27;/giu, "'");
 }
 
+function isUnusableIdolprofImageUrl(sourceUrl) {
+  const lower = sourceUrl.toLowerCase();
+
+  return (
+    lower.includes("8y9bdlnv_400x400.png") ||
+    lower.includes("no-image-160.png") ||
+    lower.includes("404.png") ||
+    lower.includes("site-icon") ||
+    lower.includes("ws-fe.amazon-adsystem.com")
+  );
+}
+
 async function fetchText(url) {
   const response = await fetch(url, {
     headers: {
@@ -220,7 +234,11 @@ function normalizeIdolprofImageUrl(sourceUrl) {
   }
 
   if (sourceUrl.startsWith("//")) {
-    return `https:${sourceUrl}`;
+    sourceUrl = `https:${sourceUrl}`;
+  }
+
+  if (isUnusableIdolprofImageUrl(sourceUrl)) {
+    throw new Error(`Unusable idolprof image: ${sourceUrl}`);
   }
 
   const parsed = new URL(sourceUrl);
@@ -231,6 +249,29 @@ function normalizeIdolprofImageUrl(sourceUrl) {
   }
 
   return sourceUrl;
+}
+
+async function resolveIdolprofLandingUrl(name) {
+  const searchUrl = IDOLPROF_SEARCH_URL.replace("%s", encodeURIComponent(name));
+  const response = await fetch(searchUrl, {
+    headers: {
+      "user-agent": USER_AGENT,
+      "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Idolprof search failed (${response.status}) for ${name}`);
+  }
+
+  const results = await response.json();
+  const exact = results.find((entry) => entry?.title?.rendered === name);
+
+  if (!exact) {
+    return null;
+  }
+
+  return `https://idolprof.com/wiki/${exact.slug}/`;
 }
 
 function extractFirstMatch(html, landingUrl, patterns) {
@@ -404,9 +445,35 @@ async function main() {
       .map((value) => value.trim())
       .filter(Boolean)
   );
-  const targets = TARGETS.filter(
+  const configuredTargets = TARGETS.filter(
     (target) => onlyNames.size === 0 || onlyNames.has(target.name)
   );
+  const configuredTargetNames = new Set(
+    configuredTargets.map((target) => target.name)
+  );
+  const autoIdolprofTargets = [];
+
+  if (process.env.AUTO_IDOLPROF_EXACT === "1" && onlyNames.size > 0) {
+    for (const name of onlyNames) {
+      if (configuredTargetNames.has(name)) {
+        continue;
+      }
+
+      const landingUrl = await resolveIdolprofLandingUrl(name);
+
+      if (!landingUrl) {
+        continue;
+      }
+
+      autoIdolprofTargets.push({
+        name,
+        kind: "idolprof",
+        landingUrl,
+      });
+    }
+  }
+
+  const targets = [...configuredTargets, ...autoIdolprofTargets];
   const refreshExisting = process.env.REFRESH_EXISTING === "1";
   const replacements = new Map();
   const failures = [];
