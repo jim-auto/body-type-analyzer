@@ -9,16 +9,7 @@ const FEMALE_CUP_PAGE_SLUGS = {
   H: "h%e3%82%ab%e3%83%83%e3%83%97",
 };
 
-const FEMALE_QUOTAS = {
-  A: 7,
-  B: 22,
-  C: 26,
-  D: 22,
-  E: 13,
-  F: 6,
-  G: 3,
-  H: 1,
-};
+const FEMALE_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 const FEMALE_PREFERRED_NAMES = [
   "新垣結衣",
@@ -478,7 +469,7 @@ async function fetchMaleEntriesForHeight(height) {
 async function buildFemaleProfiles() {
   const buckets = {};
 
-  for (const cup of Object.keys(FEMALE_QUOTAS)) {
+  for (const cup of FEMALE_CUP_ORDER) {
     buckets[cup] = await fetchFemaleCupEntries(cup);
   }
 
@@ -486,9 +477,8 @@ async function buildFemaleProfiles() {
   const selected = [];
   const seenNames = new Set();
 
-  for (const [cup, quota] of Object.entries(FEMALE_QUOTAS)) {
+  for (const cup of FEMALE_CUP_ORDER) {
     const bucket = [...buckets[cup]].sort(sorter);
-    let selectedForCup = 0;
 
     for (const entry of bucket) {
       if (seenNames.has(entry.name)) {
@@ -503,16 +493,11 @@ async function buildFemaleProfiles() {
         cup: entry.cup,
       });
       seenNames.add(entry.name);
-      selectedForCup += 1;
-
-      if (selectedForCup >= quota) {
-        break;
-      }
     }
   }
 
-  if (selected.length !== 100) {
-    throw new Error(`Expected 100 female profiles, received ${selected.length}`);
+  if (selected.length === 0) {
+    throw new Error("Expected at least one female profile");
   }
 
   return selected;
@@ -539,10 +524,10 @@ async function buildMaleProfiles() {
     }
   }
 
-  const selected = pool.sort(preferredSort(MALE_PREFERRED_NAMES)).slice(0, 100);
+  const selected = pool.sort(preferredSort(MALE_PREFERRED_NAMES));
 
-  if (selected.length !== 100) {
-    throw new Error(`Expected 100 male profiles, received ${selected.length}`);
+  if (selected.length === 0) {
+    throw new Error("Expected at least one male profile");
   }
 
   return selected;

@@ -151,18 +151,19 @@ describe("Home (Ranking Page)", () => {
   test("ランキングは20人ずつページ送りできる", () => {
     const firstPageTop = femaleStyleCategory.ranking[0];
     const secondPageTop = femaleStyleCategory.ranking[20];
+    const totalLabel = `${femaleStyleCategory.ranking.length}人`;
 
     renderHome();
 
     expect(screen.getByText(firstPageTop.name)).toBeInTheDocument();
     expect(screen.queryByText(secondPageTop.name)).not.toBeInTheDocument();
-    expect(screen.getByText("1-20位 / 100人")).toBeInTheDocument();
+    expect(screen.getByText(`1-20位 / ${totalLabel}`)).toBeInTheDocument();
 
     clickNextPage();
 
     expect(screen.queryByText(firstPageTop.name)).not.toBeInTheDocument();
     expect(screen.getByText(secondPageTop.name)).toBeInTheDocument();
-    expect(screen.getByText("21-40位 / 100人")).toBeInTheDocument();
+    expect(screen.getByText(`21-40位 / ${totalLabel}`)).toBeInTheDocument();
   });
 
   test("男女切り替え時にカテゴリタブが最初に戻る", () => {

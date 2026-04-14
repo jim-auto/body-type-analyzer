@@ -121,11 +121,13 @@ function getEstimatedCupDetail(entry: FemaleRankingEntry): string {
 
 function DistributionSeriesCard({
   title,
+  total,
   buckets,
   tone,
   referencePrefix,
 }: {
   title: string;
+  total: number;
   buckets: DistributionBucket[];
   tone: "rose" | "sky";
   referencePrefix?: (label: string) => string | null;
@@ -144,7 +146,7 @@ function DistributionSeriesCard({
         <h4 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-700">
           {title}
         </h4>
-        <span className="text-xs text-slate-400">100人ベース</span>
+        <span className="text-xs text-slate-400">{total}人ベース</span>
       </div>
 
       <div className="space-y-3">
@@ -453,6 +455,7 @@ export default function HomePageClient({
               <div className="mt-5 grid gap-4 xl:grid-cols-2">
                 <DistributionSeriesCard
                   title={femaleCupDistribution.publicSeries.title}
+                  total={femaleCupDistribution.total}
                   buckets={femaleCupDistribution.publicSeries.buckets}
                   tone="rose"
                   referencePrefix={(label) => {
@@ -471,6 +474,7 @@ export default function HomePageClient({
                 />
                 <DistributionSeriesCard
                   title={femaleCupDistribution.estimatedSeries.title}
+                  total={femaleCupDistribution.total}
                   buckets={femaleCupDistribution.estimatedSeries.buckets}
                   tone="rose"
                 />
@@ -490,11 +494,13 @@ export default function HomePageClient({
               <div className="mt-5 grid gap-4 xl:grid-cols-2">
                 <DistributionSeriesCard
                   title={maleHeightDistribution.publicSeries.title}
+                  total={maleHeightDistribution.total}
                   buckets={maleHeightDistribution.publicSeries.buckets}
                   tone="sky"
                 />
                 <DistributionSeriesCard
                   title={maleHeightDistribution.estimatedSeries.title}
+                  total={maleHeightDistribution.total}
                   buckets={maleHeightDistribution.estimatedSeries.buckets}
                   tone="sky"
                 />

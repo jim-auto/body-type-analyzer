@@ -23,7 +23,7 @@ const CUP_MEDIAN_BUST_BY_ACTUAL = {
   G: 90,
   H: 89,
 } as const;
-const CUP_MEDIAN_TRUST_BAND_CM = 3;
+const CUP_MEDIAN_TRUST_BAND_CM = 4;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
