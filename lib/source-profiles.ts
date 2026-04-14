@@ -78,7 +78,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "菊池亜希子",
-    image: "https://ui-avatars.com/api/?name=%E8%8F%8A%E6%B1%A0%E4%BA%9C%E5%B8%8C%E5%AD%90&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e88f8ae6b1a0_63362375.jpg",
     actualHeight: 173,
     bust: 80,
     cup: "A",
@@ -176,7 +176,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "春輝",
-    image: "https://ui-avatars.com/api/?name=%E6%98%A5%E8%BC%9D&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e698a5e8bc9d_13946a89.jpg",
     actualHeight: 174,
     bust: 83,
     cup: "A",
@@ -190,7 +190,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "小泉深雪",
-    image: "https://ui-avatars.com/api/?name=%E5%B0%8F%E6%B3%89%E6%B7%B1%E9%9B%AA&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e5b08fe6b389_aa01f885.jpg",
     actualHeight: 179,
     bust: 83,
     cup: "A",
@@ -267,7 +267,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "中村明花",
-    image: "https://ui-avatars.com/api/?name=%E4%B8%AD%E6%9D%91%E6%98%8E%E8%8A%B1&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e4b8ade69d91_0616b591.jpg",
     actualHeight: 175,
     bust: 82,
     cup: "A",
@@ -1100,7 +1100,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "ケリー",
-    image: "https://ui-avatars.com/api/?name=%E3%82%B1%E3%83%AA%E3%83%BC&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e382b1e383aa_1218fbde.jpg",
     actualHeight: 174,
     bust: 80,
     cup: "C",
@@ -1653,7 +1653,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "青宮鑑",
-    image: "https://ui-avatars.com/api/?name=%E9%9D%92%E5%AE%AE%E9%91%91&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e99d92e5aeae_202f1404.jpg",
     actualHeight: 173,
     bust: 85,
     cup: "C",
@@ -3844,7 +3844,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "佐藤江梨子",
-    image: "https://ui-avatars.com/api/?name=%E4%BD%90%E8%97%A4%E6%B1%9F%E6%A2%A8%E5%AD%90&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e4bd90e897a4_c6b9411f.jpg",
     actualHeight: 173,
     bust: 88,
     cup: "E",
@@ -4285,7 +4285,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "相沢菜々子",
-    image: "https://ui-avatars.com/api/?name=%E7%9B%B8%E6%B2%A2%E8%8F%9C%E3%80%85%E5%AD%90&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e79bb8e6b2a2_6bd3c141.jpg",
     actualHeight: 173,
     bust: 84,
     cup: "E",
@@ -6105,7 +6105,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "木村あやね",
-    image: "https://ui-avatars.com/api/?name=%E6%9C%A8%E6%9D%91%E3%81%82%E3%82%84%E3%81%AD&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e69ca8e69d91_24f4e901.jpg",
     actualHeight: 173,
     bust: 89,
     cup: "F",
@@ -6840,7 +6840,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "松本さゆき",
-    image: "https://ui-avatars.com/api/?name=%E6%9D%BE%E6%9C%AC%E3%81%95%E3%82%86%E3%81%8D&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e69dbee69cac_9c9f8d00.jpg",
     actualHeight: 172,
     bust: 91,
     cup: "G",
@@ -7029,7 +7029,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "爽香",
-    image: "https://ui-avatars.com/api/?name=%E7%88%BD%E9%A6%99&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e788bde9a699_aa511e67.jpg",
     actualHeight: 173,
     bust: 100,
     cup: "G",
@@ -7253,7 +7253,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "奈月セナ",
-    image: "https://ui-avatars.com/api/?name=%E5%A5%88%E6%9C%88%E3%82%BB%E3%83%8A&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e5a588e69c88_5151f217.jpg",
     actualHeight: 172,
     bust: 88,
     cup: "G",
@@ -7568,7 +7568,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "愛川ゆず季",
-    image: "https://ui-avatars.com/api/?name=%E6%84%9B%E5%B7%9D%E3%82%86%E3%81%9A%E5%AD%A3&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e6849be5b79d_3e2dd344.jpg",
     actualHeight: 157,
     bust: 100,
     cup: "H",
@@ -7610,7 +7610,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "夏来唯",
-    image: "https://ui-avatars.com/api/?name=%E5%A4%8F%E6%9D%A5%E5%94%AF&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e5a48fe69da5_2d1aafe4.jpg",
     actualHeight: 163,
     bust: 95,
     cup: "H",
@@ -7652,7 +7652,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "喜多愛",
-    image: "https://ui-avatars.com/api/?name=%E5%96%9C%E5%A4%9A%E6%84%9B&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e5969ce5a49a_95e73477.jpg",
     actualHeight: 163,
     bust: 95,
     cup: "H",
@@ -7715,7 +7715,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "山咲まりな",
-    image: "https://ui-avatars.com/api/?name=%E5%B1%B1%E5%92%B2%E3%81%BE%E3%82%8A%E3%81%AA&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e5b1b1e592b2_73d2e85b.jpg",
     actualHeight: 168,
     bust: 93,
     cup: "H",
@@ -7806,7 +7806,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "水咲優美",
-    image: "https://ui-avatars.com/api/?name=%E6%B0%B4%E5%92%B2%E5%84%AA%E7%BE%8E&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e6b0b4e592b2_6b01112d.jpg",
     actualHeight: 164,
     bust: 106,
     cup: "H",
@@ -7862,7 +7862,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "潮崎まりん",
-    image: "https://ui-avatars.com/api/?name=%E6%BD%AE%E5%B4%8E%E3%81%BE%E3%82%8A%E3%82%93&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e6bdaee5b48e_76650e9b.jpg",
     actualHeight: 171,
     bust: 90,
     cup: "H",
@@ -7883,14 +7883,14 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "天羽結愛",
-    image: "https://ui-avatars.com/api/?name=%E5%A4%A9%E7%BE%BD%E7%B5%90%E6%84%9B&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e5a4a9e7bebd_5977448d.jpg",
     actualHeight: 158,
     bust: 94,
     cup: "H",
   },
   {
     name: "天野ちよ",
-    image: "https://ui-avatars.com/api/?name=%E5%A4%A9%E9%87%8E%E3%81%A1%E3%82%88&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e5a4a9e9878e_1d358383.jpg",
     actualHeight: 169,
     bust: 92,
     cup: "H",
@@ -7911,7 +7911,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "日向葵衣",
-    image: "https://ui-avatars.com/api/?name=%E6%97%A5%E5%90%91%E8%91%B5%E8%A1%A3&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e697a5e59091_bcbf282a.jpg",
     actualHeight: 154,
     bust: 95,
     cup: "H",
@@ -10770,7 +10770,7 @@ export const maleProfilePool: MaleProfileSource[] = [
   },
   {
     name: "上杉柊平",
-    image: "https://ui-avatars.com/api/?name=%E4%B8%8A%E6%9D%89%E6%9F%8A%E5%B9%B3&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e4b88ae69d89_cd091724.jpg",
     actualHeight: 185,
   },
   {
@@ -12915,7 +12915,7 @@ export const maleProfilePool: MaleProfileSource[] = [
   },
   {
     name: "濱尾ノリタカ",
-    image: "https://ui-avatars.com/api/?name=%E6%BF%B1%E5%B0%BE%E3%83%8E%E3%83%AA%E3%82%BF%E3%82%AB&size=300&background=random&color=fff&bold=true",
+    image: "/images/jp_e6bfb1e5b0be_54840158.jpg",
     actualHeight: 185,
   },
   {

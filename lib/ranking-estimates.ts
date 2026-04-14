@@ -28,9 +28,36 @@ const maleRankingModel = maleRankingModelJson as {
 };
 
 const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+const FEMALE_IMAGE_MODEL_EXCLUDED_NAMES = new Set([
+  "ケリー",
+  "愛川ゆず季",
+  "夏来唯",
+  "喜多愛",
+  "菊池亜希子",
+  "佐藤江梨子",
+  "山咲まりな",
+  "春輝",
+  "小泉深雪",
+  "松本さゆき",
+  "水咲優美",
+  "青宮鑑",
+  "爽香",
+  "相沢菜々子",
+  "中村明花",
+  "潮崎まりん",
+  "天羽結愛",
+  "天野ちよ",
+  "奈月セナ",
+  "日向葵衣",
+  "木村あやね",
+]);
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+export function isFemaleImageModelExcluded(name: string): boolean {
+  return FEMALE_IMAGE_MODEL_EXCLUDED_NAMES.has(name);
 }
 
 function getCupIndex(cup: string | null | undefined): number | null {
@@ -47,7 +74,10 @@ function getCupIndex(cup: string | null | undefined): number | null {
 function getFemaleModelEstimate(
   profile: FemaleProfileSource
 ): FemaleModelEstimate | null {
-  if (!profile.image.startsWith("/images/")) {
+  if (
+    !profile.image.startsWith("/images/") ||
+    isFemaleImageModelExcluded(profile.name)
+  ) {
     return null;
   }
 

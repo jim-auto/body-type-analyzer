@@ -6,12 +6,14 @@ import rankingDataJson from "../../public/data/ranking.json";
 import { buildRankingData } from "@/lib/ranking-builder";
 import {
   getCupDifference,
+  getAdjustedEstimatedCup,
   getEstimatedHeight,
 } from "@/lib/profile-estimates";
 import {
   getFemaleRankingEstimatedCup,
   getFemaleRankingEstimatedHeight,
   getMaleRankingEstimatedHeight,
+  isFemaleImageModelExcluded,
 } from "@/lib/ranking-estimates";
 import type {
   FemaleRankingEntry,
@@ -42,7 +44,6 @@ const knownAmbiguousImageNames = [
   "MALIA.",
   "衛藤美彩",
   "鎌倉美咲",
-  "ケリー",
   "マギー",
   "若槻千夏",
   "向井理",
@@ -204,6 +205,24 @@ describe("ranking.json actual profile data", () => {
 
     expect(femaleChangedCount).toBeGreaterThan(0);
     expect(maleChangedCount).toBeGreaterThan(0);
+  });
+
+  test("表示専用の女性画像はランキング推定に混ぜない", () => {
+    const excludedEntries = femaleProfilePool.filter((entry) =>
+      isFemaleImageModelExcluded(entry.name)
+    );
+
+    expect(excludedEntries.length).toBeGreaterThan(0);
+
+    excludedEntries.forEach((entry) => {
+      expect(entry.image.startsWith("/images/")).toBe(true);
+      expect(getFemaleRankingEstimatedHeight(entry)).toBe(
+        getEstimatedHeight(entry.actualHeight, entry.name)
+      );
+      expect(getFemaleRankingEstimatedCup(entry)).toBe(
+        getAdjustedEstimatedCup(entry.bust, entry.cup)
+      );
+    });
   });
 
   test("男性エントリに bust / cup がない", () => {
