@@ -1,4 +1,5 @@
 import HomePageClient from "@/components/HomePageClient";
+import { FEMALE_CUP_TRAINING_COVERAGE_SUMMARY } from "@/lib/cup-training-coverage";
 import {
   buildFemaleCupDistributionSummary,
   buildMaleHeightDistributionSummary,
@@ -19,6 +20,7 @@ export default function Home() {
     <HomePageClient
       data={rankingData}
       femaleCupDistribution={femaleCupDistribution}
+      femaleCupTrainingCoverage={FEMALE_CUP_TRAINING_COVERAGE_SUMMARY}
       femaleOccupationCoverage={FEMALE_PROFILE_COVERAGE_SUMMARY}
       femaleOccupationGoals={FEMALE_PROFILE_GOAL_SUMMARY}
       maleHeightDistribution={maleHeightDistribution}

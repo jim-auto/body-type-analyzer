@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import Home from "@/app/page";
+import { FEMALE_CUP_TRAINING_COVERAGE_SUMMARY } from "@/lib/cup-training-coverage";
+import { getCupIndex, normalizeCupLabel } from "@/lib/cup-order";
 import {
   buildFemaleCupDistributionSummary,
   buildMaleHeightDistributionSummary,
@@ -23,6 +25,9 @@ const rankingData = rankingDataJson as RankingData;
 const femaleCupDistribution = buildFemaleCupDistributionSummary();
 const maleHeightDistribution = buildMaleHeightDistributionSummary();
 const PAGE_SIZE = 20;
+const scarceCupWarningMinIndex = getCupIndex(
+  FEMALE_CUP_TRAINING_COVERAGE_SUMMARY.largeCupWarningMin
+);
 
 const femaleStyleCategory = rankingData.female.find(
   (entry) => entry.category === "style"
@@ -57,11 +62,30 @@ const femaleStyleNonAvEntry = femaleStyleCategory.ranking.find(
 const femaleStyleAvCount = femaleStyleCategory.ranking.filter((entry) =>
   getFemaleProfileOccupations(entry.name).includes("av")
 ).length;
-const femaleScarceCupEntryIndex = femalePublicCupCategory.ranking.findIndex((entry) =>
-  ["L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"].includes(
-    (entry.displayCup ?? entry.cup) ?? ""
-  )
-);
+
+function getFemaleCupSampleCount(cup: string | null | undefined): number | null {
+  const normalizedCup = normalizeCupLabel(cup);
+
+  if (!normalizedCup) {
+    return null;
+  }
+
+  return FEMALE_CUP_TRAINING_COVERAGE_SUMMARY.sampleCounts[normalizedCup] ?? 0;
+}
+
+const femaleScarceCupEntryIndex = femalePublicCupCategory.ranking.findIndex((entry) => {
+  const displayedCup = entry.displayCup ?? entry.cup;
+  const displayedCupIndex = getCupIndex(displayedCup);
+  const sampleCount = getFemaleCupSampleCount(displayedCup);
+
+  return (
+    displayedCupIndex !== null &&
+    scarceCupWarningMinIndex !== null &&
+    displayedCupIndex >= scarceCupWarningMinIndex &&
+    sampleCount !== null &&
+    sampleCount < FEMALE_CUP_TRAINING_COVERAGE_SUMMARY.scarceSampleThreshold
+  );
+});
 const femaleScarceCupEntry =
   femaleScarceCupEntryIndex >= 0
     ? femalePublicCupCategory.ranking[femaleScarceCupEntryIndex]
@@ -439,7 +463,8 @@ describe("Home (Ranking Page)", () => {
     ).toBeInTheDocument();
   });
 
-  test("分布セクションに女性カップ分布と男性身長分布が表示される", () => {
+
+  test("Distribution section shows female cup and male height series", () => {
     const femalePublicBucket = femaleCupDistribution.publicSeries.buckets.find(
       (bucket) => bucket.cup === "C"
     )!;

@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 
+import type { FemaleCupTrainingCoverageSummary } from "@/lib/cup-training-coverage";
 import type {
   FemaleCupDistributionSummary,
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
-import { getCupIndex } from "@/lib/cup-order";
+import { getCupIndex, normalizeCupLabel } from "@/lib/cup-order";
 import {
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
@@ -32,6 +33,7 @@ type Gender = "female" | "male";
 type HomePageClientProps = {
   data: RankingData;
   femaleCupDistribution: FemaleCupDistributionSummary;
+  femaleCupTrainingCoverage: FemaleCupTrainingCoverageSummary;
   femaleOccupationCoverage: FemaleProfileCoverageSummary;
   femaleOccupationGoals: FemaleProfileGoalSummary;
   maleHeightDistribution: MaleHeightDistributionSummary;
@@ -48,7 +50,6 @@ type OccupationFilter = "all" | ProfileOccupation;
 const PAGE_SIZE = 20;
 const EARLY_PAGE_COUNT = 5;
 const RANKING_CARD_OCCUPATION_LIMIT = 3;
-const SCARCE_CUP_MIN = "L";
 
 const medalColors: Record<number, string> = {
   0: "bg-yellow-400 text-yellow-900",
@@ -143,15 +144,34 @@ function getDisplayedCup(entry: FemaleRankingEntry): string | null {
   return entry.displayCup ?? entry.cup;
 }
 
-function hasInsufficientCupData(entry: FemaleRankingEntry): boolean {
+function getCupSampleCount(
+  summary: FemaleCupTrainingCoverageSummary,
+  cup: string | null | undefined
+): number | null {
+  const normalizedCup = normalizeCupLabel(cup);
+
+  if (!normalizedCup) {
+    return null;
+  }
+
+  return summary.sampleCounts[normalizedCup] ?? 0;
+}
+
+function hasInsufficientCupData(
+  entry: FemaleRankingEntry,
+  summary: FemaleCupTrainingCoverageSummary
+): boolean {
   const displayedCup = getDisplayedCup(entry);
   const displayedCupIndex = getCupIndex(displayedCup);
-  const scarceCupIndex = getCupIndex(SCARCE_CUP_MIN);
+  const largeCupIndex = getCupIndex(summary.largeCupWarningMin);
+  const sampleCount = getCupSampleCount(summary, displayedCup);
 
   return (
     displayedCupIndex !== null &&
-    scarceCupIndex !== null &&
-    displayedCupIndex >= scarceCupIndex
+    largeCupIndex !== null &&
+    displayedCupIndex >= largeCupIndex &&
+    sampleCount !== null &&
+    sampleCount < summary.scarceSampleThreshold
   );
 }
 
@@ -257,6 +277,7 @@ function DistributionSeriesCard({
 export default function HomePageClient({
   data,
   femaleCupDistribution,
+  femaleCupTrainingCoverage,
   femaleOccupationCoverage,
   femaleOccupationGoals,
   maleHeightDistribution,
@@ -761,7 +782,7 @@ export default function HomePageClient({
                     ? getFemaleOccupationLabels(entry.name)
                     : [];
                   const hasCupDataWarning = femaleEntry
-                    ? hasInsufficientCupData(femaleEntry)
+                    ? hasInsufficientCupData(femaleEntry, femaleCupTrainingCoverage)
                     : false;
                   const predictionText = isPublicHeightCategory
                     ? getPublicHeightDetail(entry)
