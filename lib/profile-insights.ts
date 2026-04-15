@@ -1,6 +1,5 @@
 import { bustToEstimatedCup } from "@/lib/statistics";
-
-const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+import { getCupIndex } from "@/lib/cup-order";
 
 type Tone = "🎯" | "😊" | "🤔" | "😏";
 
@@ -34,11 +33,6 @@ function getTone(absDelta: number): Tone {
   }
 
   return "😏";
-}
-
-function getCupIndex(cup: string): number | null {
-  const index = CUP_ORDER.indexOf(cup);
-  return index === -1 ? null : index;
 }
 
 function formatSignedValue(delta: number, unit: string): string {

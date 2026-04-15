@@ -39,6 +39,7 @@ describe("profile-estimates", () => {
   test("cup difference supports H cup comparisons", () => {
     expect(getCupDifference("H", "H")).toBe(0);
     expect(getCupDifference("H", "G")).toBe(-1);
+    expect(getCupDifference("K", "I")).toBe(-2);
   });
 
   test("height calibration keeps dataset-wide mean absolute error low", () => {

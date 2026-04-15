@@ -20,23 +20,23 @@ import {
   calculateDeviation,
   getCupSortValue,
 } from "./statistics.ts";
-
-const ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+import { getCupIndex, getPreferredCupLabel } from "./cup-order.ts";
 
 function buildFemaleBaseEntry(
   profile: (typeof femaleProfilePool)[number]
 ): Omit<FemaleRankingEntry, "score"> {
   const estimatedHeight = getFemaleRankingEstimatedHeight(profile);
   const estimatedCup = getFemaleRankingEstimatedCup(profile);
+  const comparableCup = getPreferredCupLabel(profile);
 
   return {
     ...profile,
     estimatedHeight,
     heightDiff: estimatedHeight - profile.actualHeight,
     estimatedCup,
-    cupDiff: getCupDifference(profile.cup, estimatedCup),
+    cupDiff: getCupDifference(comparableCup, estimatedCup),
     displayCupDiff: getDisplayCupDifference(
-      profile.displayCup ?? profile.cup,
+      comparableCup,
       estimatedCup
     ),
   };
@@ -75,13 +75,14 @@ function buildFemaleStyleRanking(): FemaleRankingEntry[] {
     .map((profile) => {
       const entry = buildFemaleBaseEntry(profile);
       const heightDeviation = getFemaleHeightDeviation(profile.actualHeight);
-      const cupDeviation = profile.cup
-        ? calculateCupDeviation(profile.cup)
+      const comparableCup = getPreferredCupLabel(profile);
+      const cupDeviation = comparableCup
+        ? calculateCupDeviation(comparableCup)
         : null;
 
       return {
         ...entry,
-        cupSortValue: getCupSortValue(profile.cup),
+        cupSortValue: getCupSortValue(comparableCup),
         score:
           cupDeviation === null
             ? heightDeviation
@@ -142,10 +143,7 @@ function buildFemaleEstimatedCupRanking(): FemaleRankingEntry[] {
     )
     .map((entry) => ({
       ...entry,
-      score:
-        ESTIMATED_CUP_ORDER.indexOf(
-          entry.estimatedCup as (typeof ESTIMATED_CUP_ORDER)[number]
-        ) + 1,
+      score: (getCupIndex(entry.estimatedCup) ?? -1) + 1,
     }))
     .sort(
       (left, right) =>

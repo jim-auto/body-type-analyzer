@@ -117,13 +117,12 @@ def fetch_candidates(cup_pages: tuple[str, ...]) -> list[Candidate]:
                 continue
 
             original_cup = cup_match.group(1)
-            mapped_cup = "H" if original_cup in {"I", "J", "K"} else original_cup
             candidate = Candidate(
                 name=name,
                 search_name=search_name_for(name),
                 height=int(height_match.group(1)),
                 bust=int(bust_match.group(1)),
-                cup=mapped_cup,
+                cup=original_cup,
                 original_cup=original_cup,
                 source_url=url,
             )
@@ -254,6 +253,7 @@ def append_record(records: list[dict], candidate: Candidate, image_path: Path) -
             "actualHeight": float(candidate.height),
             "bust": candidate.bust,
             "cup": candidate.cup,
+            "displayCup": candidate.original_cup,
             "source": "manual",
             "sourceUrl": candidate.source_url,
             "remoteImageUrl": "",

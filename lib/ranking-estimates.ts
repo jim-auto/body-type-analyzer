@@ -7,6 +7,7 @@ import {
   getAdjustedEstimatedCup,
   getEstimatedHeight,
 } from "./profile-estimates.ts";
+import { getCupIndex, getCupLabel, getPreferredCupLabel } from "./cup-order.ts";
 import type {
   FemaleProfileSource,
   MaleProfileSource,
@@ -27,7 +28,6 @@ const maleRankingModel = maleRankingModelJson as {
   estimates: Record<string, number>;
 };
 
-const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 const FEMALE_IMAGE_MODEL_EXCLUDED_NAMES = new Set([
   "ケリー",
   "愛川ゆず季",
@@ -122,17 +122,6 @@ export function isFemaleImageModelExcluded(name: string): boolean {
   return FEMALE_IMAGE_MODEL_EXCLUDED_NAMES.has(name);
 }
 
-function getCupIndex(cup: string | null | undefined): number | null {
-  if (!cup) {
-    return null;
-  }
-
-  const normalizedCup = cup.trim().toUpperCase();
-  const index = CUP_ORDER.indexOf(normalizedCup as (typeof CUP_ORDER)[number]);
-
-  return index === -1 ? null : index;
-}
-
 function getFemaleModelEstimate(
   profile: FemaleProfileSource
 ): FemaleModelEstimate | null {
@@ -187,7 +176,10 @@ export function getFemaleRankingEstimatedHeight(
 export function getFemaleRankingEstimatedCup(
   profile: FemaleProfileSource
 ): string | null {
-  const baselineEstimate = getAdjustedEstimatedCup(profile.bust, profile.cup);
+  const baselineEstimate = getAdjustedEstimatedCup(
+    profile.bust,
+    getPreferredCupLabel(profile)
+  );
   const modelEstimate = getFemaleModelEstimate(profile)?.estimatedCup;
 
   if (!modelEstimate) {
@@ -210,7 +202,7 @@ export function getFemaleRankingEstimatedCup(
       baselineIndex * (1 - FEMALE_IMAGE_MODEL_WEIGHT)
   );
 
-  return CUP_ORDER[clamp(blendedIndex, 0, CUP_ORDER.length - 1)];
+  return getCupLabel(blendedIndex);
 }
 
 export function getMaleRankingEstimatedHeight(

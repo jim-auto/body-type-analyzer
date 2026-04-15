@@ -6,7 +6,11 @@ import {
   diagnose,
   isLowInformationDiagnosisImageQuality,
 } from "@/lib/image-analyzer";
-import { DIAGNOSIS_MODEL_ENTRIES, type DiagnosisFeatures } from "@/lib/diagnosis-model";
+import {
+  DIAGNOSIS_CUP_ORDER,
+  DIAGNOSIS_MODEL_ENTRIES,
+  type DiagnosisFeatures,
+} from "@/lib/diagnosis-model";
 
 const sampleEntry = DIAGNOSIS_MODEL_ENTRIES.find(
   (entry) => entry.name === "深田恭子"
@@ -22,9 +26,7 @@ describe("image-analyzer", () => {
 
     expect(result.estimatedHeight).toBeGreaterThanOrEqual(140);
     expect(result.estimatedHeight).toBeLessThanOrEqual(190);
-    expect(["A", "B", "C", "D", "E", "F", "G", "H"]).toContain(
-      result.estimatedCup
-    );
+    expect(DIAGNOSIS_CUP_ORDER).toContain(result.estimatedCup);
     expect(result.similarCelebrities.length).toBe(3);
     expect(result.similarCelebrities[0]?.name).toBe(result.similarCelebrity);
   });

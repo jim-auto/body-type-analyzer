@@ -1,3 +1,10 @@
+import {
+  EXTENDED_CUP_ORDER,
+  getCupIndex,
+  getCupLabel,
+  normalizeCupLabel,
+} from "./cup-order.ts";
+
 export const FEMALE_STATS = {
   height: { mean: 158.0, stddev: 5.4 },
   bust: { mean: 84.1, stddev: 4.5 },
@@ -24,7 +31,6 @@ export const CUP_DISTRIBUTION_SOURCE = {
 } as const;
 
 const DISPLAY_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G"] as const;
-const CUP_SORT_ORDER = ["AA", ...DISPLAY_CUP_ORDER, "H", "I"] as const;
 const CUP_PERCENTILE_MIN = 0.001;
 const CUP_PERCENTILE_MAX = 0.999;
 
@@ -48,11 +54,14 @@ export function getCupSortValue(cup: string | null | undefined): number {
   }
 
   const normalizedCup = cup.trim().toUpperCase();
-  const index = CUP_SORT_ORDER.indexOf(
-    normalizedCup as (typeof CUP_SORT_ORDER)[number]
-  );
 
-  return index === -1 ? -1 : index;
+  if (normalizedCup === "AA") {
+    return 0;
+  }
+
+  const index = getCupIndex(normalizedCup);
+
+  return index === null ? -1 : index + 1;
 }
 
 export function calculateCupDeviation(cup: string): number {
@@ -74,21 +83,25 @@ export function bustToEstimatedCup(bustCm: number): string {
   const estimatedUnder = Math.round(bustCm * 0.82);
   const under = Math.round(estimatedUnder / 5) * 5;
   const diff = bustCm - under;
+  const index = Math.floor((diff - 8.75) / 2.5);
+  const clampedIndex = Math.max(
+    0,
+    Math.min(EXTENDED_CUP_ORDER.length - 1, index)
+  );
 
-  if (diff < 11.25) return "A";
-  if (diff < 13.75) return "B";
-  if (diff < 16.25) return "C";
-  if (diff < 18.75) return "D";
-  if (diff < 21.25) return "E";
-  if (diff < 23.75) return "F";
-  return "G";
+  return getCupLabel(clampedIndex);
 }
 
 function getCupPercentile(cup: string): number | null {
-  const normalizedCup = cup.trim().toUpperCase();
+  const rawCup = cup.trim().toUpperCase();
+  const normalizedCup = normalizeCupLabel(cup);
 
-  if (normalizedCup === "AA") {
+  if (rawCup === "AA") {
     return CUP_DISTRIBUTION.A / 2;
+  }
+
+  if (!normalizedCup) {
+    return null;
   }
 
   let cumulative = 0;
@@ -108,12 +121,12 @@ function getCupPercentile(cup: string): number | null {
     return isTopPublishedCup ? cumulative - probability / 2 : cumulative;
   }
 
-  if (normalizedCup === "H") {
-    return 1 - CUP_DISTRIBUTION.G / 4;
-  }
+  const index = getCupIndex(normalizedCup);
+  const topPublishedIndex = getCupIndex("G");
 
-  if (normalizedCup === "I") {
-    return 1 - CUP_DISTRIBUTION.G / 8;
+  if (index !== null && topPublishedIndex !== null && index > topPublishedIndex) {
+    const tailStep = index - topPublishedIndex;
+    return 1 - CUP_DISTRIBUTION.G / 2 ** (tailStep + 1);
   }
 
   return null;

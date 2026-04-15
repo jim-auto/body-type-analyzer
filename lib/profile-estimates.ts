@@ -1,8 +1,6 @@
 import { bustToEstimatedCup } from "./statistics.ts";
+import { getCupIndex, getCupLabel, normalizeCupLabel } from "./cup-order.ts";
 
-const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
-const DISPLAY_CUP_MIN_CODE = "A".charCodeAt(0);
-const DISPLAY_CUP_MAX_CODE = "Z".charCodeAt(0);
 const HEIGHT_DELTA_SEQUENCE = [
   0,
   0,
@@ -15,51 +13,47 @@ const HEIGHT_DELTA_SEQUENCE = [
   0,
   0,
 ] as const;
-const CUP_MEDIAN_BUST_BY_ACTUAL = {
-  A: 76,
+const CUP_TYPICAL_BUST_BY_ACTUAL = {
+  A: 79,
   B: 80,
-  C: 81,
-  D: 85,
-  E: 83,
+  C: 82,
+  D: 84,
+  E: 85,
   F: 88,
   G: 90,
-  H: 89,
 } as const;
-const CUP_MEDIAN_TRUST_BAND_CM = 4;
+const EXTENDED_CUP_H_BUST = 96;
+const EXTENDED_CUP_BUST_STEP_CM = 4;
+const CUP_MEDIAN_TRUST_BAND_CM = 5;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function getCupIndex(cup: string | null | undefined): number | null {
-  if (!cup) {
+function getTypicalBustForCup(cup: string | null | undefined): number | null {
+  const normalizedCup = normalizeCupLabel(cup);
+
+  if (!normalizedCup) {
     return null;
   }
 
-  const normalizedCup = cup.trim().toUpperCase();
-  const index = CUP_ORDER.indexOf(normalizedCup as (typeof CUP_ORDER)[number]);
+  const directBust =
+    CUP_TYPICAL_BUST_BY_ACTUAL[
+      normalizedCup as keyof typeof CUP_TYPICAL_BUST_BY_ACTUAL
+    ];
 
-  return index === -1 ? null : index;
-}
+  if (directBust !== undefined) {
+    return directBust;
+  }
 
-function getDisplayCupIndex(cup: string | null | undefined): number | null {
-  if (!cup) {
+  const index = getCupIndex(normalizedCup);
+  const hIndex = getCupIndex("H");
+
+  if (index === null || hIndex === null || index < hIndex) {
     return null;
   }
 
-  const normalizedCup = cup.trim().toUpperCase();
-
-  if (normalizedCup.length !== 1) {
-    return null;
-  }
-
-  const code = normalizedCup.charCodeAt(0);
-
-  if (code < DISPLAY_CUP_MIN_CODE || code > DISPLAY_CUP_MAX_CODE) {
-    return null;
-  }
-
-  return code - DISPLAY_CUP_MIN_CODE;
+  return EXTENDED_CUP_H_BUST + (index - hIndex) * EXTENDED_CUP_BUST_STEP_CM;
 }
 
 export function getNameSeed(name: string): number {
@@ -129,12 +123,15 @@ export function getAdjustedEstimatedCup(
     return estimatedCup;
   }
 
-  const normalizedActualCup = CUP_ORDER[actualIndex];
-  const medianBust = CUP_MEDIAN_BUST_BY_ACTUAL[normalizedActualCup];
+  const normalizedActualCup = getCupLabel(actualIndex);
+  const medianBust = getTypicalBustForCup(normalizedActualCup);
 
   // Published cup sizes are more reliable when the bust sits near that cup's
   // observed median in our source dataset, so trust the public value first.
-  if (Math.abs(bust - medianBust) <= CUP_MEDIAN_TRUST_BAND_CM) {
+  if (
+    medianBust !== null &&
+    Math.abs(bust - medianBust) <= CUP_MEDIAN_TRUST_BAND_CM
+  ) {
     return normalizedActualCup;
   }
 
@@ -145,12 +142,10 @@ export function getAdjustedEstimatedCup(
   }
 
   if (Math.abs(difference) === 2) {
-    return CUP_ORDER[
-      clamp(actualIndex + Math.sign(difference), 0, CUP_ORDER.length - 1)
-    ];
+    return getCupLabel(actualIndex + Math.sign(difference));
   }
 
-  return CUP_ORDER[actualIndex];
+  return normalizedActualCup;
 }
 
 export function getCupDifference(
@@ -171,12 +166,5 @@ export function getDisplayCupDifference(
   actualCup: string | null | undefined,
   estimatedCup: string | null
 ): number | null {
-  const actualIndex = getDisplayCupIndex(actualCup);
-  const estimatedIndex = getDisplayCupIndex(estimatedCup);
-
-  if (actualIndex === null || estimatedIndex === null) {
-    return null;
-  }
-
-  return estimatedIndex - actualIndex;
+  return getCupDifference(actualCup, estimatedCup);
 }

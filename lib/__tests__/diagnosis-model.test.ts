@@ -1,4 +1,5 @@
 import {
+  DIAGNOSIS_CUP_ORDER,
   DIAGNOSIS_MODEL_ENTRIES,
   DIAGNOSIS_MODEL_METRICS,
   diagnoseFromFeatures,
@@ -29,9 +30,7 @@ describe("diagnosis-model", () => {
 
     expect(result.estimatedHeight).toBeGreaterThanOrEqual(140);
     expect(result.estimatedHeight).toBeLessThanOrEqual(190);
-    expect(["A", "B", "C", "D", "E", "F", "G", "H"]).toContain(
-      result.estimatedCup
-    );
+    expect(DIAGNOSIS_CUP_ORDER).toContain(result.estimatedCup);
     expect(result.heightDeviation).toBeGreaterThanOrEqual(20);
     expect(result.heightDeviation).toBeLessThanOrEqual(80);
     expect(result.cupDeviation).toBeGreaterThanOrEqual(20);

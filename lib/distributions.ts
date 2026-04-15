@@ -10,7 +10,7 @@ import {
 } from "./statistics.ts";
 
 const FEMALE_PUBLIC_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H+"] as const;
-const FEMALE_ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+const FEMALE_ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H+"] as const;
 const MALE_HEIGHT_BUCKETS = [
   { label: "165cm未満", min: Number.NEGATIVE_INFINITY, max: 165 },
   { label: "165-169cm", min: 165, max: 170 },
@@ -76,6 +76,10 @@ function getPublicCupBucket(cup: string | null | undefined): string | null {
   return null;
 }
 
+function getEstimatedCupBucket(cup: string | null | undefined): string | null {
+  return getPublicCupBucket(cup);
+}
+
 function buildFemaleCupBuckets(
   cupOrder: readonly string[],
   counts: Record<string, number>,
@@ -135,9 +139,10 @@ export function buildFemaleCupDistributionSummary(): FemaleCupDistributionSummar
   const estimatedCounts = femaleProfilePool.reduce<Record<string, number>>(
     (result, entry) => {
       const estimatedCup = getFemaleRankingEstimatedCup(entry);
+      const bucket = getEstimatedCupBucket(estimatedCup);
 
-      if (estimatedCup) {
-        result[estimatedCup] = (result[estimatedCup] ?? 0) + 1;
+      if (bucket) {
+        result[bucket] = (result[bucket] ?? 0) + 1;
       }
 
       return result;

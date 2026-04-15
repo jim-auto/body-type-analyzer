@@ -41,7 +41,7 @@ describe("distributions", () => {
       "E",
       "F",
       "G",
-      "H",
+      "H+",
     ]);
   });
 
@@ -89,7 +89,8 @@ describe("distributions", () => {
         const estimatedCup = getFemaleRankingEstimatedCup(entry);
 
         if (estimatedCup) {
-          result[estimatedCup] = (result[estimatedCup] ?? 0) + 1;
+          const bucket = /^[A-G]$/u.test(estimatedCup) ? estimatedCup : "H+";
+          result[bucket] = (result[bucket] ?? 0) + 1;
         }
 
         return result;
@@ -108,7 +109,7 @@ describe("distributions", () => {
       E: expectedCounts.E ?? 0,
       F: expectedCounts.F ?? 0,
       G: expectedCounts.G ?? 0,
-      H: expectedCounts.H ?? 0,
+      "H+": expectedCounts["H+"] ?? 0,
     });
   });
 

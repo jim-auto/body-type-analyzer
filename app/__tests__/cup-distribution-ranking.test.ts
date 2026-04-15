@@ -21,7 +21,12 @@ describe("female cup distribution and style ranking", () => {
       return result;
     }, {});
 
-    expect(Object.keys(counts).sort()).toEqual(["A", "B", "C", "D", "E", "F", "G", "H"]);
+    const cupLabels = Object.keys(counts).sort();
+
+    expect(cupLabels).toEqual(
+      expect.arrayContaining(["A", "B", "C", "D", "E", "F", "G", "H"])
+    );
+    expect(cupLabels.some((cup) => /^[I-Z]$/u.test(cup))).toBe(true);
     expect(Object.values(counts).every((count) => count > 0)).toBe(true);
     expect(styleRanking).toHaveLength(femaleProfilePool.length);
     expect(estimatedHeightRanking).toHaveLength(femaleProfilePool.length);

@@ -20,7 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = REPO_ROOT / "public" / "data" / "diagnosis-model.json"
 LOCAL_TRAINING_DATA_PATH = REPO_ROOT / "local-data" / "training-profiles.json"
 
-CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"]
+CUP_ORDER = [chr(code) for code in range(ord("A"), ord("Z") + 1)]
 REGIONS = {
     "full": (0.0, 0.0, 1.0, 1.0),
     "top": (0.0, 0.0, 1.0, 0.45),
@@ -414,17 +414,22 @@ def load_profiles() -> list[Profile]:
     )
     profiles = json.loads(result.stdout)
 
-    base_profiles = [
-        Profile(
-            name=profile["name"],
-            image=profile["image"],
-            actual_height=float(profile["actualHeight"]),
-            cup=profile["cup"],
-            source="public",
+    base_profiles = []
+    for profile in profiles:
+        public_cup = profile.get("displayCup") or profile["cup"]
+
+        if not profile["image"].startswith("/images/") or public_cup not in CUP_ORDER:
+            continue
+
+        base_profiles.append(
+            Profile(
+                name=profile["name"],
+                image=profile["image"],
+                actual_height=float(profile["actualHeight"]),
+                cup=public_cup,
+                source="public",
+            )
         )
-        for profile in profiles
-        if profile["image"].startswith("/images/") and profile["cup"] in CUP_ORDER
-    ]
     local_profiles = load_local_training_profiles()
     merged = {profile.name: profile for profile in base_profiles}
 
@@ -443,7 +448,9 @@ def load_local_training_profiles() -> list[Profile]:
     profiles: list[Profile] = []
 
     for record in records:
-        if not record.get("imagePath") or record.get("cup") not in CUP_ORDER:
+        cup = record.get("displayCup") or record.get("cup")
+
+        if not record.get("imagePath") or cup not in CUP_ORDER:
             continue
 
         source = record.get("source", "local")
@@ -460,7 +467,7 @@ def load_local_training_profiles() -> list[Profile]:
                 name=record["name"],
                 image=record["imagePath"],
                 actual_height=float(record["actualHeight"]),
-                cup=record["cup"],
+                cup=cup,
                 source=source,
                 use_for_height=use_for_height,
                 use_for_cup=use_for_cup,

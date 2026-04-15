@@ -1,5 +1,9 @@
 import diagnosisModelJson from "../public/data/diagnosis-model.json" with { type: "json" };
 import maleDiagnosisModelJson from "../public/data/male-diagnosis-model.json" with { type: "json" };
+import {
+  EXTENDED_CUP_ORDER,
+  getCupIndex as getExtendedCupIndex,
+} from "./cup-order.ts";
 
 import {
   FEMALE_STATS,
@@ -8,7 +12,7 @@ import {
   calculateDeviation,
 } from "./statistics.ts";
 
-export const DIAGNOSIS_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+export const DIAGNOSIS_CUP_ORDER = EXTENDED_CUP_ORDER;
 
 const MAX_SIMILAR_CELEBRITIES = 3;
 const HEIGHT_MIN = 140;
@@ -295,7 +299,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function getCupIndex(cup: DiagnosisCup): number {
-  return DIAGNOSIS_CUP_ORDER.indexOf(cup);
+  return getExtendedCupIndex(cup) ?? 0;
 }
 
 function euclideanDistance(left: number[], right: number[]): number {

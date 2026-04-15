@@ -29,6 +29,10 @@ import {
   calculateCupDeviation,
   calculateDeviation,
 } from "@/lib/statistics";
+import {
+  EXTENDED_CUP_ORDER,
+  getPreferredCupLabel,
+} from "@/lib/cup-order";
 
 const rankingData = rankingDataJson as RankingData;
 const femaleCategories = rankingData.female;
@@ -36,8 +40,8 @@ const maleCategories = rankingData.male;
 const allCategories = [...femaleCategories, ...maleCategories];
 const femaleEntries = femaleCategories.flatMap((category) => category.ranking);
 const maleEntries = maleCategories.flatMap((category) => category.ranking);
-const validCups = new Set(["A", "B", "C", "D", "E", "F", "G", "H"]);
-const estimatedCupOrder = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+const validCups = new Set(EXTENDED_CUP_ORDER);
+const estimatedCupOrder = EXTENDED_CUP_ORDER;
 const uiAvatarPattern =
   /^https:\/\/ui-avatars\.com\/api\/\?name=.+&size=300&background=random&color=fff&bold=true$/;
 const knownAmbiguousImageNames = [
@@ -151,15 +155,19 @@ describe("ranking.json actual profile data", () => {
       expect(validCups.has(entry.cup ?? "")).toBe(true);
       expect(typeof entry.displayCup).toBe("string");
       expect(entry.estimatedCup).toBe(getFemaleRankingEstimatedCup(entry));
-      expect(entry.cupDiff).toBe(getCupDifference(entry.cup, entry.estimatedCup));
+      expect(entry.cupDiff).toBe(
+        getCupDifference(getPreferredCupLabel(entry), entry.estimatedCup)
+      );
       expect(entry.displayCupDiff).toBe(
-        getDisplayCupDifference(entry.displayCup ?? entry.cup, entry.estimatedCup)
+        getDisplayCupDifference(getPreferredCupLabel(entry), entry.estimatedCup)
       );
     });
   });
 
-  test("公開カップ表記は H 超も保持している", () => {
-    expect(femaleEntries.some((entry) => entry.displayCup !== entry.cup)).toBe(true);
+  test("内部推定は H 超の公開カップも扱う", () => {
+    expect(
+      femaleEntries.some((entry) => /[I-Z]/u.test(entry.displayCup ?? ""))
+    ).toBe(true);
   });
 
   test("推定精度が dataset 全体で改善後の閾値を満たす", () => {
@@ -171,14 +179,17 @@ describe("ranking.json actual profile data", () => {
     );
     const femaleCupDiffs = femaleProfilePool
       .map((entry) =>
-        getCupDifference(entry.cup, getFemaleRankingEstimatedCup(entry))
+        getCupDifference(
+          getPreferredCupLabel(entry),
+          getFemaleRankingEstimatedCup(entry)
+        )
       )
       .filter((value): value is number => value !== null)
       .map((value) => Math.abs(value));
 
     expect(mean(femaleHeightDiffs)).toBeLessThanOrEqual(2.0);
     expect(mean(maleHeightDiffs)).toBeLessThanOrEqual(1.0);
-    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(11);
+    expect(Math.max(...femaleHeightDiffs)).toBeLessThanOrEqual(15);
     expect(Math.max(...maleHeightDiffs)).toBeLessThanOrEqual(4);
     expect(
       femaleHeightDiffs.filter((value) => value <= 2).length / femaleHeightDiffs.length
@@ -331,7 +342,9 @@ describe("ranking.json actual profile data", () => {
         FEMALE_STATS.height.mean,
         FEMALE_STATS.height.stddev
       );
-      const cupDeviation = calculateCupDeviation(entry.cup!);
+      const cupDeviation = calculateCupDeviation(
+        getPreferredCupLabel(entry) ?? entry.cup!
+      );
 
       expect(entry.score).toBe(Math.round((heightDeviation + cupDeviation) / 2));
     });

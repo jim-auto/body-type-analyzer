@@ -33,24 +33,6 @@ function normalizeCup(cup) {
 
   const normalized = cup.trim().toUpperCase();
 
-  if (!normalized) {
-    return null;
-  }
-
-  if (/^[A-G]$/.test(normalized)) {
-    return normalized;
-  }
-
-  return "H";
-}
-
-function normalizeDisplayCup(cup) {
-  if (typeof cup !== "string") {
-    return null;
-  }
-
-  const normalized = cup.trim().toUpperCase();
-
   return /^[A-Z]$/.test(normalized) ? normalized : null;
 }
 
@@ -74,7 +56,6 @@ function sanitizeImageUrl(url) {
 function toProfile(actress) {
   const actualHeight = parseNumber(actress.height);
   const bust = parseNumber(actress.bust);
-  const displayCup = normalizeDisplayCup(actress.cup);
   const cup = normalizeCup(actress.cup);
   const remoteImageUrl = sanitizeImageUrl(actress.imageURL?.large);
   const sourceUrl = actress.listURL?.digital ?? "";
@@ -94,7 +75,7 @@ function toProfile(actress) {
     actualHeight,
     bust,
     cup,
-    displayCup: displayCup ?? cup,
+    displayCup: cup,
     remoteImageUrl,
     sourceUrl,
   };

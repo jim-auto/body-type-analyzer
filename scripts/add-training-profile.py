@@ -23,7 +23,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TRAINING_DATA_PATH = REPO_ROOT / "local-data" / "training-profiles.json"
 TRAINING_IMAGES_DIR = REPO_ROOT / "local-data" / "training-images"
-CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"]
+CUP_ORDER = [chr(code) for code in range(ord("A"), ord("Z") + 1)]
 
 
 def main() -> None:
@@ -73,6 +73,7 @@ def main() -> None:
         "actualHeight": args.height,
         "bust": args.bust,
         "cup": args.cup,
+        "displayCup": args.cup,
         "source": args.source,
         "sourceUrl": args.source_url,
         "remoteImageUrl": args.image_url,

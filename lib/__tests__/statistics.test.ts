@@ -6,6 +6,7 @@ import {
   calculateCupDeviation,
   calculateDeviation,
 } from "@/lib/statistics";
+import { EXTENDED_CUP_ORDER } from "@/lib/cup-order";
 
 describe("statistics", () => {
   test("calculateDeviation returns 50 at the mean", () => {
@@ -87,12 +88,18 @@ describe("statistics", () => {
     expect(calculateCupDeviation("G")).toBeGreaterThanOrEqual(60);
   });
 
+  test("J cup is above H cup", () => {
+    expect(calculateCupDeviation("J")).toBeGreaterThan(
+      calculateCupDeviation("H")
+    );
+  });
+
   test("A cup is clearly below average", () => {
     expect(calculateCupDeviation("A")).toBeLessThanOrEqual(40);
   });
 
   test("larger cups always receive larger deviation scores", () => {
-    const cups = ["A", "B", "C", "D", "E", "F", "G"] as const;
+    const cups = EXTENDED_CUP_ORDER.slice(0, 10);
     const deviations = cups.map((cup) => calculateCupDeviation(cup));
 
     deviations.slice(1).forEach((score, index) => {
