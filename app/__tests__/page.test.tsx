@@ -10,6 +10,10 @@ import {
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
 } from "@/lib/profile-occupations";
+import {
+  formatSignedDifference,
+  getMismatchEmoji,
+} from "@/lib/profile-estimates";
 import type { RankingData } from "@/lib/ranking";
 import rankingDataJson from "../../public/data/ranking.json";
 
@@ -221,6 +225,9 @@ describe("Home (Ranking Page)", () => {
   test("女性 style ランキングで公表値の要約が表示される", () => {
     const topEntry = femaleStyleCategory.ranking[0];
     const displayedCup = topEntry.displayCup ?? topEntry.cup;
+    const estimatedCupText = topEntry.estimatedCup
+      ? `${topEntry.estimatedCup}カップ`
+      : "カップ推定不可";
 
     renderHome();
     clickCategoryTab(femaleStyleCategory.title);
@@ -228,8 +235,8 @@ describe("Home (Ranking Page)", () => {
     expect(
       screen.getByText(
         displayedCup
-          ? `公表: ${topEntry.actualHeight}cm / ${displayedCup}カップ`
-          : `公表: ${topEntry.actualHeight}cm / カップ非公表`
+          ? `公表: ${topEntry.actualHeight}cm / ${displayedCup}カップ ・ AI推定: ${topEntry.estimatedHeight}cm / ${estimatedCupText}`
+          : `公表: ${topEntry.actualHeight}cm / カップ非公表 ・ AI推定: ${topEntry.estimatedHeight}cm / ${estimatedCupText}`
       )
     ).toBeInTheDocument();
   });
@@ -261,9 +268,11 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(`偏差値${topMaleEntry.score}`).length).toBeGreaterThan(
       0
     );
-    expect(screen.getAllByText(`公表: ${topMaleEntry.actualHeight}cm`).length).toBeGreaterThan(
-      0
-    );
+    expect(
+      screen.getAllByText(
+        `公表: ${topMaleEntry.actualHeight}cm ・ AI推定: ${topMaleEntry.estimatedHeight}cm`
+      ).length
+    ).toBeGreaterThan(0);
   });
 
   test("ランキングは番号ボタンでページ移動できる", () => {
@@ -360,7 +369,6 @@ describe("Home (Ranking Page)", () => {
 
   test("公表身長タブをクリックすると cm 表示になる", () => {
     const topEntry = femalePublicHeightCategory.ranking[0];
-    const displayedCup = topEntry.displayCup ?? topEntry.cup;
 
     renderHome();
     clickCategoryTab("公表身長ランキング");
@@ -369,9 +377,10 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(`${topEntry.score}cm`).length).toBeGreaterThan(0);
     expect(
       screen.getAllByText(
-        displayedCup
-          ? `公表カップ: ${displayedCup}カップ`
-          : "公表カップ: 非公表"
+        `AI推定身長: ${topEntry.estimatedHeight}cm（差: ${formatSignedDifference(
+          topEntry.heightDiff,
+          "cm"
+        )} ${getMismatchEmoji(topEntry.heightDiff)}）`
       ).length
     ).toBeGreaterThan(0);
   });
@@ -379,6 +388,15 @@ describe("Home (Ranking Page)", () => {
   test("公表カップタブをクリックするとカップ表示になる", () => {
     const topEntry = femalePublicCupCategory.ranking[0];
     const displayedCup = topEntry.displayCup ?? topEntry.cup;
+    const expectedDetail =
+      !topEntry.estimatedCup || topEntry.displayCupDiff === null
+        ? topEntry.estimatedCup
+          ? `AI推定カップ: ${topEntry.estimatedCup}カップ`
+          : "AI推定カップ: 不明"
+        : `AI推定カップ: ${topEntry.estimatedCup}カップ（差: ${formatSignedDifference(
+            topEntry.displayCupDiff,
+            "サイズ"
+          )} ${getMismatchEmoji(topEntry.displayCupDiff)}）`;
 
     renderHome();
     clickCategoryTab("公表カップ数ランキング");
@@ -387,9 +405,7 @@ describe("Home (Ranking Page)", () => {
     expect(
       screen.getAllByText(`${displayedCup}カップ`).length
     ).toBeGreaterThan(0);
-    expect(screen.getAllByText(`公表身長: ${topEntry.actualHeight}cm`).length).toBeGreaterThan(
-      0
-    );
+    expect(screen.getAllByText(expectedDetail).length).toBeGreaterThan(0);
   });
 
   test("分布セクションに女性カップ分布と男性身長分布が表示される", () => {

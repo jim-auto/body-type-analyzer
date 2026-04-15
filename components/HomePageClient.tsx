@@ -15,6 +15,10 @@ import {
   type FemaleProfileGoalSummary,
 } from "@/lib/profile-occupations";
 import {
+  formatSignedDifference,
+  getMismatchEmoji,
+} from "@/lib/profile-estimates";
+import {
   isFemaleEntry,
   type FemaleRankingEntry,
   type MaleRankingEntry,
@@ -139,30 +143,38 @@ function getDisplayedCup(entry: FemaleRankingEntry): string | null {
 
 function getFemaleStyleDetail(entry: FemaleRankingEntry): string {
   const displayedCup = getDisplayedCup(entry);
+  const publicSummary = displayedCup
+    ? `${entry.actualHeight}cm / ${displayedCup}カップ`
+    : `${entry.actualHeight}cm / カップ非公表`;
+  const estimatedCupSummary = entry.estimatedCup
+    ? `${entry.estimatedCup}カップ`
+    : "カップ推定不可";
 
-  return displayedCup
-    ? `公表: ${entry.actualHeight}cm / ${displayedCup}カップ`
-    : `公表: ${entry.actualHeight}cm / カップ非公表`;
+  return `公表: ${publicSummary} ・ AI推定: ${entry.estimatedHeight}cm / ${estimatedCupSummary}`;
 }
 
 function getMaleStyleDetail(entry: MaleRankingEntry): string {
-  return `公表: ${entry.actualHeight}cm`;
+  return `公表: ${entry.actualHeight}cm ・ AI推定: ${entry.estimatedHeight}cm`;
 }
 
 function getPublicHeightDetail(entry: RankingEntry): string {
-  if (isFemaleEntry(entry)) {
-    const displayedCup = getDisplayedCup(entry);
-
-    return displayedCup
-      ? `公表カップ: ${displayedCup}カップ`
-      : "公表カップ: 非公表";
-  }
-
-  return `公表身長: ${entry.actualHeight}cm`;
+  return `AI推定身長: ${entry.estimatedHeight}cm（差: ${formatSignedDifference(
+    entry.heightDiff,
+    "cm"
+  )} ${getMismatchEmoji(entry.heightDiff)}）`;
 }
 
 function getPublicCupDetail(entry: FemaleRankingEntry): string {
-  return `公表身長: ${entry.actualHeight}cm`;
+  if (!entry.estimatedCup || entry.displayCupDiff === null) {
+    return entry.estimatedCup
+      ? `AI推定カップ: ${entry.estimatedCup}カップ`
+      : "AI推定カップ: 不明";
+  }
+
+  return `AI推定カップ: ${entry.estimatedCup}カップ（差: ${formatSignedDifference(
+    entry.displayCupDiff,
+    "サイズ"
+  )} ${getMismatchEmoji(entry.displayCupDiff)}）`;
 }
 
 function getFemaleOccupationLabels(name: string): string[] {

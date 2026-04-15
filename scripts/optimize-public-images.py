@@ -80,6 +80,7 @@ def resize_image(image: Image.Image, max_edge: int) -> Image.Image:
 def convert_image(source_path: Path, max_edge: int, quality: int) -> ConversionResult:
     output_path = build_output_path(source_path)
     temp_output_path = output_path.with_suffix(".tmp.webp")
+    source_bytes = source_path.stat().st_size
 
     with Image.open(source_path) as image:
         normalized = normalize_image(image)
@@ -91,7 +92,7 @@ def convert_image(source_path: Path, max_edge: int, quality: int) -> ConversionR
     return ConversionResult(
         source_path=source_path,
         output_path=output_path,
-        source_bytes=source_path.stat().st_size,
+        source_bytes=source_bytes,
         output_bytes=output_path.stat().st_size,
     )
 
