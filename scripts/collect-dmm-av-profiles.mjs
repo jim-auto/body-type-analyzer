@@ -44,6 +44,16 @@ function normalizeCup(cup) {
   return "H";
 }
 
+function normalizeDisplayCup(cup) {
+  if (typeof cup !== "string") {
+    return null;
+  }
+
+  const normalized = cup.trim().toUpperCase();
+
+  return /^[A-Z]$/.test(normalized) ? normalized : null;
+}
+
 function parseNumber(value) {
   if (value === null || value === undefined || value === "") {
     return null;
@@ -64,6 +74,7 @@ function sanitizeImageUrl(url) {
 function toProfile(actress) {
   const actualHeight = parseNumber(actress.height);
   const bust = parseNumber(actress.bust);
+  const displayCup = normalizeDisplayCup(actress.cup);
   const cup = normalizeCup(actress.cup);
   const remoteImageUrl = sanitizeImageUrl(actress.imageURL?.large);
   const sourceUrl = actress.listURL?.digital ?? "";
@@ -83,6 +94,7 @@ function toProfile(actress) {
     actualHeight,
     bust,
     cup,
+    displayCup: displayCup ?? cup,
     remoteImageUrl,
     sourceUrl,
   };
@@ -132,25 +144,18 @@ async function main() {
       : currentAvCount;
   const targetGeneratedCount = Math.max(targetAvTotal - baseAvCount, 0);
   const currentPoolNames = await loadFemaleProfileNames();
-  const retainedProfiles = existingProfiles
-    .filter(
-      (profile) =>
-        profile?.name &&
-        Number.isFinite(profile.actualHeight) &&
-        profile.actualHeight > 0 &&
-        Number.isFinite(profile.bust) &&
-        profile.bust > 0 &&
-        profile?.cup &&
-        profile?.remoteImageUrl
-    )
-    .slice(0, targetGeneratedCount);
-  const retainedNames = new Set(retainedProfiles.map((profile) => profile.name));
+  const existingGeneratedNames = new Set(
+    existingProfiles
+      .filter((profile) => typeof profile?.name === "string" && profile.name)
+      .map((profile) => profile.name)
+  );
 
-  for (const name of retainedNames) {
+  for (const name of existingGeneratedNames) {
     currentPoolNames.delete(name);
   }
 
-  const results = [...retainedProfiles];
+  const results = [];
+  const resultNames = new Set();
   let offset = 1;
 
   while (results.length < targetGeneratedCount) {
@@ -167,12 +172,12 @@ async function main() {
         continue;
       }
 
-      if (currentPoolNames.has(profile.name) || retainedNames.has(profile.name)) {
+      if (currentPoolNames.has(profile.name) || resultNames.has(profile.name)) {
         continue;
       }
 
       results.push(profile);
-      retainedNames.add(profile.name);
+      resultNames.add(profile.name);
 
       if (results.length >= targetGeneratedCount) {
         break;

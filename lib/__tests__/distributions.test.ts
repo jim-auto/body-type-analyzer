@@ -31,7 +31,7 @@ describe("distributions", () => {
       "E",
       "F",
       "G",
-      "H",
+      "H+",
     ]);
     expect(summary.estimatedSeries.buckets.map((bucket) => bucket.cup)).toEqual([
       "A",
@@ -49,9 +49,14 @@ describe("distributions", () => {
     const summary = buildFemaleCupDistributionSummary();
     const expectedCounts = femaleProfilePool.reduce<Record<string, number>>(
       (result, entry) => {
-        if (entry.cup) {
-          result[entry.cup] = (result[entry.cup] ?? 0) + 1;
+        const displayCup = entry.displayCup ?? entry.cup;
+
+        if (!displayCup) {
+          return result;
         }
+
+        const bucket = /^[A-G]$/u.test(displayCup) ? displayCup : "H+";
+        result[bucket] = (result[bucket] ?? 0) + 1;
 
         return result;
       },
@@ -69,10 +74,10 @@ describe("distributions", () => {
       E: expectedCounts.E ?? 0,
       F: expectedCounts.F ?? 0,
       G: expectedCounts.G ?? 0,
-      H: expectedCounts.H ?? 0,
+      "H+": expectedCounts["H+"] ?? 0,
     });
     expect(
-      summary.publicSeries.buckets.find((bucket) => bucket.cup === "H")
+      summary.publicSeries.buckets.find((bucket) => bucket.cup === "H+")
         ?.referencePercentage
     ).toBeNull();
   });

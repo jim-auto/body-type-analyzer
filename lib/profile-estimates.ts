@@ -1,6 +1,8 @@
 import { bustToEstimatedCup } from "./statistics.ts";
 
 const CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+const DISPLAY_CUP_MIN_CODE = "A".charCodeAt(0);
+const DISPLAY_CUP_MAX_CODE = "Z".charCodeAt(0);
 const HEIGHT_DELTA_SEQUENCE = [
   0,
   0,
@@ -38,6 +40,26 @@ function getCupIndex(cup: string | null | undefined): number | null {
   const index = CUP_ORDER.indexOf(normalizedCup as (typeof CUP_ORDER)[number]);
 
   return index === -1 ? null : index;
+}
+
+function getDisplayCupIndex(cup: string | null | undefined): number | null {
+  if (!cup) {
+    return null;
+  }
+
+  const normalizedCup = cup.trim().toUpperCase();
+
+  if (normalizedCup.length !== 1) {
+    return null;
+  }
+
+  const code = normalizedCup.charCodeAt(0);
+
+  if (code < DISPLAY_CUP_MIN_CODE || code > DISPLAY_CUP_MAX_CODE) {
+    return null;
+  }
+
+  return code - DISPLAY_CUP_MIN_CODE;
 }
 
 export function getNameSeed(name: string): number {
@@ -137,6 +159,20 @@ export function getCupDifference(
 ): number | null {
   const actualIndex = getCupIndex(actualCup);
   const estimatedIndex = getCupIndex(estimatedCup);
+
+  if (actualIndex === null || estimatedIndex === null) {
+    return null;
+  }
+
+  return estimatedIndex - actualIndex;
+}
+
+export function getDisplayCupDifference(
+  actualCup: string | null | undefined,
+  estimatedCup: string | null
+): number | null {
+  const actualIndex = getDisplayCupIndex(actualCup);
+  const estimatedIndex = getDisplayCupIndex(estimatedCup);
 
   if (actualIndex === null || estimatedIndex === null) {
     return null;

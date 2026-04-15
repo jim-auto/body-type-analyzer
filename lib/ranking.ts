@@ -5,12 +5,14 @@ export type FemaleRankingEntry = {
   score: number;
   image: string;
   cup: string | null;
+  displayCup: string | null;
   actualHeight: number;
   bust: number | null;
   estimatedHeight: number;
   heightDiff: number;
   estimatedCup: string | null;
   cupDiff: number | null;
+  displayCupDiff: number | null;
 };
 
 export type MaleRankingEntry = {
@@ -40,5 +42,5 @@ export function isFemaleEntry(entry: RankingEntry): entry is FemaleRankingEntry 
 }
 
 export function hasPublicCup(entry: RankingEntry): entry is FemaleRankingEntry {
-  return isFemaleEntry(entry) && entry.cup !== null;
+  return isFemaleEntry(entry) && entry.displayCup !== null;
 }

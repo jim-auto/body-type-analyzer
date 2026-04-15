@@ -6,6 +6,7 @@ import rankingDataJson from "../../public/data/ranking.json";
 import { buildRankingData } from "@/lib/ranking-builder";
 import {
   getCupDifference,
+  getDisplayCupDifference,
   getAdjustedEstimatedCup,
   getEstimatedHeight,
 } from "@/lib/profile-estimates";
@@ -148,9 +149,17 @@ describe("ranking.json actual profile data", () => {
     femaleEntries.forEach((entry) => {
       expect(entry.bust).toEqual(expect.any(Number));
       expect(validCups.has(entry.cup ?? "")).toBe(true);
+      expect(typeof entry.displayCup).toBe("string");
       expect(entry.estimatedCup).toBe(getFemaleRankingEstimatedCup(entry));
       expect(entry.cupDiff).toBe(getCupDifference(entry.cup, entry.estimatedCup));
+      expect(entry.displayCupDiff).toBe(
+        getDisplayCupDifference(entry.displayCup ?? entry.cup, entry.estimatedCup)
+      );
     });
+  });
+
+  test("公開カップ表記は H 超も保持している", () => {
+    expect(femaleEntries.some((entry) => entry.displayCup !== entry.cup)).toBe(true);
   });
 
   test("推定精度が dataset 全体で改善後の閾値を満たす", () => {

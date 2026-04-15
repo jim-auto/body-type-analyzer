@@ -166,12 +166,13 @@ describe("Home (Ranking Page)", () => {
 
   test("女性 style ランキングでカップ数と身長と偏差値が表示される", () => {
     const entryWithCup = femaleStyleCategory.ranking.find((entry) => entry.cup !== null)!;
+    const displayedCup = entryWithCup.displayCup ?? entryWithCup.cup;
 
     renderHome();
     clickCategoryTab(femaleStyleCategory.title);
 
     expect(screen.getByText(entryWithCup.name)).toBeInTheDocument();
-    expect(screen.getAllByText(`${entryWithCup.cup}カップ`).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(`${displayedCup}カップ`).length).toBeGreaterThan(0);
     expect(screen.getAllByText(`${entryWithCup.actualHeight}cm`).length).toBeGreaterThan(
       0
     );
@@ -375,11 +376,12 @@ describe("Home (Ranking Page)", () => {
 
   test("推定カップタブをクリックするとカップ表示になる", () => {
     const topEntry = femaleEstimatedCupCategory.ranking[0];
+    const displayedCup = topEntry.displayCup ?? topEntry.cup;
     const cupDiffLabel =
-      topEntry.cupDiff === null
+      topEntry.displayCupDiff === null
         ? "不明 🤔"
-        : `${formatSignedDifference(topEntry.cupDiff, "サイズ")} ${getMismatchEmoji(
-            topEntry.cupDiff
+        : `${formatSignedDifference(topEntry.displayCupDiff, "サイズ")} ${getMismatchEmoji(
+            topEntry.displayCupDiff
           )}`;
 
     renderHome();
@@ -391,7 +393,7 @@ describe("Home (Ranking Page)", () => {
     ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(
-        `実際: ${topEntry.cup ? `${topEntry.cup}カップ` : "非公表"}（差: ${cupDiffLabel}）`
+        `実際: ${displayedCup ? `${displayedCup}カップ` : "非公表"}（差: ${cupDiffLabel}）`
       ).length
     ).toBeGreaterThan(0);
   });

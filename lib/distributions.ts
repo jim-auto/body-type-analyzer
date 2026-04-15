@@ -9,7 +9,8 @@ import {
   MALE_STATS,
 } from "./statistics.ts";
 
-const FEMALE_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
+const FEMALE_PUBLIC_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H+"] as const;
+const FEMALE_ESTIMATED_CUP_ORDER = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 const MALE_HEIGHT_BUCKETS = [
   { label: "165cm未満", min: Number.NEGATIVE_INFINITY, max: 165 },
   { label: "165-169cm", min: 165, max: 170 },
@@ -31,7 +32,7 @@ type DistributionSeries<TBucket extends DistributionBucket> = {
 };
 
 export type FemaleCupDistributionBucket = DistributionBucket & {
-  cup: (typeof FEMALE_CUP_ORDER)[number];
+  cup: string;
   referencePercentage: number | null;
 };
 
@@ -57,11 +58,30 @@ function toPercentage(count: number, total: number): number {
   return Number(((count / total) * 100).toFixed(1));
 }
 
+function getPublicCupBucket(cup: string | null | undefined): string | null {
+  if (!cup) {
+    return null;
+  }
+
+  const normalizedCup = cup.trim().toUpperCase();
+
+  if (/^[A-G]$/.test(normalizedCup)) {
+    return normalizedCup;
+  }
+
+  if (/^[H-Z]$/.test(normalizedCup)) {
+    return "H+";
+  }
+
+  return null;
+}
+
 function buildFemaleCupBuckets(
+  cupOrder: readonly string[],
   counts: Record<string, number>,
   total: number
 ): FemaleCupDistributionBucket[] {
-  return FEMALE_CUP_ORDER.map((cup) => {
+  return cupOrder.map((cup) => {
     const referencePercentage =
       cup in CUP_DISTRIBUTION
         ? Number(
@@ -102,8 +122,10 @@ export function buildFemaleCupDistributionSummary(): FemaleCupDistributionSummar
   const total = femaleProfilePool.length;
   const publicCounts = femaleProfilePool.reduce<Record<string, number>>(
     (result, entry) => {
-      if (entry.cup) {
-        result[entry.cup] = (result[entry.cup] ?? 0) + 1;
+      const bucket = getPublicCupBucket(entry.displayCup ?? entry.cup);
+
+      if (bucket) {
+        result[bucket] = (result[bucket] ?? 0) + 1;
       }
 
       return result;
@@ -129,11 +151,15 @@ export function buildFemaleCupDistributionSummary(): FemaleCupDistributionSummar
     referenceYear: CUP_DISTRIBUTION_SOURCE.year,
     publicSeries: {
       title: "公開データ",
-      buckets: buildFemaleCupBuckets(publicCounts, total),
+      buckets: buildFemaleCupBuckets(FEMALE_PUBLIC_CUP_ORDER, publicCounts, total),
     },
     estimatedSeries: {
       title: "推定データ",
-      buckets: buildFemaleCupBuckets(estimatedCounts, total),
+      buckets: buildFemaleCupBuckets(
+        FEMALE_ESTIMATED_CUP_ORDER,
+        estimatedCounts,
+        total
+      ),
     },
   };
 }

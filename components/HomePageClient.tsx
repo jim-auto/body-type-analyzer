@@ -138,22 +138,28 @@ function getDefaultCategoryIndex(
   return index >= 0 ? index : 0;
 }
 
+function getDisplayedCup(entry: FemaleRankingEntry): string | null {
+  return entry.displayCup ?? entry.cup;
+}
+
 function getFemalePredictionText(entry: FemaleRankingEntry): string {
+  const displayedCup = getDisplayedCup(entry);
+
   if (!entry.estimatedCup) {
     return "AI推定: 実バスト非公表";
   }
 
-  if (!entry.cup) {
+  if (!displayedCup) {
     return `AI推定: ${entry.estimatedCup}カップ（実カップ非公表 🤔）`;
   }
 
-  if (entry.cupDiff === null) {
+  if (entry.displayCupDiff === null) {
     return `AI推定: ${entry.estimatedCup}カップ`;
   }
 
-  const emoji = getMismatchEmoji(entry.cupDiff);
+  const emoji = getMismatchEmoji(entry.displayCupDiff);
   return `AI推定: ${entry.estimatedCup}カップ（${formatSignedDifference(
-    entry.cupDiff,
+    entry.displayCupDiff,
     "サイズ"
   )} ${emoji}）`;
 }
@@ -177,16 +183,17 @@ function getEstimatedHeightDetail(entry: RankingEntry): string {
 }
 
 function getEstimatedCupDetail(entry: FemaleRankingEntry): string {
-  const actualCupText = entry.cup ? `${entry.cup}カップ` : "非公表";
+  const displayedCup = getDisplayedCup(entry);
+  const actualCupText = displayedCup ? `${displayedCup}カップ` : "非公表";
 
-  if (entry.cupDiff === null) {
+  if (entry.displayCupDiff === null) {
     return `実際: ${actualCupText}（差: 不明 🤔）`;
   }
 
-  const emoji = getMismatchEmoji(entry.cupDiff);
+  const emoji = getMismatchEmoji(entry.displayCupDiff);
 
   return `実際: ${actualCupText}（差: ${formatSignedDifference(
-    entry.cupDiff,
+    entry.displayCupDiff,
     "サイズ"
   )} ${emoji}）`;
 }
@@ -824,9 +831,9 @@ export default function HomePageClient({
                             <span className="font-semibold text-slate-700">
                               {entry.name}
                             </span>
-                            {femaleEntry?.cup ? (
+                            {femaleEntry && getDisplayedCup(femaleEntry) ? (
                               <span className="rounded bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-700">
-                                {femaleEntry.cup}カップ
+                                {getDisplayedCup(femaleEntry)}カップ
                               </span>
                             ) : null}
                             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">

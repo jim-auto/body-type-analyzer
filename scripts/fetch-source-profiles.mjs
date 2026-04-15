@@ -1429,6 +1429,7 @@ async function buildFemaleProfiles() {
         actualHeight: entry.actualHeight,
         bust: entry.bust,
         cup: entry.cup,
+        displayCup: entry.displayCup ?? entry.cup,
       });
       seenNames.add(entry.name);
     }
@@ -1445,6 +1446,7 @@ async function buildFemaleProfiles() {
       actualHeight: entry.actualHeight,
       bust: entry.bust,
       cup: entry.cup,
+      displayCup: entry.displayCup ?? entry.cup,
     });
     seenNames.add(entry.name);
   }
@@ -1460,6 +1462,7 @@ async function buildFemaleProfiles() {
       actualHeight: entry.actualHeight,
       bust: entry.bust,
       cup: entry.cup,
+      displayCup: entry.displayCup ?? entry.cup,
     });
     seenNames.add(entry.name);
   }
@@ -1510,6 +1513,7 @@ function renderProfilesFile(femaleProfiles, maleProfiles) {
     actualHeight: ${entry.actualHeight},
     bust: ${entry.bust},
     cup: "${entry.cup}",
+    displayCup: "${escapeTsString(entry.displayCup ?? entry.cup)}",
   }`
     )
     .join(",\n");
@@ -1530,6 +1534,7 @@ function renderProfilesFile(femaleProfiles, maleProfiles) {
   actualHeight: number;
   bust: number | null;
   cup: string | null;
+  displayCup: string | null;
 };
 
 export type MaleProfileSource = {

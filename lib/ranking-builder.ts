@@ -5,6 +5,7 @@ import {
 } from "./ranking.ts";
 import {
   getCupDifference,
+  getDisplayCupDifference,
 } from "./profile-estimates.ts";
 import {
   getFemaleRankingEstimatedCup,
@@ -34,6 +35,10 @@ function buildFemaleBaseEntry(
     heightDiff: estimatedHeight - profile.actualHeight,
     estimatedCup,
     cupDiff: getCupDifference(profile.cup, estimatedCup),
+    displayCupDiff: getDisplayCupDifference(
+      profile.displayCup ?? profile.cup,
+      estimatedCup
+    ),
   };
 }
 
