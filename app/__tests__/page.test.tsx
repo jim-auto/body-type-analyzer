@@ -102,7 +102,7 @@ describe("Home (Ranking Page)", () => {
     ).toBeInTheDocument();
   });
 
-  test("AI診断への CTA が表示される", () => {
+  test("AIスタイル診断への CTA が表示される", () => {
     renderHome();
 
     expect(
@@ -112,7 +112,7 @@ describe("Home (Ranking Page)", () => {
       })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "AI診断をはじめる" })
+      screen.getByRole("link", { name: "AIスタイル診断をはじめる" })
     ).toHaveAttribute("href", "/analyze");
     expect(
       screen.getByRole("link", { name: "モデル性能を見る" })

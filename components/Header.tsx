@@ -13,7 +13,7 @@ export default function Header() {
           href="/analyze"
           className="rounded-full bg-pink-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-600"
         >
-          AI診断
+          AIスタイル診断
         </Link>
       </div>
     </header>

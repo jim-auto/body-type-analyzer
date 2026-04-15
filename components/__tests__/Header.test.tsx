@@ -13,9 +13,9 @@ describe("Header", () => {
     expect(logoLink).toHaveAttribute("href", "/");
   });
 
-  test("AI診断リンクが存在すること", () => {
+  test("AIスタイル診断リンクが存在すること", () => {
     render(<Header />);
-    expect(screen.getByRole("link", { name: "AI診断" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "AIスタイル診断" })).toHaveAttribute(
       "href",
       "/analyze"
     );

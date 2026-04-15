@@ -261,6 +261,59 @@ export default function AnalyzePage() {
     };
   }, []);
 
+  const modelPerformanceSection = (
+    <section
+      id="model-performance"
+      aria-label="モデル性能"
+      className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8"
+    >
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-2xl space-y-2">
+          <h2 className="text-2xl font-bold text-slate-900">モデル性能</h2>
+          <p className="text-sm leading-6 text-slate-600 sm:text-base">
+            学習プロフィール画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚から作った
+            近傍比較モデルを、学習に使っていない固定テストで確認した結果です。
+            完全一致より、数cm単位・1カップ単位でどこまで収まるかを中心に公開しています。
+          </p>
+        </div>
+
+        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+          <p>学習画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚</p>
+          <p>身長 固定テスト {DIAGNOSIS_MODEL_METRICS.height.generalization.holdoutCount} 件</p>
+          <p>カップ 固定テスト {DIAGNOSIS_MODEL_METRICS.cup.generalization.holdoutCount} 件</p>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        {PERFORMANCE_SUMMARIES.map((item) => (
+          <article
+            key={item.title}
+            className="rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-6 py-6"
+          >
+            <p className="text-sm font-semibold tracking-[0.2em] text-slate-400">
+              {item.title}
+            </p>
+            <p className="mt-3 text-4xl font-black text-slate-900">{item.value}</p>
+            <p className="mt-2 text-base font-semibold text-slate-700">
+              {item.summary}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-500">
+              <span className="rounded-full bg-slate-100 px-3 py-1">
+                {item.exact}
+              </span>
+              <span className="rounded-full bg-slate-100 px-3 py-1">
+                {item.mae}
+              </span>
+              <span className="rounded-full bg-slate-100 px-3 py-1">
+                {item.validation}
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,113,133,0.15),_transparent_35%),linear-gradient(180deg,_#fff7fb_0%,_#fffdf8_45%,_#f8fafc_100%)] px-4 py-8 sm:py-12">
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-8">
@@ -272,7 +325,7 @@ export default function AnalyzePage() {
               </span>
               <div className="space-y-2">
                 <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">
-                  AI診断
+                  AIスタイル診断
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
                   画像を1枚アップロードすると、学習プロフィール画像から近い特徴を探して
@@ -289,57 +342,6 @@ export default function AnalyzePage() {
                 {gender === "female" ? DIAGNOSIS_VALIDATION_LABEL : `固定テスト: 身長の7割が±${MALE_DIAGNOSIS_MODEL_METRICS.height.coverage[0]?.maxError ?? 0}cm以内`}
               </div>
             </div>
-          </div>
-        </section>
-
-        <section
-          id="model-performance"
-          aria-label="モデル性能"
-          className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8"
-        >
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl space-y-2">
-              <h2 className="text-2xl font-bold text-slate-900">モデル性能</h2>
-              <p className="text-sm leading-6 text-slate-600 sm:text-base">
-                学習プロフィール画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚から作った
-                近傍比較モデルを、学習に使っていない固定テストで確認した結果です。
-                完全一致より、数cm単位・1カップ単位でどこまで収まるかを中心に公開しています。
-              </p>
-            </div>
-
-            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-              <p>学習画像 {DIAGNOSIS_MODEL_METRICS.trainingCount} 枚</p>
-              <p>身長 固定テスト {DIAGNOSIS_MODEL_METRICS.height.generalization.holdoutCount} 件</p>
-              <p>カップ 固定テスト {DIAGNOSIS_MODEL_METRICS.cup.generalization.holdoutCount} 件</p>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {PERFORMANCE_SUMMARIES.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-6 py-6"
-              >
-                <p className="text-sm font-semibold tracking-[0.2em] text-slate-400">
-                  {item.title}
-                </p>
-                <p className="mt-3 text-4xl font-black text-slate-900">{item.value}</p>
-                <p className="mt-2 text-base font-semibold text-slate-700">
-                  {item.summary}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-500">
-                  <span className="rounded-full bg-slate-100 px-3 py-1">
-                    {item.exact}
-                  </span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1">
-                    {item.mae}
-                  </span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1">
-                    {item.validation}
-                  </span>
-                </div>
-              </article>
-            ))}
           </div>
         </section>
 
@@ -474,7 +476,7 @@ export default function AnalyzePage() {
                   </div>
                   <div
                     role="progressbar"
-                    aria-label="AI診断の進捗"
+                    aria-label="AIスタイル診断の進捗"
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={progress}
@@ -500,7 +502,7 @@ export default function AnalyzePage() {
                     Complete
                   </p>
                   <h2 className="text-2xl font-bold text-slate-900">
-                    診断結果
+                    スタイル診断結果
                   </h2>
                   <p className="text-sm leading-6 text-slate-500">
                     {DIAGNOSIS_MODEL_SUMMARY}から近いサンプルを探して推定しています。
@@ -592,7 +594,7 @@ export default function AnalyzePage() {
                     Ready
                   </p>
                   <h2 className="text-2xl font-bold text-slate-900">
-                    診断待機中
+                    スタイル診断待機中
                   </h2>
                   <p className="text-sm leading-6 text-slate-500">
                     画像から特徴量を抽出し、学習プロフィール画像の近傍を検索します。
@@ -692,6 +694,7 @@ export default function AnalyzePage() {
             </div>
           </section>
         ) : null}
+        {modelPerformanceSection}
       </main>
     </div>
   );

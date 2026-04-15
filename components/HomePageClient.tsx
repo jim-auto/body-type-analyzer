@@ -397,7 +397,7 @@ export default function HomePageClient({
               href="/analyze"
               className="inline-flex rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-600"
             >
-              AI診断をはじめる
+              AIスタイル診断をはじめる
             </Link>
             <Link
               href="/analyze#model-performance"

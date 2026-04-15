@@ -180,10 +180,12 @@ afterEach(() => {
 
 describe("AnalyzePage", () => {
   test("モデル性能が公開表示される", () => {
-    renderPage();
+    const { container } = renderPage();
     const performanceSection = screen.getByRole("region", { name: "モデル性能" });
+    const main = container.querySelector("main");
 
     expect(performanceSection).toHaveAttribute("id", "model-performance");
+    expect(main?.lastElementChild).toBe(performanceSection);
     expect(
       screen.getByRole("heading", { level: 2, name: "モデル性能" })
     ).toBeInTheDocument();
@@ -264,11 +266,11 @@ describe("AnalyzePage", () => {
     ).toBeInTheDocument();
   });
 
-  test("AI診断ページタイトルが表示される", () => {
+  test("AIスタイル診断ページタイトルが表示される", () => {
     renderPage();
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "AI診断" })
+      screen.getByRole("heading", { level: 1, name: "AIスタイル診断" })
     ).toBeInTheDocument();
   });
 
@@ -329,7 +331,7 @@ describe("AnalyzePage", () => {
 
     expect(screen.getByText(AI_LOADING_MESSAGES[0])).toBeInTheDocument();
     expect(
-      screen.getByRole("progressbar", { name: "AI診断の進捗" })
+      screen.getByRole("progressbar", { name: "AIスタイル診断の進捗" })
     ).toHaveTextContent("進捗 8%");
   });
 
@@ -345,13 +347,13 @@ describe("AnalyzePage", () => {
     expect(screen.getByText(AI_LOADING_MESSAGES[1])).toBeInTheDocument();
   });
 
-  test("ローディング完了後に診断結果カードが表示される", async () => {
+  test("ローディング完了後にスタイル診断結果カードが表示される", async () => {
     renderPage();
 
     await uploadImage();
     await finishAnalysis();
 
-    expect(screen.getByText("診断結果")).toBeInTheDocument();
+    expect(screen.getByText("スタイル診断結果")).toBeInTheDocument();
     expect(screen.getByText("163")).toBeInTheDocument();
     expect(screen.getByText("D")).toBeInTheDocument();
     expect(screen.getByText("偏差値 59")).toBeInTheDocument();
@@ -422,7 +424,7 @@ describe("AnalyzePage", () => {
     expect(
       screen.getByText(DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE)
     ).toBeInTheDocument();
-    expect(screen.getByText("診断結果")).toBeInTheDocument();
+    expect(screen.getByText("スタイル診断結果")).toBeInTheDocument();
   });
 
   test("結果表示時に免責表示が並ぶ", async () => {
@@ -454,7 +456,7 @@ describe("AnalyzePage", () => {
     await uploadImage();
     await finishAnalysis();
 
-    expect(screen.getByText("診断結果")).toBeInTheDocument();
+    expect(screen.getByText("スタイル診断結果")).toBeInTheDocument();
     expect(screen.getByText("178")).toBeInTheDocument();
     expect(screen.queryByText("推定カップ")).not.toBeInTheDocument();
     expect(screen.queryByText("シルエットタイプ")).not.toBeInTheDocument();
