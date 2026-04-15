@@ -1,5 +1,6 @@
 import rankingDataJson from "../../public/data/ranking.json";
 import type { RankingData } from "@/lib/ranking";
+import { getPreferredCupLabel } from "@/lib/cup-order";
 import { femaleProfilePool } from "@/lib/source-profiles";
 import {
   FEMALE_STATS,
@@ -10,8 +11,8 @@ import {
 const rankingData = rankingDataJson as RankingData;
 const styleRanking =
   rankingData.female.find((category) => category.category === "style")?.ranking ?? [];
-const estimatedHeightRanking =
-  rankingData.female.find((category) => category.category === "estimatedHeight")
+const publicHeightRanking =
+  rankingData.female.find((category) => category.category === "publicHeight")
     ?.ranking ?? [];
 
 describe("female cup distribution and style ranking", () => {
@@ -29,7 +30,7 @@ describe("female cup distribution and style ranking", () => {
     expect(cupLabels.some((cup) => /^[I-Z]$/u.test(cup))).toBe(true);
     expect(Object.values(counts).every((count) => count > 0)).toBe(true);
     expect(styleRanking).toHaveLength(femaleProfilePool.length);
-    expect(estimatedHeightRanking).toHaveLength(femaleProfilePool.length);
+    expect(publicHeightRanking).toHaveLength(femaleProfilePool.length);
   });
 
   test("女性 style ランキングの score は身長偏差値とカップ偏差値の平均になる", () => {
@@ -41,16 +42,16 @@ describe("female cup distribution and style ranking", () => {
               entry.actualHeight,
               FEMALE_STATS.height.mean,
               FEMALE_STATS.height.stddev
-            ) + calculateCupDeviation(entry.cup!)
+            ) + calculateCupDeviation(getPreferredCupLabel(entry) ?? entry.cup!)
           ) / 2
         )
       );
     });
   });
 
-  test("女性 style ランキングは AI推定身長ランキングと別順位になる", () => {
+  test("女性 style ランキングは公表身長ランキングと別順位になる", () => {
     expect(styleRanking.map((entry) => entry.name)).not.toEqual(
-      estimatedHeightRanking.map((entry) => entry.name)
+      publicHeightRanking.map((entry) => entry.name)
     );
   });
 });

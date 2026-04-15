@@ -41,7 +41,7 @@ const allCategories = [...femaleCategories, ...maleCategories];
 const femaleEntries = femaleCategories.flatMap((category) => category.ranking);
 const maleEntries = maleCategories.flatMap((category) => category.ranking);
 const validCups = new Set(EXTENDED_CUP_ORDER);
-const estimatedCupOrder = EXTENDED_CUP_ORDER;
+const publicCupOrder = EXTENDED_CUP_ORDER;
 const uiAvatarPattern =
   /^https:\/\/ui-avatars\.com\/api\/\?name=.+&size=300&background=random&color=fff&bold=true$/;
 const knownAmbiguousImageNames = [
@@ -70,12 +70,12 @@ describe("ranking.json actual profile data", () => {
     expect(maleCategories).toHaveLength(2);
     expect(femaleCategories.map((category) => category.category)).toEqual([
       "style",
-      "estimatedHeight",
-      "estimatedCup",
+      "publicHeight",
+      "publicCup",
     ]);
     expect(maleCategories.map((category) => category.category)).toEqual([
       "style",
-      "estimatedHeight",
+      "publicHeight",
     ]);
   });
 
@@ -95,17 +95,17 @@ describe("ranking.json actual profile data", () => {
     expect(getCategory(femaleCategories, "style").title).toBe(
       "スタイル偏差値ランキング"
     );
-    expect(getCategory(femaleCategories, "estimatedHeight").title).toBe(
-      "AI推定身長ランキング"
+    expect(getCategory(femaleCategories, "publicHeight").title).toBe(
+      "公表身長ランキング"
     );
-    expect(getCategory(femaleCategories, "estimatedCup").title).toBe(
-      "AI推定カップ数ランキング"
+    expect(getCategory(femaleCategories, "publicCup").title).toBe(
+      "公表カップ数ランキング"
     );
     expect(getCategory(maleCategories, "style").title).toBe(
       "スタイル偏差値ランキング"
     );
-    expect(getCategory(maleCategories, "estimatedHeight").title).toBe(
-      "AI推定身長ランキング"
+    expect(getCategory(maleCategories, "publicHeight").title).toBe(
+      "公表身長ランキング"
     );
   });
 
@@ -121,9 +121,9 @@ describe("ranking.json actual profile data", () => {
   test("各カテゴリのランキングが母集団ぶん表示される", () => {
     femaleCategories.forEach((category) => {
       const expectedLength =
-        category.category === "estimatedCup"
+        category.category === "publicCup"
           ? femaleProfilePool.filter(
-              (entry) => getFemaleRankingEstimatedCup(entry) !== null
+              (entry) => getPreferredCupLabel(entry) !== null
             ).length
           : femaleProfilePool.length;
 
@@ -303,31 +303,31 @@ describe("ranking.json actual profile data", () => {
     });
   });
 
-  test("推定身長ランキングが推定身長の降順である", () => {
+  test("公表身長ランキングが公表身長の降順である", () => {
     [femaleCategories, maleCategories].forEach((categories) => {
-      const ranking = getCategory(categories, "estimatedHeight").ranking;
+      const ranking = getCategory(categories, "publicHeight").ranking;
 
-      expect(ranking.map((entry) => entry.estimatedHeight)).toEqual(
+      expect(ranking.map((entry) => entry.actualHeight)).toEqual(
         [...ranking]
-          .map((entry) => entry.estimatedHeight)
+          .map((entry) => entry.actualHeight)
           .sort((left, right) => right - left)
       );
     });
   });
 
-  test("推定カップ数ランキングが推定カップの降順である", () => {
-    const ranking = getCategory(femaleCategories, "estimatedCup").ranking;
+  test("公表カップ数ランキングが公表カップの降順である", () => {
+    const ranking = getCategory(femaleCategories, "publicCup").ranking;
     const cupIndexes = ranking.map((entry) =>
-      estimatedCupOrder.indexOf(
-        entry.estimatedCup as (typeof estimatedCupOrder)[number]
+      publicCupOrder.indexOf(
+        getPreferredCupLabel(entry) as (typeof publicCupOrder)[number]
       )
     );
 
     expect(cupIndexes).toEqual([...cupIndexes].sort((left, right) => right - left));
     ranking.forEach((entry) => {
       expect(entry.score).toBe(
-        estimatedCupOrder.indexOf(
-          entry.estimatedCup as (typeof estimatedCupOrder)[number]
+        publicCupOrder.indexOf(
+          getPreferredCupLabel(entry) as (typeof publicCupOrder)[number]
         ) + 1
       );
     });

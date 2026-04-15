@@ -7,7 +7,6 @@ import type {
   FemaleCupDistributionSummary,
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
-import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 import {
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
@@ -15,10 +14,6 @@ import {
   type FemaleProfileCoverageSummary,
   type FemaleProfileGoalSummary,
 } from "@/lib/profile-occupations";
-import {
-  formatSignedDifference,
-  getMismatchEmoji,
-} from "@/lib/profile-estimates";
 import {
   isFemaleEntry,
   type FemaleRankingEntry,
@@ -130,7 +125,7 @@ function getDefaultCategoryIndex(
   categories: RankingData[Gender],
   gender: Gender
 ): number {
-  const defaultCategory = gender === "female" ? "estimatedCup" : "style";
+  const defaultCategory = gender === "female" ? "publicCup" : "style";
   const index = categories.findIndex(
     (category) => category.category === defaultCategory
   );
@@ -142,60 +137,32 @@ function getDisplayedCup(entry: FemaleRankingEntry): string | null {
   return entry.displayCup ?? entry.cup;
 }
 
-function getFemalePredictionText(entry: FemaleRankingEntry): string {
+function getFemaleStyleDetail(entry: FemaleRankingEntry): string {
   const displayedCup = getDisplayedCup(entry);
 
-  if (!entry.estimatedCup) {
-    return "AI推定: 実バスト非公表";
-  }
-
-  if (!displayedCup) {
-    return `AI推定: ${entry.estimatedCup}カップ（実カップ非公表 🤔）`;
-  }
-
-  if (entry.displayCupDiff === null) {
-    return `AI推定: ${entry.estimatedCup}カップ`;
-  }
-
-  const emoji = getMismatchEmoji(entry.displayCupDiff);
-  return `AI推定: ${entry.estimatedCup}カップ（${formatSignedDifference(
-    entry.displayCupDiff,
-    "サイズ"
-  )} ${emoji}）`;
+  return displayedCup
+    ? `公表: ${entry.actualHeight}cm / ${displayedCup}カップ`
+    : `公表: ${entry.actualHeight}cm / カップ非公表`;
 }
 
-function getMalePredictionText(entry: MaleRankingEntry): string {
-  const emoji = getMismatchEmoji(entry.heightDiff);
-
-  return `AI推定: ${entry.estimatedHeight}cm（${formatSignedDifference(
-    entry.heightDiff,
-    "cm"
-  )} ${emoji}）`;
+function getMaleStyleDetail(entry: MaleRankingEntry): string {
+  return `公表: ${entry.actualHeight}cm`;
 }
 
-function getEstimatedHeightDetail(entry: RankingEntry): string {
-  const emoji = getMismatchEmoji(entry.heightDiff);
+function getPublicHeightDetail(entry: RankingEntry): string {
+  if (isFemaleEntry(entry)) {
+    const displayedCup = getDisplayedCup(entry);
 
-  return `実際: ${entry.actualHeight}cm（差: ${formatSignedDifference(
-    entry.heightDiff,
-    "cm"
-  )} ${emoji}）`;
-}
-
-function getEstimatedCupDetail(entry: FemaleRankingEntry): string {
-  const displayedCup = getDisplayedCup(entry);
-  const actualCupText = displayedCup ? `${displayedCup}カップ` : "非公表";
-
-  if (entry.displayCupDiff === null) {
-    return `実際: ${actualCupText}（差: 不明 🤔）`;
+    return displayedCup
+      ? `公表カップ: ${displayedCup}カップ`
+      : "公表カップ: 非公表";
   }
 
-  const emoji = getMismatchEmoji(entry.displayCupDiff);
+  return `公表身長: ${entry.actualHeight}cm`;
+}
 
-  return `実際: ${actualCupText}（差: ${formatSignedDifference(
-    entry.displayCupDiff,
-    "サイズ"
-  )} ${emoji}）`;
+function getPublicCupDetail(entry: FemaleRankingEntry): string {
+  return `公表身長: ${entry.actualHeight}cm`;
 }
 
 function getFemaleOccupationLabels(name: string): string[] {
@@ -349,8 +316,8 @@ export default function HomePageClient({
   const pageEnd = Math.min(pageStart + PAGE_SIZE, filteredRanking.length);
   const pagedRanking = filteredRanking.slice(pageStart, pageEnd);
   const paginationItems = getPaginationItems(currentPage, totalPages);
-  const isEstimatedHeightCategory = current?.category === "estimatedHeight";
-  const isEstimatedCupCategory = current?.category === "estimatedCup";
+  const isPublicHeightCategory = current?.category === "publicHeight";
+  const isPublicCupCategory = current?.category === "publicCup";
   const activeCategoryStyle =
     gender === "female"
       ? "bg-pink-500 text-white shadow-md"
@@ -605,32 +572,6 @@ export default function HomePageClient({
                 {current.title}
               </h2>
 
-              {isEstimatedHeightCategory ? (
-                <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-                  <span>AI推定精度</span>
-                  <span className="font-bold">
-                    7割が±{DIAGNOSIS_MODEL_METRICS.height.generalization.coverage[0]?.maxError ?? 0}cm以内
-                  </span>
-                  <span className="text-sky-600">
-                    平均誤差 {Number.isInteger(DIAGNOSIS_MODEL_METRICS.height.generalization.mae)
-                      ? DIAGNOSIS_MODEL_METRICS.height.generalization.mae
-                      : DIAGNOSIS_MODEL_METRICS.height.generalization.mae.toFixed(1)}cm
-                  </span>
-                </div>
-              ) : isEstimatedCupCategory ? (
-                <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-pink-800">
-                  <span>AI推定精度</span>
-                  <span className="font-bold">
-                    7割が±{DIAGNOSIS_MODEL_METRICS.cup.generalization.coverage[0]?.maxError ?? 0}カップ以内
-                  </span>
-                  <span className="text-pink-600">
-                    平均誤差 {Number.isInteger(DIAGNOSIS_MODEL_METRICS.cup.generalization.mae)
-                      ? DIAGNOSIS_MODEL_METRICS.cup.generalization.mae
-                      : DIAGNOSIS_MODEL_METRICS.cup.generalization.mae.toFixed(1)}カップ
-                  </span>
-                </div>
-              ) : null}
-
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-100/80 px-4 py-3 text-sm text-slate-600">
                 <div className="space-y-1">
                   <p>
@@ -793,17 +734,17 @@ export default function HomePageClient({
                   const femaleOccupationLabels = femaleEntry
                     ? getFemaleOccupationLabels(entry.name)
                     : [];
-                  const predictionText = isEstimatedHeightCategory
-                    ? getEstimatedHeightDetail(entry)
-                    : isEstimatedCupCategory && femaleEntry
-                      ? getEstimatedCupDetail(femaleEntry)
+                  const predictionText = isPublicHeightCategory
+                    ? getPublicHeightDetail(entry)
+                    : isPublicCupCategory && femaleEntry
+                      ? getPublicCupDetail(femaleEntry)
                       : femaleEntry
-                        ? getFemalePredictionText(femaleEntry)
-                        : getMalePredictionText(entry as MaleRankingEntry);
-                  const scoreLabel = isEstimatedHeightCategory
+                        ? getFemaleStyleDetail(femaleEntry)
+                        : getMaleStyleDetail(entry as MaleRankingEntry);
+                  const scoreLabel = isPublicHeightCategory
                     ? `${entry.score}cm`
-                    : isEstimatedCupCategory && femaleEntry?.estimatedCup
-                      ? `${femaleEntry.estimatedCup}カップ`
+                    : isPublicCupCategory && femaleEntry
+                      ? `${getDisplayedCup(femaleEntry) ?? femaleEntry.cup}カップ`
                       : `偏差値${entry.score}`;
 
                   return (

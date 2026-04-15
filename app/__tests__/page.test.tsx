@@ -10,10 +10,6 @@ import {
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
 } from "@/lib/profile-occupations";
-import {
-  formatSignedDifference,
-  getMismatchEmoji,
-} from "@/lib/profile-estimates";
 import type { RankingData } from "@/lib/ranking";
 import rankingDataJson from "../../public/data/ranking.json";
 
@@ -27,11 +23,14 @@ const PAGE_SIZE = 20;
 const femaleStyleCategory = rankingData.female.find(
   (entry) => entry.category === "style"
 )!;
+const femalePublicHeightCategory = rankingData.female.find(
+  (entry) => entry.category === "publicHeight"
+)!;
+const femalePublicCupCategory = rankingData.female.find(
+  (entry) => entry.category === "publicCup"
+)!;
 const maleStyleCategory = rankingData.male.find(
   (entry) => entry.category === "style"
-)!;
-const femaleEstimatedCupCategory = rankingData.female.find(
-  (entry) => entry.category === "estimatedCup"
 )!;
 const femaleSearchQueryEntry = femaleStyleCategory.ranking.find(
   (entry) =>
@@ -77,13 +76,6 @@ const searchByName = (query: string) => {
   fireEvent.change(screen.getByLabelText("名前で検索"), {
     target: { value: query },
   });
-};
-
-const getFemaleCategory = (categoryKey: string) => {
-  const category = rankingData.female.find((entry) => entry.category === categoryKey);
-
-  expect(category).toBeDefined();
-  return category!;
 };
 
 afterEach(() => {
@@ -147,20 +139,20 @@ describe("Home (Ranking Page)", () => {
     expect(within(avCard as HTMLElement).getByText(String(avGoal.remaining))).toBeInTheDocument();
   });
 
-  test("初期表示で女性の AI推定カップ数ランキングが表示される", () => {
+  test("初期表示で女性の公表カップ数ランキングが表示される", () => {
     renderHome();
 
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: femaleEstimatedCupCategory.title,
+        name: femalePublicCupCategory.title,
       })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(femaleEstimatedCupCategory.ranking[0].name)
+      screen.getByText(femalePublicCupCategory.ranking[0].name)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(femaleEstimatedCupCategory.ranking[1].name)
+      screen.getByText(femalePublicCupCategory.ranking[1].name)
     ).toBeInTheDocument();
   });
 
@@ -226,11 +218,20 @@ describe("Home (Ranking Page)", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("女性 style ランキングでAI推定表示がされる", () => {
+  test("女性 style ランキングで公表値の要約が表示される", () => {
+    const topEntry = femaleStyleCategory.ranking[0];
+    const displayedCup = topEntry.displayCup ?? topEntry.cup;
+
     renderHome();
     clickCategoryTab(femaleStyleCategory.title);
 
-    expect(screen.getAllByText(/^AI推定:/)).toHaveLength(PAGE_SIZE);
+    expect(
+      screen.getByText(
+        displayedCup
+          ? `公表: ${topEntry.actualHeight}cm / ${displayedCup}カップ`
+          : `公表: ${topEntry.actualHeight}cm / カップ非公表`
+      )
+    ).toBeInTheDocument();
   });
 
   test("カテゴリタブ数が女性3つ・男性2つになっている", () => {
@@ -243,7 +244,7 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getByText(maleStyleCategory.ranking[0].name)).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /ランキング$/ })).toHaveLength(2);
     expect(
-      screen.queryByRole("button", { name: "AI推定カップ数ランキング" })
+      screen.queryByRole("button", { name: "公表カップ数ランキング" })
     ).not.toBeInTheDocument();
   });
 
@@ -260,7 +261,9 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(`偏差値${topMaleEntry.score}`).length).toBeGreaterThan(
       0
     );
-    expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(PAGE_SIZE);
+    expect(screen.getAllByText(`公表: ${topMaleEntry.actualHeight}cm`).length).toBeGreaterThan(
+      0
+    );
   });
 
   test("ランキングは番号ボタンでページ移動できる", () => {
@@ -324,11 +327,11 @@ describe("Home (Ranking Page)", () => {
   test("男女切り替え時にカテゴリタブが最初に戻る", () => {
     renderHome();
 
-    clickCategoryTab("AI推定カップ数ランキング");
+    clickCategoryTab("公表カップ数ランキング");
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: "AI推定カップ数ランキング",
+        name: "公表カップ数ランキング",
       })
     ).toBeInTheDocument();
 
@@ -355,47 +358,38 @@ describe("Home (Ranking Page)", () => {
     );
   });
 
-  test("推定身長タブをクリックすると cm 表示になる", () => {
-    const estimatedHeightCategory = getFemaleCategory("estimatedHeight");
-    const topEntry = estimatedHeightCategory.ranking[0];
+  test("公表身長タブをクリックすると cm 表示になる", () => {
+    const topEntry = femalePublicHeightCategory.ranking[0];
+    const displayedCup = topEntry.displayCup ?? topEntry.cup;
 
     renderHome();
-    clickCategoryTab("AI推定身長ランキング");
+    clickCategoryTab("公表身長ランキング");
 
     expect(screen.getByText(topEntry.name)).toBeInTheDocument();
     expect(screen.getAllByText(`${topEntry.score}cm`).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(
-        `実際: ${topEntry.actualHeight}cm（差: ${formatSignedDifference(
-          topEntry.heightDiff,
-          "cm"
-        )} ${getMismatchEmoji(topEntry.heightDiff)}）`
-      )
-    ).toBeInTheDocument();
+      screen.getAllByText(
+        displayedCup
+          ? `公表カップ: ${displayedCup}カップ`
+          : "公表カップ: 非公表"
+      ).length
+    ).toBeGreaterThan(0);
   });
 
-  test("推定カップタブをクリックするとカップ表示になる", () => {
-    const topEntry = femaleEstimatedCupCategory.ranking[0];
+  test("公表カップタブをクリックするとカップ表示になる", () => {
+    const topEntry = femalePublicCupCategory.ranking[0];
     const displayedCup = topEntry.displayCup ?? topEntry.cup;
-    const cupDiffLabel =
-      topEntry.displayCupDiff === null
-        ? "不明 🤔"
-        : `${formatSignedDifference(topEntry.displayCupDiff, "サイズ")} ${getMismatchEmoji(
-            topEntry.displayCupDiff
-          )}`;
 
     renderHome();
-    clickCategoryTab("AI推定カップ数ランキング");
+    clickCategoryTab("公表カップ数ランキング");
 
     expect(screen.getByText(topEntry.name)).toBeInTheDocument();
     expect(
-      screen.getAllByText(`${topEntry.estimatedCup}カップ`).length
+      screen.getAllByText(`${displayedCup}カップ`).length
     ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(
-        `実際: ${displayedCup ? `${displayedCup}カップ` : "非公表"}（差: ${cupDiffLabel}）`
-      ).length
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(`公表身長: ${topEntry.actualHeight}cm`).length).toBeGreaterThan(
+      0
+    );
   });
 
   test("分布セクションに女性カップ分布と男性身長分布が表示される", () => {

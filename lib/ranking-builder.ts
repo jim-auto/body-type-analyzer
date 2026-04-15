@@ -114,14 +114,14 @@ function buildMaleStyleRanking(): MaleRankingEntry[] {
     );
 }
 
-function buildFemaleEstimatedHeightRanking(): FemaleRankingEntry[] {
+function buildFemalePublicHeightRanking(): FemaleRankingEntry[] {
   return femaleProfilePool
     .map((profile) => {
       const entry = buildFemaleBaseEntry(profile);
 
       return {
         ...entry,
-        score: entry.estimatedHeight,
+        score: entry.actualHeight,
       };
     })
     .sort(
@@ -132,19 +132,18 @@ function buildFemaleEstimatedHeightRanking(): FemaleRankingEntry[] {
     );
 }
 
-function buildFemaleEstimatedCupRanking(): FemaleRankingEntry[] {
+function buildFemalePublicCupRanking(): FemaleRankingEntry[] {
   return femaleProfilePool
     .map((profile) => buildFemaleBaseEntry(profile))
-    .filter(
-      (
-        entry
-      ): entry is Omit<FemaleRankingEntry, "score"> & { estimatedCup: string } =>
-        entry.estimatedCup !== null
-    )
-    .map((entry) => ({
-      ...entry,
-      score: (getCupIndex(entry.estimatedCup) ?? -1) + 1,
-    }))
+    .filter((entry) => getPreferredCupLabel(entry) !== null)
+    .map((entry) => {
+      const publicCup = getPreferredCupLabel(entry);
+
+      return {
+        ...entry,
+        score: (getCupIndex(publicCup) ?? -1) + 1,
+      };
+    })
     .sort(
       (left, right) =>
         right.score - left.score ||
@@ -154,14 +153,14 @@ function buildFemaleEstimatedCupRanking(): FemaleRankingEntry[] {
     );
 }
 
-function buildMaleEstimatedHeightRanking(): MaleRankingEntry[] {
+function buildMalePublicHeightRanking(): MaleRankingEntry[] {
   return maleProfilePool
     .map((profile) => {
       const entry = buildMaleBaseEntry(profile);
 
       return {
         ...entry,
-        score: entry.estimatedHeight,
+        score: entry.actualHeight,
       };
     })
     .sort(
@@ -181,14 +180,14 @@ export function buildRankingData(): RankingData {
         ranking: buildFemaleStyleRanking(),
       },
       {
-        category: "estimatedHeight",
-        title: "AI推定身長ランキング",
-        ranking: buildFemaleEstimatedHeightRanking(),
+        category: "publicHeight",
+        title: "公表身長ランキング",
+        ranking: buildFemalePublicHeightRanking(),
       },
       {
-        category: "estimatedCup",
-        title: "AI推定カップ数ランキング",
-        ranking: buildFemaleEstimatedCupRanking(),
+        category: "publicCup",
+        title: "公表カップ数ランキング",
+        ranking: buildFemalePublicCupRanking(),
       },
     ],
     male: [
@@ -198,9 +197,9 @@ export function buildRankingData(): RankingData {
         ranking: buildMaleStyleRanking(),
       },
       {
-        category: "estimatedHeight",
-        title: "AI推定身長ランキング",
-        ranking: buildMaleEstimatedHeightRanking(),
+        category: "publicHeight",
+        title: "公表身長ランキング",
+        ranking: buildMalePublicHeightRanking(),
       },
     ],
   };
