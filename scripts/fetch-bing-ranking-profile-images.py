@@ -17,10 +17,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 RANKING_PATH = REPO_ROOT / "public" / "data" / "ranking.json"
 SOURCE_PROFILES_PATH = REPO_ROOT / "lib" / "source-profiles.ts"
 FETCH_SOURCE_PROFILES_PATH = REPO_ROOT / "scripts" / "fetch-source-profiles.mjs"
+IMAGE_CREDITS_PATH = REPO_ROOT / "public" / "data" / "image-credits.json"
 IMAGES_DIR = REPO_ROOT / "public" / "images"
 
 FEMALE_QUERY_SUFFIXES = ("グラビア", "プロフィール", "モデル", "宣材写真")
 MALE_QUERY_SUFFIXES = ("俳優", "プロフィール", "宣材写真", "アー写")
+QUERY_OVERRIDES = {
+    "清水みさと": ["清水みさと 女優", "清水みさと タレント", "清水みさと グラビア"],
+    "高橋茂雄": ["高橋茂雄 サバンナ", "サバンナ 高橋茂雄", "高橋茂雄 芸人"],
+    "榎木孝明": ["榎木孝明 俳優"],
+    "原口あきまさ": ["原口あきまさ ものまね", "原口あきまさ タレント"],
+}
 MIN_BYTES = 10 * 1024
 MIN_SIDE = 180
 MIN_RATIO = 0.9
@@ -121,6 +128,11 @@ def load_only_names(raw_names: str, names_file: str) -> set[str]:
 
 
 def build_queries(target: Target) -> list[str]:
+    override_queries = QUERY_OVERRIDES.get(target.name)
+
+    if override_queries:
+        return list(dict.fromkeys(override_queries))
+
     search_name = collector.search_name_for(target.name)
     suffixes = FEMALE_QUERY_SUFFIXES if target.gender == "female" else MALE_QUERY_SUFFIXES
     queries = [search_name]
@@ -150,7 +162,26 @@ def image_download_candidates(page, target: Target) -> list[str]:
 
 
 def validate_and_save_image(image_bytes: bytes, destination: Path) -> bool:
-    if len(image_bytes) < MIN_BYTES:
+    return validate_and_save_image_with_thresholds(
+        image_bytes,
+        destination,
+        min_bytes=MIN_BYTES,
+        min_side=MIN_SIDE,
+        min_ratio=MIN_RATIO,
+        max_ratio=MAX_RATIO,
+    )
+
+
+def validate_and_save_image_with_thresholds(
+    image_bytes: bytes,
+    destination: Path,
+    *,
+    min_bytes: int,
+    min_side: int,
+    min_ratio: float,
+    max_ratio: float,
+) -> bool:
+    if len(image_bytes) < min_bytes:
         return False
 
     with Image.open(io.BytesIO(image_bytes)) as image:
@@ -158,11 +189,11 @@ def validate_and_save_image(image_bytes: bytes, destination: Path) -> bool:
         image = ImageOps.exif_transpose(image)
         width, height = image.size
 
-        if width < MIN_SIDE or height < MIN_SIDE:
+        if width < min_side or height < min_side:
             return False
 
         ratio = height / width
-        if ratio < MIN_RATIO or ratio > MAX_RATIO:
+        if ratio < min_ratio or ratio > max_ratio:
             return False
 
         if image.mode not in ("RGB", "L"):
@@ -177,14 +208,21 @@ def validate_and_save_image(image_bytes: bytes, destination: Path) -> bool:
 
 
 def download_target_image(
-    page, target: Target, refresh_existing: bool = False
+    page,
+    target: Target,
+    refresh_existing: bool = False,
+    *,
+    min_bytes: int = MIN_BYTES,
+    min_side: int = MIN_SIDE,
+    min_ratio: float = MIN_RATIO,
+    max_ratio: float = MAX_RATIO,
 ) -> tuple[Path | None, str]:
     output_path = IMAGES_DIR / f"{make_filename(target.name)}.jpg"
 
     if (
         not refresh_existing
         and output_path.exists()
-        and output_path.stat().st_size >= MIN_BYTES
+        and output_path.stat().st_size >= min_bytes
     ):
         return output_path, "cached"
 
@@ -204,7 +242,14 @@ def download_target_image(
             continue
 
         try:
-            if validate_and_save_image(image_bytes, output_path):
+            if validate_and_save_image_with_thresholds(
+                image_bytes,
+                output_path,
+                min_bytes=min_bytes,
+                min_side=min_side,
+                min_ratio=min_ratio,
+                max_ratio=max_ratio,
+            ):
                 return output_path, image_url
         except OSError:
             output_path.unlink(missing_ok=True)
@@ -266,6 +311,29 @@ def write_text_atomic(path: Path, content: str) -> None:
     temp_path.replace(path)
 
 
+def read_existing_credits() -> list[dict[str, object]]:
+    try:
+        return json.loads(IMAGE_CREDITS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def update_image_credits(credits_by_name: dict[str, dict[str, object]]) -> None:
+    current_credits = read_existing_credits()
+    merged: dict[str, dict[str, object]] = {
+        str(entry.get("name", "")): entry for entry in current_credits
+    }
+
+    for name, credit in credits_by_name.items():
+        merged[name] = credit
+
+    next_credits = sorted(merged.values(), key=lambda entry: str(entry.get("name", "")))
+    write_text_atomic(
+        IMAGE_CREDITS_PATH,
+        json.dumps(next_credits, ensure_ascii=False, indent=2) + "\n",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Fetch Bing profile images for top-ranking entries"
@@ -289,6 +357,30 @@ def main() -> int:
         default="all",
         help="Which ranking gender buckets to scan",
     )
+    parser.add_argument(
+        "--min-bytes",
+        type=int,
+        default=MIN_BYTES,
+        help="Minimum downloaded source size in bytes",
+    )
+    parser.add_argument(
+        "--min-side",
+        type=int,
+        default=MIN_SIDE,
+        help="Minimum source width and height in pixels",
+    )
+    parser.add_argument(
+        "--min-ratio",
+        type=float,
+        default=MIN_RATIO,
+        help="Minimum allowed height/width ratio",
+    )
+    parser.add_argument(
+        "--max-ratio",
+        type=float,
+        default=MAX_RATIO,
+        help="Maximum allowed height/width ratio",
+    )
     args = parser.parse_args()
 
     only_names = load_only_names(args.only_names, args.only_names_file)
@@ -296,6 +388,7 @@ def main() -> int:
         only_names, args.top_n, args.gender, refresh_existing=args.refresh_existing
     )
     replacements: dict[str, str] = {}
+    credits: dict[str, dict[str, object]] = {}
     failures: list[dict[str, str]] = []
 
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
@@ -307,7 +400,13 @@ def main() -> int:
         for target in targets:
             try:
                 output_path, source = download_target_image(
-                    page, target, refresh_existing=args.refresh_existing
+                    page,
+                    target,
+                    refresh_existing=args.refresh_existing,
+                    min_bytes=args.min_bytes,
+                    min_side=args.min_side,
+                    min_ratio=args.min_ratio,
+                    max_ratio=args.max_ratio,
                 )
                 if output_path is None:
                     failures.append({"name": target.name, "reason": "no-image-found"})
@@ -316,10 +415,25 @@ def main() -> int:
 
                 image_path = f"/images/{output_path.name}"
                 replacements[target.name] = image_path
+                credits[target.name] = {
+                    "name": target.name,
+                    "image": image_path,
+                    "title": target.name,
+                    "creator": None,
+                    "creatorUrl": None,
+                    "source": source,
+                    "provider": "bing",
+                    "license": "",
+                    "licenseVersion": "",
+                    "licenseUrl": "",
+                    "foreignLandingUrl": source,
+                    "attribution": "",
+                }
 
                 if len(replacements) % FLUSH_EVERY == 0:
                     update_source_profiles(replacements)
                     update_fetch_source_profiles(replacements)
+                    update_image_credits(credits)
 
                 print(f"{target.name} -> {source}")
             except Exception as exc:
@@ -331,6 +445,7 @@ def main() -> int:
     if replacements:
         update_source_profiles(replacements)
         update_fetch_source_profiles(replacements)
+        update_image_credits(credits)
 
     print(
         json.dumps(
