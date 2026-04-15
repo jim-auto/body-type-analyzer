@@ -41,21 +41,21 @@ const mockResult: DiagnosisResult = {
   similarCelebrities: [
     {
       name: "石原さとみ",
-      image: "/images/ishihara_satomi.jpg",
+      image: "/images/ishihara_satomi.webp",
       similarity: 94,
       actualHeight: 157,
       cup: "D",
     },
     {
       name: "深田恭子",
-      image: "/images/fukada_kyoko.jpg",
+      image: "/images/fukada_kyoko.webp",
       similarity: 89,
       actualHeight: 163,
       cup: "E",
     },
     {
       name: "今田美桜",
-      image: "/images/imada_mio.jpg",
+      image: "/images/imada_mio.webp",
       similarity: 83,
       actualHeight: 157,
       cup: "F",
@@ -96,7 +96,7 @@ const mockMaleResult: MaleDiagnosisResult = {
   similarCelebrities: [
     {
       name: "福山雅治",
-      image: "/images/fukuyama_masaharu.jpg",
+      image: "/images/fukuyama_masaharu.webp",
       similarity: 88,
       actualHeight: 181,
       cup: "A",

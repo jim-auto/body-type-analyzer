@@ -243,6 +243,13 @@ describe("ranking.json actual profile data", () => {
     });
   });
 
+  test("public/images は webp のみを配信する", () => {
+    const imageDir = path.join(process.cwd(), "public", "images");
+    const imageFiles = fs.readdirSync(imageDir);
+
+    expect(imageFiles.some((filename) => /\.jpe?g$/iu.test(filename))).toBe(false);
+  });
+
   test("曖昧な名前のプロフィールは安全のため ui-avatars を使う", () => {
     knownAmbiguousImageNames.forEach((name) => {
       const entry = [...femaleProfilePool, ...maleProfilePool].find(
