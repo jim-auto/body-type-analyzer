@@ -57,6 +57,15 @@ const femaleStyleNonAvEntry = femaleStyleCategory.ranking.find(
 const femaleStyleAvCount = femaleStyleCategory.ranking.filter((entry) =>
   getFemaleProfileOccupations(entry.name).includes("av")
 ).length;
+const femaleScarceCupEntryIndex = femalePublicCupCategory.ranking.findIndex((entry) =>
+  ["L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"].includes(
+    (entry.displayCup ?? entry.cup) ?? ""
+  )
+);
+const femaleScarceCupEntry =
+  femaleScarceCupEntryIndex >= 0
+    ? femalePublicCupCategory.ranking[femaleScarceCupEntryIndex]
+    : null;
 
 const renderHome = () => render(<Home />);
 
@@ -406,6 +415,28 @@ describe("Home (Ranking Page)", () => {
       screen.getAllByText(`${displayedCup}カップ`).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText(expectedDetail).length).toBeGreaterThan(0);
+  });
+
+  test("学習データが薄い大カップ帯にはデータ不足の注意を表示する", () => {
+    expect(femaleScarceCupEntry).not.toBeNull();
+
+    renderHome();
+    clickCategoryTab("公表カップ数ランキング");
+
+    const pageNumber = Math.floor(femaleScarceCupEntryIndex / PAGE_SIZE) + 1;
+
+    if (pageNumber > 1) {
+      clickPageNumber(pageNumber);
+    }
+
+    const card = screen
+      .getByText(femaleScarceCupEntry!.name)
+      .closest("div.rounded-2xl");
+
+    expect(card).not.toBeNull();
+    expect(
+      within(card as HTMLElement).getByText("そのカップ数はデータ不足")
+    ).toBeInTheDocument();
   });
 
   test("分布セクションに女性カップ分布と男性身長分布が表示される", () => {

@@ -7,6 +7,7 @@ import type {
   FemaleCupDistributionSummary,
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
+import { getCupIndex } from "@/lib/cup-order";
 import {
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
@@ -47,6 +48,7 @@ type OccupationFilter = "all" | ProfileOccupation;
 const PAGE_SIZE = 20;
 const EARLY_PAGE_COUNT = 5;
 const RANKING_CARD_OCCUPATION_LIMIT = 3;
+const SCARCE_CUP_MIN = "L";
 
 const medalColors: Record<number, string> = {
   0: "bg-yellow-400 text-yellow-900",
@@ -139,6 +141,18 @@ function getDefaultCategoryIndex(
 
 function getDisplayedCup(entry: FemaleRankingEntry): string | null {
   return entry.displayCup ?? entry.cup;
+}
+
+function hasInsufficientCupData(entry: FemaleRankingEntry): boolean {
+  const displayedCup = getDisplayedCup(entry);
+  const displayedCupIndex = getCupIndex(displayedCup);
+  const scarceCupIndex = getCupIndex(SCARCE_CUP_MIN);
+
+  return (
+    displayedCupIndex !== null &&
+    scarceCupIndex !== null &&
+    displayedCupIndex >= scarceCupIndex
+  );
 }
 
 function getFemaleStyleDetail(entry: FemaleRankingEntry): string {
@@ -746,6 +760,9 @@ export default function HomePageClient({
                   const femaleOccupationLabels = femaleEntry
                     ? getFemaleOccupationLabels(entry.name)
                     : [];
+                  const hasCupDataWarning = femaleEntry
+                    ? hasInsufficientCupData(femaleEntry)
+                    : false;
                   const predictionText = isPublicHeightCategory
                     ? getPublicHeightDetail(entry)
                     : isPublicCupCategory && femaleEntry
@@ -787,6 +804,11 @@ export default function HomePageClient({
                             {femaleEntry && getDisplayedCup(femaleEntry) ? (
                               <span className="rounded bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-700">
                                 {getDisplayedCup(femaleEntry)}カップ
+                              </span>
+                            ) : null}
+                            {hasCupDataWarning ? (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
+                                そのカップ数はデータ不足
                               </span>
                             ) : null}
                             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
