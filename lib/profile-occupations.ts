@@ -81,13 +81,13 @@ type ProfileCoverageData = {
 const profileOccupations = occupationsJson as ProfileOccupationsData;
 const profileCoverage = coverageJson as ProfileCoverageData;
 
-export const FEMALE_PROFILE_TOTAL_GOAL = 1400;
+export const FEMALE_PROFILE_TOTAL_GOAL = 1800;
 export const FEMALE_PROFILE_OCCUPATION_GOAL_TARGETS: Record<
   ProfileOccupation,
   number
 > = {
   gravure: 800,
-  av: 200,
+  av: 500,
   actress: 950,
   model: 300,
   talent: 650,

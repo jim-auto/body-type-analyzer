@@ -65,9 +65,18 @@ const COVERAGE_OUTPUT_PATH = path.join(
   "data",
   "profile-coverage.json"
 );
+const DMM_AV_PROFILES_PATH = path.join(REPO_ROOT, "data", "dmm-av-profiles.json");
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function readJsonIfExists(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
 async function fetchText(url, { retries = 5 } = {}) {
@@ -525,6 +534,10 @@ async function fetchGravurefitLargeCupReferenceSet() {
 
 async function main() {
   const generatedAt = new Date().toISOString();
+  const dmmAvProfiles = readJsonIfExists(DMM_AV_PROFILES_PATH)?.profiles ?? [];
+  const dmmAvNameSet = new Set(
+    dmmAvProfiles.map((profile) => profile.name).filter(Boolean)
+  );
   const femalePageMaps = await buildFemaleProfilePageMap();
   const idolprofCache = new Map();
   const femaleProfiles = [...femaleProfilePool];
@@ -567,6 +580,7 @@ async function main() {
       wikipediaIntroByName.get(entry.name) ||
       "";
     const overrideOccupations = FEMALE_OCCUPATION_OVERRIDES[entry.name] ?? [];
+    const dmmOccupations = dmmAvNameSet.has(entry.name) ? ["av"] : [];
 
     entry.occupations = mergeOccupations(
       detectOccupations({
@@ -574,7 +588,8 @@ async function main() {
         noteText: entry.noteText,
         wikipediaIntro,
       }),
-      overrideOccupations
+      overrideOccupations,
+      dmmOccupations
     );
 
     if ((index + 1) % 100 === 0 || index === femaleResults.length - 1) {

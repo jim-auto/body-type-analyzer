@@ -23,7 +23,7 @@ describe("profile occupations", () => {
       (entry) => entry.occupation === "av"
     );
 
-    expect(FEMALE_PROFILE_GOAL_SUMMARY.totalTarget).toBe(1400);
+    expect(FEMALE_PROFILE_GOAL_SUMMARY.totalTarget).toBe(1800);
     expect(FEMALE_PROFILE_GOAL_SUMMARY.totalCurrent).toBe(
       FEMALE_PROFILE_COVERAGE_SUMMARY.total
     );
@@ -31,8 +31,8 @@ describe("profile occupations", () => {
       FEMALE_PROFILE_COVERAGE_SUMMARY.occupations.length
     );
     expect(avGoal).toBeDefined();
-    expect(avGoal?.target).toBe(200);
-    expect(avGoal?.remaining).toBe(Math.max(200 - (avGoal?.count ?? 0), 0));
+    expect(avGoal?.target).toBe(500);
+    expect(avGoal?.remaining).toBe(Math.max(500 - (avGoal?.count ?? 0), 0));
   });
 
   test("known female profiles receive expected occupation tags", () => {
