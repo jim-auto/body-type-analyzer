@@ -35,6 +35,7 @@ type DistributionBucket = {
 };
 
 const PAGE_SIZE = 20;
+const EARLY_PAGE_COUNT = 5;
 
 const medalColors: Record<number, string> = {
   0: "bg-yellow-400 text-yellow-900",
@@ -65,6 +66,53 @@ const genderButtonStyles: Record<Gender, { active: string; inactive: string }> =
       inactive: "text-slate-500 hover:bg-white/80",
     },
   };
+
+function normalizeSearchQuery(value: string): string {
+  return value.normalize("NFKC").toLowerCase().replace(/\s+/g, "").trim();
+}
+
+function getPaginationItems(
+  currentPage: number,
+  totalPages: number
+): Array<number | string> {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index);
+  }
+
+  const visiblePages = new Set<number>([0, totalPages - 1]);
+
+  if (currentPage <= EARLY_PAGE_COUNT - 2) {
+    for (let index = 0; index < EARLY_PAGE_COUNT; index += 1) {
+      visiblePages.add(index);
+    }
+  } else if (currentPage >= totalPages - (EARLY_PAGE_COUNT - 1)) {
+    for (let index = totalPages - EARLY_PAGE_COUNT; index < totalPages; index += 1) {
+      visiblePages.add(index);
+    }
+  } else {
+    for (let index = currentPage - 1; index <= currentPage + 1; index += 1) {
+      visiblePages.add(index);
+    }
+  }
+
+  const sortedPages = [...visiblePages]
+    .filter((index) => index >= 0)
+    .sort((left, right) => left - right);
+  const items: Array<number | string> = [];
+
+  for (let index = 0; index < sortedPages.length; index += 1) {
+    const page = sortedPages[index];
+    const previousPage = sortedPages[index - 1];
+
+    if (previousPage !== undefined && page - previousPage > 1) {
+      items.push(`ellipsis-${previousPage}-${page}`);
+    }
+
+    items.push(page);
+  }
+
+  return items;
+}
 
 function getFemalePredictionText(entry: FemaleRankingEntry): string {
   if (!entry.estimatedCup) {
@@ -184,6 +232,7 @@ export default function HomePageClient({
   const [gender, setGender] = useState<Gender>("female");
   const [activeTab, setActiveTab] = useState(0);
   const [activePage, setActivePage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const basePath =
     process.env.NODE_ENV === "production" ? "/body-type-analyzer" : "";
 
@@ -204,11 +253,19 @@ export default function HomePageClient({
   const categories = data[gender];
   const current = categories[activeTab];
   const currentRanking = current?.ranking ?? [];
-  const totalPages = Math.max(1, Math.ceil(currentRanking.length / PAGE_SIZE));
+  const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
+  const filteredRanking =
+    normalizedSearchQuery.length === 0
+      ? currentRanking
+      : currentRanking.filter((entry) =>
+          normalizeSearchQuery(entry.name).includes(normalizedSearchQuery)
+        );
+  const totalPages = Math.max(1, Math.ceil(filteredRanking.length / PAGE_SIZE));
   const currentPage = Math.min(activePage, totalPages - 1);
   const pageStart = currentPage * PAGE_SIZE;
-  const pageEnd = Math.min(pageStart + PAGE_SIZE, currentRanking.length);
-  const pagedRanking = currentRanking.slice(pageStart, pageEnd);
+  const pageEnd = Math.min(pageStart + PAGE_SIZE, filteredRanking.length);
+  const pagedRanking = filteredRanking.slice(pageStart, pageEnd);
+  const paginationItems = getPaginationItems(currentPage, totalPages);
   const isEstimatedHeightCategory = current?.category === "estimatedHeight";
   const isEstimatedCupCategory = current?.category === "estimatedCup";
   const activeCategoryStyle =
@@ -333,99 +390,179 @@ export default function HomePageClient({
               ) : null}
 
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-100/80 px-4 py-3 text-sm text-slate-600">
-                <p>
-                  {currentRanking.length === 0
-                    ? "0件"
-                    : `${pageStart + 1}-${pageEnd}位 / ${currentRanking.length}人`}
-                </p>
-                <div className="flex items-center gap-2">
+                <div className="space-y-1">
+                  <p>
+                    {filteredRanking.length === 0
+                      ? "0人"
+                      : `${pageStart + 1}-${pageEnd}位 / ${filteredRanking.length}人`}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    ページ {filteredRanking.length === 0 ? 0 : currentPage + 1} /{" "}
+                    {filteredRanking.length === 0 ? 0 : totalPages}
+                    {normalizedSearchQuery.length > 0
+                      ? ` ・ 「${searchQuery.trim()}」の検索結果`
+                      : ""}
+                  </p>
+                </div>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[17rem]">
+                  <label
+                    htmlFor="ranking-search"
+                    className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400"
+                  >
+                    名前で検索
+                  </label>
+                  <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                    <input
+                      id="ranking-search"
+                      type="search"
+                      value={searchQuery}
+                      onChange={(event) => {
+                        setSearchQuery(event.target.value);
+                        setActivePage(0);
+                      }}
+                      placeholder="名前を入力"
+                      className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                    />
+                    {searchQuery.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setActivePage(0);
+                        }}
+                        className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500 transition hover:bg-slate-200"
+                      >
+                        クリア
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              {filteredRanking.length > 0 ? (
+                <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl bg-white/80 px-4 py-3 shadow-sm ring-1 ring-slate-100">
                   <button
                     type="button"
                     onClick={() => setActivePage((page) => Math.max(page - 1, 0))}
                     disabled={currentPage === 0}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-600 transition enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    前の20人
+                    前へ
                   </button>
-                  <span className="min-w-14 text-center font-semibold text-slate-500">
-                    {currentPage + 1} / {totalPages}
-                  </span>
+                  {paginationItems.map((item) =>
+                    typeof item === "number" ? (
+                      <button
+                        key={`page-${item + 1}`}
+                        type="button"
+                        onClick={() => setActivePage(item)}
+                        aria-current={item === currentPage ? "page" : undefined}
+                        className={`min-w-10 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                          item === currentPage
+                            ? activeCategoryStyle
+                            : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {item + 1}
+                      </button>
+                    ) : (
+                      <span
+                        key={item}
+                        className="px-1 text-sm font-semibold text-slate-400"
+                      >
+                        ...
+                      </span>
+                    )
+                  )}
                   <button
                     type="button"
                     onClick={() =>
                       setActivePage((page) => Math.min(page + 1, totalPages - 1))
                     }
                     disabled={currentPage >= totalPages - 1}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-600 transition enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    次の20人
+                    次へ
                   </button>
                 </div>
-              </div>
-              {pagedRanking.map((entry, index) => {
-                const absoluteIndex = pageStart + index;
-                const femaleEntry =
-                  gender === "female" && isFemaleEntry(entry) ? entry : null;
-                const predictionText = isEstimatedHeightCategory
-                  ? getEstimatedHeightDetail(entry)
-                  : isEstimatedCupCategory && femaleEntry
-                    ? getEstimatedCupDetail(femaleEntry)
-                    : femaleEntry
-                      ? getFemalePredictionText(femaleEntry)
-                      : getMalePredictionText(entry as MaleRankingEntry);
-                const scoreLabel = isEstimatedHeightCategory
-                  ? `${entry.score}cm`
-                  : isEstimatedCupCategory && femaleEntry?.estimatedCup
-                    ? `${femaleEntry.estimatedCup}カップ`
-                    : `偏差値${entry.score}`;
+              ) : null}
 
-                return (
-                  <div
-                    key={`${gender}-${entry.name}`}
-                    className="flex items-start justify-between rounded-2xl bg-white/95 p-3.5 shadow-sm ring-1 ring-slate-100 transition-shadow hover:shadow-md sm:p-4"
-                  >
-                    <div className="flex min-w-0 items-start gap-4">
+              {pagedRanking.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-white/90 px-6 py-12 text-center shadow-sm">
+                  <p className="text-base font-semibold text-slate-700">
+                    該当する人物が見つかりません。
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    名前を変えてもう一度検索してください。
+                  </p>
+                </div>
+              ) : (
+                pagedRanking.map((entry) => {
+                  const absoluteIndex = currentRanking.indexOf(entry);
+                  const rankIndex =
+                    absoluteIndex >= 0 ? absoluteIndex : pageStart + pagedRanking.indexOf(entry);
+                  const rankNumber = rankIndex + 1;
+                  const femaleEntry =
+                    gender === "female" && isFemaleEntry(entry) ? entry : null;
+                  const predictionText = isEstimatedHeightCategory
+                    ? getEstimatedHeightDetail(entry)
+                    : isEstimatedCupCategory && femaleEntry
+                      ? getEstimatedCupDetail(femaleEntry)
+                      : femaleEntry
+                        ? getFemalePredictionText(femaleEntry)
+                        : getMalePredictionText(entry as MaleRankingEntry);
+                  const scoreLabel = isEstimatedHeightCategory
+                    ? `${entry.score}cm`
+                    : isEstimatedCupCategory && femaleEntry?.estimatedCup
+                      ? `${femaleEntry.estimatedCup}カップ`
+                      : `偏差値${entry.score}`;
+
+                  return (
+                    <div
+                      key={`${gender}-${entry.name}`}
+                      className="flex items-start justify-between rounded-2xl bg-white/95 p-3.5 shadow-sm ring-1 ring-slate-100 transition-shadow hover:shadow-md sm:p-4"
+                    >
+                      <div className="flex min-w-0 items-start gap-4">
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                            medalColors[rankIndex] ?? defaultRankBadge
+                          }`}
+                        >
+                          {rankNumber}
+                        </span>
+                        <img
+                          src={resolveImageSrc(entry.image)}
+                          alt={entry.name}
+                          className={`h-12 w-12 shrink-0 rounded-full object-cover ${
+                            medalBorder[rankIndex] ?? defaultAvatarRing
+                          }`}
+                        />
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-slate-700">
+                              {entry.name}
+                            </span>
+                            {femaleEntry?.cup ? (
+                              <span className="rounded bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-700">
+                                {femaleEntry.cup}カップ
+                              </span>
+                            ) : null}
+                            <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                              {entry.actualHeight}cm
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400">{predictionText}</p>
+                        </div>
+                      </div>
                       <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                          medalColors[absoluteIndex] ?? defaultRankBadge
+                        className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${
+                          medalColors[rankIndex] ?? defaultScoreBadge
                         }`}
                       >
-                        {absoluteIndex + 1}
+                        {scoreLabel}
                       </span>
-                      <img
-                        src={resolveImageSrc(entry.image)}
-                        alt={entry.name}
-                        className={`h-12 w-12 shrink-0 rounded-full object-cover ${
-                          medalBorder[absoluteIndex] ?? defaultAvatarRing
-                        }`}
-                      />
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-semibold text-slate-700">
-                            {entry.name}
-                          </span>
-                          {femaleEntry?.cup ? (
-                            <span className="rounded bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-700">
-                              {femaleEntry.cup}カップ
-                            </span>
-                          ) : null}
-                          <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
-                            {entry.actualHeight}cm
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400">{predictionText}</p>
-                      </div>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${
-                        medalColors[absoluteIndex] ?? defaultScoreBadge
-                      }`}
-                    >
-                      {scoreLabel}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           ) : null}
         </section>

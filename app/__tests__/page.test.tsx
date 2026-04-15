@@ -28,6 +28,12 @@ const maleStyleCategory = rankingData.male.find(
 const femaleEstimatedCupCategory = rankingData.female.find(
   (entry) => entry.category === "estimatedCup"
 )!;
+const femaleSearchQueryEntry = femaleStyleCategory.ranking.find(
+  (entry) =>
+    femaleStyleCategory.ranking.filter((candidate) =>
+      candidate.name.includes(entry.name)
+    ).length <= PAGE_SIZE
+)!;
 const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
   entry.image.startsWith("/")
 )!;
@@ -42,8 +48,14 @@ const clickCategoryTab = (label: string) => {
   fireEvent.click(screen.getByRole("button", { name: label }));
 };
 
-const clickNextPage = () => {
-  fireEvent.click(screen.getByRole("button", { name: "次の20人" }));
+const clickPageNumber = (pageNumber: number) => {
+  fireEvent.click(screen.getByRole("button", { name: String(pageNumber) }));
+};
+
+const searchByName = (query: string) => {
+  fireEvent.change(screen.getByLabelText("名前で検索"), {
+    target: { value: query },
+  });
 };
 
 const getFemaleCategory = (categoryKey: string) => {
@@ -148,22 +160,60 @@ describe("Home (Ranking Page)", () => {
     expect(screen.getAllByText(/^AI推定: .*cm/)).toHaveLength(PAGE_SIZE);
   });
 
-  test("ランキングは20人ずつページ送りできる", () => {
+  test("ランキングは番号ボタンでページ移動できる", () => {
     const firstPageTop = femaleStyleCategory.ranking[0];
     const secondPageTop = femaleStyleCategory.ranking[20];
     const totalLabel = `${femaleStyleCategory.ranking.length}人`;
 
     renderHome();
 
+    expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument();
     expect(screen.getByText(firstPageTop.name)).toBeInTheDocument();
     expect(screen.queryByText(secondPageTop.name)).not.toBeInTheDocument();
     expect(screen.getByText(`1-20位 / ${totalLabel}`)).toBeInTheDocument();
 
-    clickNextPage();
+    clickPageNumber(2);
 
     expect(screen.queryByText(firstPageTop.name)).not.toBeInTheDocument();
     expect(screen.getByText(secondPageTop.name)).toBeInTheDocument();
     expect(screen.getByText(`21-40位 / ${totalLabel}`)).toBeInTheDocument();
+  });
+
+  test("名前検索でランキングを絞り込みページを先頭に戻せる", () => {
+    const searchTarget = femaleSearchQueryEntry;
+    const matchingEntries = femaleStyleCategory.ranking.filter((entry) =>
+      entry.name.includes(searchTarget.name)
+    );
+    const expectedPageEnd = Math.min(PAGE_SIZE, matchingEntries.length);
+    const expectedTotalPages = Math.max(
+      1,
+      Math.ceil(matchingEntries.length / PAGE_SIZE)
+    );
+
+    renderHome();
+
+    clickPageNumber(2);
+    searchByName(searchTarget.name);
+
+    expect(screen.getByText(searchTarget.name)).toBeInTheDocument();
+    expect(
+      screen.getByText(`1-${expectedPageEnd}位 / ${matchingEntries.length}人`)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `ページ 1 / ${expectedTotalPages} ・ 「${searchTarget.name}」の検索結果`
+      )
+    ).toBeInTheDocument();
+  });
+
+  test("名前検索で結果がないと空状態を表示する", () => {
+    renderHome();
+
+    searchByName("存在しない人物");
+
+    expect(screen.getByText("該当する人物が見つかりません。")).toBeInTheDocument();
+    expect(screen.getByText("0人")).toBeInTheDocument();
   });
 
   test("男女切り替え時にカテゴリタブが最初に戻る", () => {
