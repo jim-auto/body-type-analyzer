@@ -9,6 +9,7 @@
     "lint": "eslint",
     "fetch:local-training": "node scripts/fetch-local-training-profiles.mjs",
     "optimize:images": "python scripts/optimize-public-images.py",
+    "generate:ranking-image-qa": "python scripts/generate-ranking-image-qa.py",
     "generate:diagnosis-model": "python scripts/generate-diagnosis-model.py",
     "experiment:diagnosis-model": "python scripts/run-diagnosis-experiments.py",
     "test": "jest --runInBand",
