@@ -23,7 +23,7 @@ FEMALE_QUERY_SUFFIXES = ("グラビア", "プロフィール", "モデル", "宣
 MALE_QUERY_SUFFIXES = ("俳優", "プロフィール", "宣材写真", "アー写")
 MIN_BYTES = 10 * 1024
 MIN_SIDE = 180
-MIN_RATIO = 0.75
+MIN_RATIO = 0.9
 MAX_RATIO = 2.8
 FLUSH_EVERY = 25
 
@@ -61,23 +61,32 @@ def make_filename(name: str) -> str:
     return f"jp_{hex_stem}_{digest}"
 
 
-def load_targets(only_names: set[str], top_n: int, gender_filter: str) -> list[Target]:
+def load_targets(
+    only_names: set[str], top_n: int, gender_filter: str, refresh_existing: bool = False
+) -> list[Target]:
     ranking = json.loads(RANKING_PATH.read_text(encoding="utf-8"))
     female_categories = ranking["female"] if gender_filter in ("female", "all") else []
     male_categories = ranking["male"] if gender_filter in ("male", "all") else []
     female_limit = top_n if top_n > 0 else None
     male_limit = top_n if top_n > 0 else None
+    include_existing_named_entries = refresh_existing and bool(only_names)
     female = [
         entry
         for category in female_categories
         for entry in category["ranking"][:female_limit]
         if "ui-avatars" in entry["image"]
+        or (
+            include_existing_named_entries and entry["name"] in only_names
+        )
     ]
     male = [
         entry
         for category in male_categories
         for entry in category["ranking"][:male_limit]
         if "ui-avatars" in entry["image"]
+        or (
+            include_existing_named_entries and entry["name"] in only_names
+        )
     ]
 
     deduped: list[Target] = []
@@ -167,10 +176,16 @@ def validate_and_save_image(image_bytes: bytes, destination: Path) -> bool:
     return destination.exists() and destination.stat().st_size >= MIN_BYTES
 
 
-def download_target_image(page, target: Target) -> tuple[Path | None, str]:
+def download_target_image(
+    page, target: Target, refresh_existing: bool = False
+) -> tuple[Path | None, str]:
     output_path = IMAGES_DIR / f"{make_filename(target.name)}.jpg"
 
-    if output_path.exists() and output_path.stat().st_size >= MIN_BYTES:
+    if (
+        not refresh_existing
+        and output_path.exists()
+        and output_path.stat().st_size >= MIN_BYTES
+    ):
         return output_path, "cached"
 
     for image_url in image_download_candidates(page, target):
@@ -252,10 +267,22 @@ def write_text_atomic(path: Path, content: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Fetch Bing profile images for top-ranking ui-avatar entries")
+    parser = argparse.ArgumentParser(
+        description="Fetch Bing profile images for top-ranking entries"
+    )
     parser.add_argument("--only-names", default="", help="Comma-separated target names")
     parser.add_argument("--only-names-file", default="", help="Path to a newline-delimited target-name file")
-    parser.add_argument("--top-n", type=int, default=100, help="Collect ui-avatar entries from the top N rows of each ranking")
+    parser.add_argument(
+        "--top-n",
+        type=int,
+        default=100,
+        help="Collect target entries from the top N rows of each ranking",
+    )
+    parser.add_argument(
+        "--refresh-existing",
+        action="store_true",
+        help="Ignore any cached JPEG for the targeted names and download again",
+    )
     parser.add_argument(
         "--gender",
         choices=("female", "male", "all"),
@@ -265,7 +292,9 @@ def main() -> int:
     args = parser.parse_args()
 
     only_names = load_only_names(args.only_names, args.only_names_file)
-    targets = load_targets(only_names, args.top_n, args.gender)
+    targets = load_targets(
+        only_names, args.top_n, args.gender, refresh_existing=args.refresh_existing
+    )
     replacements: dict[str, str] = {}
     failures: list[dict[str, str]] = []
 
@@ -277,7 +306,9 @@ def main() -> int:
 
         for target in targets:
             try:
-                output_path, source = download_target_image(page, target)
+                output_path, source = download_target_image(
+                    page, target, refresh_existing=args.refresh_existing
+                )
                 if output_path is None:
                     failures.append({"name": target.name, "reason": "no-image-found"})
                     print(f"{target.name} -> failed")

@@ -214,7 +214,7 @@ function buildSearchUrl(language, query) {
 }
 
 function getSummarySource(payload) {
-  const candidates = [payload?.thumbnail?.source, payload?.originalimage?.source];
+  const candidates = [payload?.originalimage?.source, payload?.thumbnail?.source];
   return candidates.find((source) => isUsableImageSource(source)) ?? null;
 }
 
@@ -420,9 +420,11 @@ function makeFilename(name) {
   return `jp_${hexStem}_${hash}`;
 }
 
-function shouldRefreshExistingImage(imagePath) {
+function shouldRefreshExistingImage(imagePath, forceRefresh = false) {
   return (
-    process.env.REFRESH_EXISTING === "1" && imagePath.startsWith("/images/jp_")
+    process.env.REFRESH_EXISTING === "1" &&
+    imagePath.startsWith("/images/") &&
+    (forceRefresh || imagePath.startsWith("/images/jp_"))
   );
 }
 
@@ -520,7 +522,7 @@ async function updateSourceProfiles(replacements) {
     source = source.replace(pattern, `$1${imagePath}$2`);
   }
 
-  await fs.writeFile(SOURCE_PROFILES_PATH, source);
+  await writeTextAtomic(SOURCE_PROFILES_PATH, source);
 }
 
 function parseImagePathEntries(block) {
@@ -560,7 +562,13 @@ async function updateFetchSourceProfiles(replacements) {
   }
 
   const updated = source.replace(match[0], renderImagePaths(entries));
-  await fs.writeFile(FETCH_SOURCE_PROFILES_PATH, updated);
+  await writeTextAtomic(FETCH_SOURCE_PROFILES_PATH, updated);
+}
+
+async function writeTextAtomic(filePath, content) {
+  const tempPath = `${filePath}.tmp`;
+  await fs.writeFile(tempPath, content, "utf8");
+  await fs.rename(tempPath, filePath);
 }
 
 async function flushReplacements(replacements) {
@@ -577,21 +585,30 @@ async function main() {
 
   await fs.mkdir(IMAGES_DIR, { recursive: true });
 
+  const onlyNames = await loadOnlyNames();
+  const forceRefreshByName =
+    process.env.REFRESH_EXISTING === "1" && onlyNames.size > 0;
+
   const femaleTargets = femaleProfilePool
     .filter(
       (entry) =>
         entry.image.startsWith("https://ui-avatars.com/") ||
-        shouldRefreshExistingImage(entry.image)
+        shouldRefreshExistingImage(
+          entry.image,
+          forceRefreshByName && onlyNames.has(entry.name)
+        )
     )
     .map((entry) => buildTarget(entry.name, "female"));
   const maleTargets = maleProfilePool
     .filter(
       (entry) =>
         entry.image.startsWith("https://ui-avatars.com/") ||
-        shouldRefreshExistingImage(entry.image)
+        shouldRefreshExistingImage(
+          entry.image,
+          forceRefreshByName && onlyNames.has(entry.name)
+        )
     )
     .map((entry) => buildTarget(entry.name, "male"));
-  const onlyNames = await loadOnlyNames();
   const targets = [...femaleTargets, ...maleTargets].filter(
     (target) => onlyNames.size === 0 || onlyNames.has(target.name)
   );
@@ -601,6 +618,7 @@ async function main() {
   const failures = [];
   let downloadedCount = 0;
   let reusedCount = 0;
+  const refreshExisting = process.env.REFRESH_EXISTING === "1";
 
   for (const target of limitedTargets) {
     const outputPath = path.join(IMAGES_DIR, `${target.filename}.jpg`);
@@ -609,15 +627,17 @@ async function main() {
     try {
       try {
         await fs.access(outputPath);
-        replacements.set(target.name, imagePath);
-        reusedCount += 1;
+        if (!refreshExisting) {
+          replacements.set(target.name, imagePath);
+          reusedCount += 1;
 
-        if (replacements.size % FLUSH_EVERY === 0) {
-          await flushReplacements(replacements);
+          if (replacements.size % FLUSH_EVERY === 0) {
+            await flushReplacements(replacements);
+          }
+
+          console.log(`${target.name} -> cached`);
+          continue;
         }
-
-        console.log(`${target.name} -> cached`);
-        continue;
       } catch {
         // Download the image when the cached file does not exist yet.
       }

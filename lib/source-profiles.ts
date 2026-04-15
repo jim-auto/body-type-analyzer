@@ -1079,7 +1079,7 @@ export const femaleProfilePool: FemaleProfileSource[] = [
   },
   {
     name: "磯貝花音",
-    image: "/images/isogai_kanon.webp",
+    image: "/images/jp_e7a3afe8b29d_dd9c1b21.webp",
     actualHeight: 162,
     bust: 82,
     cup: "C",
@@ -8040,7 +8040,7 @@ export const maleProfilePool: MaleProfileSource[] = [
   },
   {
     name: "伊藤英明",
-    image: "/images/ito_hideaki.webp",
+    image: "/images/jp_e4bc8ae897a4_56a678ec.webp",
     actualHeight: 183,
   },
   {
