@@ -25,6 +25,7 @@ MIN_BYTES = 10 * 1024
 MIN_SIDE = 180
 MIN_RATIO = 0.75
 MAX_RATIO = 2.8
+FLUSH_EVERY = 25
 
 
 @dataclass(frozen=True)
@@ -60,18 +61,22 @@ def make_filename(name: str) -> str:
     return f"jp_{hex_stem}_{digest}"
 
 
-def load_targets(only_names: set[str]) -> list[Target]:
+def load_targets(only_names: set[str], top_n: int, gender_filter: str) -> list[Target]:
     ranking = json.loads(RANKING_PATH.read_text(encoding="utf-8"))
+    female_categories = ranking["female"] if gender_filter in ("female", "all") else []
+    male_categories = ranking["male"] if gender_filter in ("male", "all") else []
+    female_limit = top_n if top_n > 0 else None
+    male_limit = top_n if top_n > 0 else None
     female = [
         entry
-        for category in ranking["female"]
-        for entry in category["ranking"][:100]
+        for category in female_categories
+        for entry in category["ranking"][:female_limit]
         if "ui-avatars" in entry["image"]
     ]
     male = [
         entry
-        for category in ranking["male"]
-        for entry in category["ranking"][:100]
+        for category in male_categories
+        for entry in category["ranking"][:male_limit]
         if "ui-avatars" in entry["image"]
     ]
 
@@ -89,6 +94,21 @@ def load_targets(only_names: set[str]) -> list[Target]:
             deduped.append(Target(name=name, gender=gender))
 
     return deduped
+
+
+def load_only_names(raw_names: str, names_file: str) -> set[str]:
+    names = {name.strip() for name in raw_names.split(",") if name.strip()}
+
+    if names_file:
+        file_path = Path(names_file)
+        file_names = {
+            name.strip()
+            for name in file_path.read_text(encoding="utf-8").splitlines()
+            if name.strip()
+        }
+        names.update(file_names)
+
+    return names
 
 
 def build_queries(target: Target) -> list[str]:
@@ -190,7 +210,7 @@ def update_source_profiles(replacements: dict[str, str]) -> None:
             raise RuntimeError(f"Could not find source profile entry for {name}")
         source = pattern.sub(rf"\1{image_path}\2", source, count=1)
 
-    SOURCE_PROFILES_PATH.write_text(source, encoding="utf-8")
+    write_text_atomic(SOURCE_PROFILES_PATH, source)
 
 
 def parse_image_path_entries(block: str) -> dict[str, str]:
@@ -222,16 +242,30 @@ def update_fetch_source_profiles(replacements: dict[str, str]) -> None:
     entries = parse_image_path_entries(match.group(0))
     entries.update(replacements)
     updated = source.replace(match.group(0), render_image_paths(entries))
-    FETCH_SOURCE_PROFILES_PATH.write_text(updated, encoding="utf-8")
+    write_text_atomic(FETCH_SOURCE_PROFILES_PATH, updated)
+
+
+def write_text_atomic(path: Path, content: str) -> None:
+    temp_path = path.with_suffix(f"{path.suffix}.tmp")
+    temp_path.write_text(content, encoding="utf-8")
+    temp_path.replace(path)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Fetch Bing profile images for top-ranking ui-avatar entries")
     parser.add_argument("--only-names", default="", help="Comma-separated target names")
+    parser.add_argument("--only-names-file", default="", help="Path to a newline-delimited target-name file")
+    parser.add_argument("--top-n", type=int, default=100, help="Collect ui-avatar entries from the top N rows of each ranking")
+    parser.add_argument(
+        "--gender",
+        choices=("female", "male", "all"),
+        default="all",
+        help="Which ranking gender buckets to scan",
+    )
     args = parser.parse_args()
 
-    only_names = {name.strip() for name in args.only_names.split(",") if name.strip()}
-    targets = load_targets(only_names)
+    only_names = load_only_names(args.only_names, args.only_names_file)
+    targets = load_targets(only_names, args.top_n, args.gender)
     replacements: dict[str, str] = {}
     failures: list[dict[str, str]] = []
 
@@ -251,6 +285,11 @@ def main() -> int:
 
                 image_path = f"/images/{output_path.name}"
                 replacements[target.name] = image_path
+
+                if len(replacements) % FLUSH_EVERY == 0:
+                    update_source_profiles(replacements)
+                    update_fetch_source_profiles(replacements)
+
                 print(f"{target.name} -> {source}")
             except Exception as exc:
                 failures.append({"name": target.name, "reason": str(exc)})

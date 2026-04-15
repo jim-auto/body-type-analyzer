@@ -40,12 +40,8 @@ const estimatedCupOrder = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 const uiAvatarPattern =
   /^https:\/\/ui-avatars\.com\/api\/\?name=.+&size=300&background=random&color=fff&bold=true$/;
 const knownAmbiguousImageNames = [
-  "ROLAND",
-  "MALIA.",
-  "衛藤美彩",
   "鎌倉美咲",
   "若槻千夏",
-  "向井理",
   "中村倫也",
 ] as const;
 

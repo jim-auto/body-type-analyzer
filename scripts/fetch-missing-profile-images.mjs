@@ -176,6 +176,24 @@ function escapePowerShellString(value) {
   return value.replace(/'/g, "''");
 }
 
+async function loadOnlyNames() {
+  const names = (process.env.ONLY_NAMES ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const onlyNamesFile = process.env.ONLY_NAMES_FILE?.trim();
+
+  if (onlyNamesFile) {
+    const fileNames = (await fs.readFile(onlyNamesFile, "utf8"))
+      .split(/\r?\n/u)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    names.push(...fileNames);
+  }
+
+  return new Set(names);
+}
+
 function buildSummaryUrl(language, title) {
   return `https://${language}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
     title
@@ -573,12 +591,7 @@ async function main() {
         shouldRefreshExistingImage(entry.image)
     )
     .map((entry) => buildTarget(entry.name, "male"));
-  const onlyNames = new Set(
-    (process.env.ONLY_NAMES ?? "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean)
-  );
+  const onlyNames = await loadOnlyNames();
   const targets = [...femaleTargets, ...maleTargets].filter(
     (target) => onlyNames.size === 0 || onlyNames.has(target.name)
   );

@@ -158,6 +158,24 @@ function escapePowerShellString(value) {
   return value.replace(/'/g, "''");
 }
 
+async function loadOnlyNames() {
+  const names = (process.env.ONLY_NAMES ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const onlyNamesFile = process.env.ONLY_NAMES_FILE?.trim();
+
+  if (onlyNamesFile) {
+    const fileNames = (await fs.readFile(onlyNamesFile, "utf8"))
+      .split(/\r?\n/u)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    names.push(...fileNames);
+  }
+
+  return new Set(names);
+}
+
 function makeFilename(name) {
   const normalized = name.normalize("NFKC");
   const asciiStem = normalized
@@ -439,12 +457,7 @@ async function flushReplacements(replacements) {
 async function main() {
   await fs.mkdir(IMAGES_DIR, { recursive: true });
 
-  const onlyNames = new Set(
-    (process.env.ONLY_NAMES ?? "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean)
-  );
+  const onlyNames = await loadOnlyNames();
   const configuredTargets = TARGETS.filter(
     (target) => onlyNames.size === 0 || onlyNames.has(target.name)
   );
@@ -459,7 +472,15 @@ async function main() {
         continue;
       }
 
-      const landingUrl = await resolveIdolprofLandingUrl(name);
+      let landingUrl = null;
+
+      try {
+        landingUrl = await resolveIdolprofLandingUrl(name);
+      } catch (error) {
+        console.warn(`${name} -> idolprof search failed`);
+        console.warn(error);
+        continue;
+      }
 
       if (!landingUrl) {
         continue;
