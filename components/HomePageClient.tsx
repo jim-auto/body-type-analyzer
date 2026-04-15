@@ -8,9 +8,11 @@ import type {
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
 import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
-import type {
-  FemaleProfileCoverageSummary,
-  FemaleProfileGoalSummary,
+import {
+  getFemaleProfileOccupations,
+  PROFILE_OCCUPATION_LABELS,
+  type FemaleProfileCoverageSummary,
+  type FemaleProfileGoalSummary,
 } from "@/lib/profile-occupations";
 import {
   formatSignedDifference,
@@ -42,6 +44,7 @@ type DistributionBucket = {
 
 const PAGE_SIZE = 20;
 const EARLY_PAGE_COUNT = 5;
+const RANKING_CARD_OCCUPATION_LIMIT = 3;
 
 const medalColors: Record<number, string> = {
   0: "bg-yellow-400 text-yellow-900",
@@ -171,6 +174,12 @@ function getEstimatedCupDetail(entry: FemaleRankingEntry): string {
     entry.cupDiff,
     "サイズ"
   )} ${emoji}）`;
+}
+
+function getFemaleOccupationLabels(name: string): string[] {
+  return getFemaleProfileOccupations(name)
+    .slice(0, RANKING_CARD_OCCUPATION_LIMIT)
+    .map((occupation) => PROFILE_OCCUPATION_LABELS[occupation]);
 }
 
 function DistributionSeriesCard({
@@ -665,6 +674,9 @@ export default function HomePageClient({
                   const rankNumber = rankIndex + 1;
                   const femaleEntry =
                     gender === "female" && isFemaleEntry(entry) ? entry : null;
+                  const femaleOccupationLabels = femaleEntry
+                    ? getFemaleOccupationLabels(entry.name)
+                    : [];
                   const predictionText = isEstimatedHeightCategory
                     ? getEstimatedHeightDetail(entry)
                     : isEstimatedCupCategory && femaleEntry
@@ -712,6 +724,18 @@ export default function HomePageClient({
                               {entry.actualHeight}cm
                             </span>
                           </div>
+                          {femaleOccupationLabels.length > 0 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {femaleOccupationLabels.map((label) => (
+                                <span
+                                  key={`${entry.name}-${label}`}
+                                  className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200"
+                                >
+                                  {label}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
                           <p className="text-xs text-slate-400">{predictionText}</p>
                         </div>
                       </div>

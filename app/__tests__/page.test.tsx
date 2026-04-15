@@ -5,7 +5,11 @@ import {
   buildFemaleCupDistributionSummary,
   buildMaleHeightDistributionSummary,
 } from "@/lib/distributions";
-import { FEMALE_PROFILE_GOAL_SUMMARY } from "@/lib/profile-occupations";
+import {
+  FEMALE_PROFILE_GOAL_SUMMARY,
+  getFemaleProfileOccupations,
+  PROFILE_OCCUPATION_LABELS,
+} from "@/lib/profile-occupations";
 import {
   formatSignedDifference,
   getMismatchEmoji,
@@ -37,6 +41,9 @@ const femaleSearchQueryEntry = femaleStyleCategory.ranking.find(
 )!;
 const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
   entry.image.startsWith("/")
+)!;
+const femaleStyleOccupationEntry = femaleStyleCategory.ranking.find(
+  (entry) => getFemaleProfileOccupations(entry.name).length > 0
 )!;
 
 const renderHome = () => render(<Home />);
@@ -151,6 +158,26 @@ describe("Home (Ranking Page)", () => {
       0
     );
     expect(screen.getAllByText(`偏差値${entryWithCup.score}`).length).toBeGreaterThan(0);
+  });
+
+  test("Ranking cards show occupation chips for female profiles", () => {
+    const occupationLabels = getFemaleProfileOccupations(
+      femaleStyleOccupationEntry.name
+    )
+      .slice(0, 3)
+      .map((occupation) => PROFILE_OCCUPATION_LABELS[occupation]);
+
+    renderHome();
+
+    const card = screen
+      .getByText(femaleStyleOccupationEntry.name)
+      .closest("div.rounded-2xl");
+
+    expect(card).not.toBeNull();
+
+    occupationLabels.forEach((label) => {
+      expect(within(card as HTMLElement).getByText(label)).toBeInTheDocument();
+    });
   });
 
   test("女性 style ランキングでAI推定表示がされる", () => {
