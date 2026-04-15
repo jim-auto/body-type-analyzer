@@ -8,7 +8,10 @@ import type {
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
 import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
-import type { FemaleProfileCoverageSummary } from "@/lib/profile-occupations";
+import type {
+  FemaleProfileCoverageSummary,
+  FemaleProfileGoalSummary,
+} from "@/lib/profile-occupations";
 import {
   formatSignedDifference,
   getMismatchEmoji,
@@ -27,6 +30,7 @@ type HomePageClientProps = {
   data: RankingData;
   femaleCupDistribution: FemaleCupDistributionSummary;
   femaleOccupationCoverage: FemaleProfileCoverageSummary;
+  femaleOccupationGoals: FemaleProfileGoalSummary;
   maleHeightDistribution: MaleHeightDistributionSummary;
 };
 
@@ -230,6 +234,7 @@ export default function HomePageClient({
   data,
   femaleCupDistribution,
   femaleOccupationCoverage,
+  femaleOccupationGoals,
   maleHeightDistribution,
 }: HomePageClientProps) {
   const [gender, setGender] = useState<Gender>("female");
@@ -284,6 +289,14 @@ export default function HomePageClient({
       ?.count ?? 0;
   const gravurefitCoverage =
     femaleOccupationCoverage.referenceCoverage.gravurefitLargeCup;
+  const topGoalProgress = femaleOccupationGoals.occupations.reduce(
+    (total, entry) => total + Math.min(entry.count, entry.target),
+    0
+  );
+  const topGoalTarget = femaleOccupationGoals.occupations.reduce(
+    (total, entry) => total + entry.target,
+    0
+  );
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-50 to-white px-4 py-8 sm:py-12">
@@ -412,6 +425,70 @@ export default function HomePageClient({
                     {entry.label} {entry.count}人
                   </span>
                 ))}
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 sm:p-5">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-slate-900">Targets</h3>
+                  <p className="text-sm text-slate-500">
+                    Pool {femaleOccupationGoals.totalCurrent} /{" "}
+                    {femaleOccupationGoals.totalTarget} people, left{" "}
+                    {femaleOccupationGoals.totalRemaining}
+                  </p>
+                </div>
+                <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-amber-700 ring-1 ring-amber-200">
+                  {topGoalProgress} / {topGoalTarget}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {femaleOccupationGoals.occupations.map((entry) => (
+                  <article
+                    key={entry.occupation}
+                    className="rounded-2xl border border-slate-100 bg-slate-50/85 p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-slate-800">
+                          {entry.label}
+                        </p>
+                        <p className="text-xs uppercase tracking-[0.12em] text-slate-400">
+                          Current / Goal / Left
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${
+                          entry.remaining === 0
+                            ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                            : "bg-amber-50 text-amber-700 ring-amber-200"
+                        }`}
+                      >
+                        {entry.remaining}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-base font-bold text-slate-900">
+                      {entry.count} / {entry.target}人
+                    </p>
+
+                    <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className={`h-full rounded-full ${
+                          entry.remaining === 0
+                            ? "bg-gradient-to-r from-emerald-500 to-teal-400"
+                            : "bg-gradient-to-r from-amber-500 to-orange-400"
+                        }`}
+                        style={{ width: `${Math.min(entry.progressRate, 100)}%` }}
+                      />
+                    </div>
+
+                    <p className="mt-2 text-xs text-slate-400">
+                      {entry.progressRate.toFixed(1)}% of target
+                    </p>
+                  </article>
+                ))}
+              </div>
             </div>
 
             <p className="mt-4 text-sm text-slate-600">
