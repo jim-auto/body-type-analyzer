@@ -11,6 +11,7 @@ import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
 import {
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
+  type ProfileOccupation,
   type FemaleProfileCoverageSummary,
   type FemaleProfileGoalSummary,
 } from "@/lib/profile-occupations";
@@ -41,6 +42,8 @@ type DistributionBucket = {
   count: number;
   percentage: number;
 };
+
+type OccupationFilter = "all" | ProfileOccupation;
 
 const PAGE_SIZE = 20;
 const EARLY_PAGE_COUNT = 5;
@@ -121,6 +124,18 @@ function getPaginationItems(
   }
 
   return items;
+}
+
+function getDefaultCategoryIndex(
+  categories: RankingData[Gender],
+  gender: Gender
+): number {
+  const defaultCategory = gender === "female" ? "estimatedCup" : "style";
+  const index = categories.findIndex(
+    (category) => category.category === defaultCategory
+  );
+
+  return index >= 0 ? index : 0;
 }
 
 function getFemalePredictionText(entry: FemaleRankingEntry): string {
@@ -247,8 +262,12 @@ export default function HomePageClient({
   maleHeightDistribution,
 }: HomePageClientProps) {
   const [gender, setGender] = useState<Gender>("female");
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(() =>
+    getDefaultCategoryIndex(data.female, "female")
+  );
   const [activePage, setActivePage] = useState(0);
+  const [activeOccupationFilter, setActiveOccupationFilter] =
+    useState<OccupationFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const basePath =
     process.env.NODE_ENV === "production" ? "/body-type-analyzer" : "";
@@ -258,8 +277,9 @@ export default function HomePageClient({
 
   const handleGenderChange = (nextGender: Gender) => {
     setGender(nextGender);
-    setActiveTab(0);
+    setActiveTab(getDefaultCategoryIndex(data[nextGender], nextGender));
     setActivePage(0);
+    setActiveOccupationFilter("all");
   };
 
   const handleCategoryChange = (nextTab: number) => {
@@ -270,11 +290,50 @@ export default function HomePageClient({
   const categories = data[gender];
   const current = categories[activeTab];
   const currentRanking = current?.ranking ?? [];
+  const femaleRankingOccupationCounts =
+    gender === "female"
+      ? currentRanking.reduce<Record<ProfileOccupation, number>>(
+          (counts, entry) => {
+            for (const occupation of getFemaleProfileOccupations(entry.name)) {
+              counts[occupation] += 1;
+            }
+
+            return counts;
+          },
+          {
+            gravure: 0,
+            av: 0,
+            actress: 0,
+            model: 0,
+            talent: 0,
+            idol: 0,
+            racequeen: 0,
+            cosplayer: 0,
+            announcer: 0,
+            singer: 0,
+            wrestler: 0,
+          }
+        )
+      : null;
+  const femaleOccupationFilterOptions =
+    gender === "female" && femaleRankingOccupationCounts
+      ? femaleOccupationCoverage.occupations.filter(
+          (entry) =>
+            (femaleRankingOccupationCounts[entry.occupation] ?? 0) > 0 ||
+            activeOccupationFilter === entry.occupation
+        )
+      : [];
+  const occupationFilteredRanking =
+    gender === "female" && activeOccupationFilter !== "all"
+      ? currentRanking.filter((entry) =>
+          getFemaleProfileOccupations(entry.name).includes(activeOccupationFilter)
+        )
+      : currentRanking;
   const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
   const filteredRanking =
     normalizedSearchQuery.length === 0
-      ? currentRanking
-      : currentRanking.filter((entry) =>
+      ? occupationFilteredRanking
+      : occupationFilteredRanking.filter((entry) =>
           normalizeSearchQuery(entry.name).includes(normalizedSearchQuery)
         );
   const totalPages = Math.max(1, Math.ceil(filteredRanking.length / PAGE_SIZE));
@@ -306,6 +365,10 @@ export default function HomePageClient({
     (total, entry) => total + entry.target,
     0
   );
+  const activeOccupationFilterLabel =
+    activeOccupationFilter === "all"
+      ? "All"
+      : PROFILE_OCCUPATION_LABELS[activeOccupationFilter];
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-50 to-white px-4 py-8 sm:py-12">
@@ -571,12 +634,58 @@ export default function HomePageClient({
                   <p className="text-xs text-slate-400">
                     ページ {filteredRanking.length === 0 ? 0 : currentPage + 1} /{" "}
                     {filteredRanking.length === 0 ? 0 : totalPages}
+                    {activeOccupationFilter !== "all"
+                      ? ` ・ ${activeOccupationFilterLabel} filter`
+                      : ""}
                     {normalizedSearchQuery.length > 0
                       ? ` ・ 「${searchQuery.trim()}」の検索結果`
                       : ""}
                   </p>
                 </div>
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[17rem]">
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[17rem]">
+                  {gender === "female" ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        Occupation Filter
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveOccupationFilter("all");
+                            setActivePage(0);
+                          }}
+                          aria-pressed={activeOccupationFilter === "all"}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                            activeOccupationFilter === "all"
+                              ? activeCategoryStyle
+                              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          All {currentRanking.length}
+                        </button>
+                        {femaleOccupationFilterOptions.map((entry) => (
+                          <button
+                            key={entry.occupation}
+                            type="button"
+                            onClick={() => {
+                              setActiveOccupationFilter(entry.occupation);
+                              setActivePage(0);
+                            }}
+                            aria-pressed={activeOccupationFilter === entry.occupation}
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                              activeOccupationFilter === entry.occupation
+                                ? activeCategoryStyle
+                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {entry.label}{" "}
+                            {femaleRankingOccupationCounts?.[entry.occupation] ?? 0}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   <label
                     htmlFor="ranking-search"
                     className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400"

@@ -45,6 +45,15 @@ const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
 const femaleStyleOccupationEntry = femaleStyleCategory.ranking.find(
   (entry) => getFemaleProfileOccupations(entry.name).length > 0
 )!;
+const femaleStyleAvEntry = femaleStyleCategory.ranking.find((entry) =>
+  getFemaleProfileOccupations(entry.name).includes("av")
+)!;
+const femaleStyleNonAvEntry = femaleStyleCategory.ranking.find(
+  (entry) => !getFemaleProfileOccupations(entry.name).includes("av")
+)!;
+const femaleStyleAvCount = femaleStyleCategory.ranking.filter((entry) =>
+  getFemaleProfileOccupations(entry.name).includes("av")
+).length;
 
 const renderHome = () => render(<Home />);
 
@@ -58,6 +67,10 @@ const clickCategoryTab = (label: string) => {
 
 const clickPageNumber = (pageNumber: number) => {
   fireEvent.click(screen.getByRole("button", { name: String(pageNumber) }));
+};
+
+const clickOccupationFilter = (label: string) => {
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${label}\\s`) }));
 };
 
 const searchByName = (query: string) => {
@@ -134,23 +147,28 @@ describe("Home (Ranking Page)", () => {
     expect(within(avCard as HTMLElement).getByText(String(avGoal.remaining))).toBeInTheDocument();
   });
 
-  test("初期表示で女性の style カテゴリが表示される", () => {
+  test("初期表示で女性の AI推定カップ数ランキングが表示される", () => {
     renderHome();
 
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: femaleStyleCategory.title,
+        name: femaleEstimatedCupCategory.title,
       })
     ).toBeInTheDocument();
-    expect(screen.getByText(femaleStyleCategory.ranking[0].name)).toBeInTheDocument();
-    expect(screen.getByText(femaleStyleCategory.ranking[1].name)).toBeInTheDocument();
+    expect(
+      screen.getByText(femaleEstimatedCupCategory.ranking[0].name)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(femaleEstimatedCupCategory.ranking[1].name)
+    ).toBeInTheDocument();
   });
 
   test("女性 style ランキングでカップ数と身長と偏差値が表示される", () => {
     const entryWithCup = femaleStyleCategory.ranking.find((entry) => entry.cup !== null)!;
 
     renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
 
     expect(screen.getByText(entryWithCup.name)).toBeInTheDocument();
     expect(screen.getAllByText(`${entryWithCup.cup}カップ`).length).toBeGreaterThan(0);
@@ -168,6 +186,7 @@ describe("Home (Ranking Page)", () => {
       .map((occupation) => PROFILE_OCCUPATION_LABELS[occupation]);
 
     renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
 
     const card = screen
       .getByText(femaleStyleOccupationEntry.name)
@@ -180,8 +199,35 @@ describe("Home (Ranking Page)", () => {
     });
   });
 
+  test("Occupation filter narrows female ranking entries by selected job", () => {
+    renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
+
+    clickOccupationFilter(PROFILE_OCCUPATION_LABELS.av);
+
+    expect(screen.getByText(femaleStyleAvEntry.name)).toBeInTheDocument();
+    expect(screen.queryByText(femaleStyleNonAvEntry.name)).not.toBeInTheDocument();
+    expect(screen.getByText(`1-20位 / ${femaleStyleAvCount}人`)).toBeInTheDocument();
+  });
+
+  test("Occupation filter is hidden on male ranking", () => {
+    renderHome();
+    clickOccupationFilter(PROFILE_OCCUPATION_LABELS.av);
+    clickGenderTab("男性");
+
+    expect(
+      screen.queryByText("Occupation Filter")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: new RegExp(`^${PROFILE_OCCUPATION_LABELS.av}\\s`),
+      })
+    ).not.toBeInTheDocument();
+  });
+
   test("女性 style ランキングでAI推定表示がされる", () => {
     renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
 
     expect(screen.getAllByText(/^AI推定:/)).toHaveLength(PAGE_SIZE);
   });
@@ -222,6 +268,7 @@ describe("Home (Ranking Page)", () => {
     const totalLabel = `${femaleStyleCategory.ranking.length}人`;
 
     renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
 
     expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument();
@@ -248,6 +295,7 @@ describe("Home (Ranking Page)", () => {
     );
 
     renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
 
     clickPageNumber(2);
     searchByName(searchTarget.name);
@@ -297,6 +345,7 @@ describe("Home (Ranking Page)", () => {
   test("productionではローカル画像にbasePathが付与される", () => {
     mutableEnv.NODE_ENV = "production";
     renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
 
     const localImage = screen.getByAltText(femaleStyleLocalImageEntry.name);
     expect(localImage).toHaveAttribute(

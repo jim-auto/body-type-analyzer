@@ -127,6 +127,7 @@ const FEMALE_AV_ADDITIONAL_PROFILES = [
   { name: "篠田ゆう", actualHeight: 163, bust: 95, cup: "H" },
   { name: "紗倉まな", actualHeight: 155, bust: 89, cup: "G" },
   { name: "若宮はずき", actualHeight: 158, bust: 95, cup: "H" },
+  { name: "若菜奈央", actualHeight: 160, bust: 95, cup: "H" },
   { name: "秋山祥子", actualHeight: 160, bust: 86, cup: "F" },
   { name: "春菜はな", actualHeight: 163, bust: 103, cup: "H" },
   { name: "春野ゆこ", actualHeight: 158, bust: 95, cup: "H" },
@@ -171,6 +172,11 @@ const FEMALE_AV_ADDITIONAL_PROFILES = [
   { name: "涼森れむ", actualHeight: 165, bust: 93, cup: "H" },
   { name: "凰かなめ", actualHeight: 160, bust: 88, cup: "G" },
   { name: "澁谷果歩", actualHeight: 155, bust: 97, cup: "H" },
+  { name: "成海うるみ", actualHeight: 155, bust: 97, cup: "H" },
+  { name: "Hitomi", actualHeight: 160, bust: 110, cup: "H" },
+  { name: "JULIA", actualHeight: 160, bust: 101, cup: "H" },
+  { name: "みひろ", actualHeight: 157, bust: 84, cup: "H" },
+  { name: "水谷ケイ", actualHeight: 165, bust: 93, cup: "H" },
 ];
 
 const MALE_HEIGHTS = Array.from({ length: 31 }, (_, index) => index + 165);
@@ -256,7 +262,9 @@ const MALE_PREFERRED_NAMES = [
 
 const IMAGE_PATHS = {
   "BOSS THE MC": "/images/boss_the_mc_69aab9e8.webp",
+  "Hitomi": "/images/hitomi_6f38ac9f.webp",
   "JP": "/images/jp_1920a565.webp",
+  "JULIA": "/images/julia_dcfafd1e.webp",
   "MALIA.": "/images/malia_a5223763.webp",
   "MEGUMI": "/images/megumi_14481fc7.webp",
   "RaMu": "/images/ramu_a2dfbcf1.webp",
@@ -280,6 +288,7 @@ const IMAGE_PATHS = {
   "ほしのあき": "/images/jp_e381bbe38197_f298f5ac.webp",
   "ましろ碧乃": "/images/jp_e381bee38197_0ed605f2.webp",
   "まなせゆうな": "/images/jp_e381bee381aa_8c5ad9ed.webp",
+  "みひろ": "/images/jp_e381bfe381b2_c8b4c93a.webp",
   "わちみなみ": "/images/jp_e3828fe381a1_91263773.webp",
   "クリスチャン・ベール": "/images/jp_e382afe383aa_943d3d25.webp",
   "ケビン・コスナー": "/images/jp_e382b1e38393_006d8276.webp",
@@ -498,6 +507,7 @@ const IMAGE_PATHS = {
   "徳江かな": "/images/jp_e5beb3e6b19f_23640a0b.webp",
   "志崎ひなた": "/images/jp_e5bf97e5b48e_3c66b60c.webp",
   "愛川ゆず季": "/images/jp_e6849be5b79d_3e2dd344.webp",
+  "成海うるみ": "/images/jp_e68890e6b5b7_2799a851.webp",
   "成海舞": "/images/jp_e68890e6b5b7_4a59453c.webp",
   "戸塚こはる": "/images/jp_e688b8e5a19a_4e3346e1.webp",
   "戸田れい": "/images/jp_e688b8e794b0_9e79f336.webp",
@@ -610,6 +620,7 @@ const IMAGE_PATHS = {
   "水沢エレナ": "/images/jp_e6b0b4e6b2a2_852eb3f1.webp",
   "水沢林太郎": "/images/jp_e6b0b4e6b2a2_b9444825.webp",
   "水谷さくら": "/images/jp_e6b0b4e8b0b7_033225b4.webp",
+  "水谷ケイ": "/images/jp_e6b0b4e8b0b7_b97c5d78.webp",
   "水谷彩咲": "/images/jp_e6b0b4e8b0b7_1e6e261f.webp",
   "水野朝陽": "/images/jp_e6b0b4e9878e_8a9b305c.webp",
   "永井すみれ": "/images/jp_e6b0b8e4ba95_50ed00f9.webp",
@@ -720,6 +731,7 @@ const IMAGE_PATHS = {
   "芹沢潤": "/images/jp_e88ab9e6b2a2_e26923e8.webp",
   "若宮はずき": "/images/jp_e88ba5e5aeae_2fdbd15e.webp",
   "若林豪": "/images/jp_e88ba5e69e97_45b3dd84.webp",
+  "若菜奈央": "/images/jp_e88ba5e88f9c_bdf14f5f.webp",
   "茜さや": "/images/jp_e88c9ce38195_29934756.webp",
   "草刈正雄": "/images/jp_e88d89e58888_fedc25dc.webp",
   "草野綾": "/images/jp_e88d89e9878e_0d9b0a55.webp",

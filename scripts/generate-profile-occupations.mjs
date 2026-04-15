@@ -41,6 +41,14 @@ const PROFILE_OCCUPATION_LABELS = {
   singer: "歌手",
   wrestler: "プロレスラー",
 };
+const FEMALE_OCCUPATION_OVERRIDES = {
+  Hitomi: ["av"],
+  JULIA: ["av"],
+  みひろ: ["av", "actress", "talent", "singer"],
+  若菜奈央: ["av"],
+  水谷ケイ: ["av", "actress", "talent"],
+  成海うるみ: ["av"],
+};
 const GRAVURE_NOTE_PATTERN =
   /グラビア|ミスマガジン|ミスFLASH|ミスヤング|日テレジェニック|イメージガール|週刊プレイボーイ|ヤングジャンプ|ヤングマガジン|ミスアクション|ミス東スポ|週刊実話WJガールズ/;
 
@@ -472,6 +480,11 @@ function detectOccupations({ pageText, noteText, wikipediaIntro }) {
   return PROFILE_OCCUPATION_ORDER.filter((occupation) => tags.has(occupation));
 }
 
+function mergeOccupations(...occupationLists) {
+  const tags = new Set(occupationLists.flat().filter(Boolean));
+  return PROFILE_OCCUPATION_ORDER.filter((occupation) => tags.has(occupation));
+}
+
 async function fetchGravurefitLargeCupReferenceSet() {
   const names = new Set();
 
@@ -553,12 +566,16 @@ async function main() {
       (entry.wikipediaUrl ? wikipediaIntroByUrl.get(entry.wikipediaUrl) ?? "" : "") ||
       wikipediaIntroByName.get(entry.name) ||
       "";
+    const overrideOccupations = FEMALE_OCCUPATION_OVERRIDES[entry.name] ?? [];
 
-    entry.occupations = detectOccupations({
-      pageText: entry.pageText,
-      noteText: entry.noteText,
-      wikipediaIntro,
-    });
+    entry.occupations = mergeOccupations(
+      detectOccupations({
+        pageText: entry.pageText,
+        noteText: entry.noteText,
+        wikipediaIntro,
+      }),
+      overrideOccupations
+    );
 
     if ((index + 1) % 100 === 0 || index === femaleResults.length - 1) {
       console.log(`Tagged ${index + 1}/${femaleResults.length} female profiles`);

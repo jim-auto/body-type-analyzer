@@ -1,51 +1,51 @@
 {
-  "generatedAt": "2026-04-15T10:16:02.431Z",
+  "generatedAt": "2026-04-15T12:04:55.344Z",
   "female": {
-    "total": 1207,
-    "tagged": 1138,
+    "total": 1213,
+    "tagged": 1144,
     "untagged": 69,
     "occupations": [
       {
         "occupation": "gravure",
         "label": "グラビア",
         "count": 704,
-        "percentage": 58.3
+        "percentage": 58
       },
       {
         "occupation": "av",
         "label": "AV女優",
-        "count": 82,
-        "percentage": 6.8
+        "count": 88,
+        "percentage": 7.3
       },
       {
         "occupation": "actress",
         "label": "女優",
-        "count": 874,
-        "percentage": 72.4
+        "count": 876,
+        "percentage": 72.2
       },
       {
         "occupation": "model",
         "label": "モデル",
-        "count": 235,
+        "count": 236,
         "percentage": 19.5
       },
       {
         "occupation": "talent",
         "label": "タレント",
-        "count": 574,
-        "percentage": 47.6
+        "count": 576,
+        "percentage": 47.5
       },
       {
         "occupation": "idol",
         "label": "アイドル",
         "count": 675,
-        "percentage": 55.9
+        "percentage": 55.6
       },
       {
         "occupation": "racequeen",
         "label": "レースクイーン",
         "count": 72,
-        "percentage": 6
+        "percentage": 5.9
       },
       {
         "occupation": "cosplayer",
@@ -62,8 +62,8 @@
       {
         "occupation": "singer",
         "label": "歌手",
-        "count": 106,
-        "percentage": 8.8
+        "count": 108,
+        "percentage": 8.9
       },
       {
         "occupation": "wrestler",

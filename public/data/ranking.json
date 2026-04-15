@@ -605,6 +605,18 @@
           "score": 70
         },
         {
+          "name": "水谷ケイ",
+          "image": "/images/jp_e6b0b4e8b0b7_b97c5d78.webp",
+          "actualHeight": 165,
+          "bust": 93,
+          "cup": "H",
+          "estimatedHeight": 162,
+          "heightDiff": -3,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 70
+        },
+        {
           "name": "妃乃ひかり",
           "image": "/images/jp_e5a683e4b983_0394f347.webp",
           "actualHeight": 165,
@@ -2345,6 +2357,30 @@
           "score": 67
         },
         {
+          "name": "Hitomi",
+          "image": "/images/hitomi_6f38ac9f.webp",
+          "actualHeight": 160,
+          "bust": 110,
+          "cup": "H",
+          "estimatedHeight": 159,
+          "heightDiff": -1,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 66
+        },
+        {
+          "name": "JULIA",
+          "image": "/images/julia_dcfafd1e.webp",
+          "actualHeight": 160,
+          "bust": 101,
+          "cup": "H",
+          "estimatedHeight": 159,
+          "heightDiff": -1,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 66
+        },
+        {
           "name": "高砂ミドリ",
           "image": "/images/jp_e9ab98e7a082_2ce37094.webp",
           "actualHeight": 160,
@@ -2402,6 +2438,18 @@
           "heightDiff": -2,
           "estimatedCup": "G",
           "cupDiff": -1,
+          "score": 66
+        },
+        {
+          "name": "若菜奈央",
+          "image": "/images/jp_e88ba5e88f9c_bdf14f5f.webp",
+          "actualHeight": 160,
+          "bust": 95,
+          "cup": "H",
+          "estimatedHeight": 160,
+          "heightDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 0,
           "score": 66
         },
         {
@@ -4265,6 +4313,18 @@
           "score": 63
         },
         {
+          "name": "みひろ",
+          "image": "/images/jp_e381bfe381b2_c8b4c93a.webp",
+          "actualHeight": 157,
+          "bust": 84,
+          "cup": "H",
+          "estimatedHeight": 160,
+          "heightDiff": 3,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 63
+        },
+        {
           "name": "園田みおん",
           "image": "/images/jp_e59c92e794b0_ab2d9d9c.webp",
           "actualHeight": 159,
@@ -5472,6 +5532,18 @@
           "cup": "H",
           "estimatedHeight": 156,
           "heightDiff": 1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "score": 61
+        },
+        {
+          "name": "成海うるみ",
+          "image": "/images/jp_e68890e6b5b7_2799a851.webp",
+          "actualHeight": 155,
+          "bust": 97,
+          "cup": "H",
+          "estimatedHeight": 157,
+          "heightDiff": 2,
           "estimatedCup": "H",
           "cupDiff": 0,
           "score": 61
@@ -19259,6 +19331,18 @@
           "score": 162
         },
         {
+          "name": "水谷ケイ",
+          "image": "/images/jp_e6b0b4e8b0b7_b97c5d78.webp",
+          "actualHeight": 165,
+          "bust": 93,
+          "cup": "H",
+          "estimatedHeight": 162,
+          "heightDiff": -3,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 162
+        },
+        {
           "name": "妃乃ひかり",
           "image": "/images/jp_e5a683e4b983_0394f347.webp",
           "actualHeight": 165,
@@ -22031,6 +22115,18 @@
           "score": 160
         },
         {
+          "name": "若菜奈央",
+          "image": "/images/jp_e88ba5e88f9c_bdf14f5f.webp",
+          "actualHeight": 160,
+          "bust": 95,
+          "cup": "H",
+          "estimatedHeight": 160,
+          "heightDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "score": 160
+        },
+        {
           "name": "若槻千夏",
           "image": "https://ui-avatars.com/api/?name=%E8%8B%A5%E6%A7%BB%E5%8D%83%E5%A4%8F&size=300&background=random&color=fff&bold=true",
           "actualHeight": 160,
@@ -22691,6 +22787,18 @@
           "score": 160
         },
         {
+          "name": "みひろ",
+          "image": "/images/jp_e381bfe381b2_c8b4c93a.webp",
+          "actualHeight": 157,
+          "bust": 84,
+          "cup": "H",
+          "estimatedHeight": 160,
+          "heightDiff": 3,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 160
+        },
+        {
           "name": "村島未悠",
           "image": "/images/jp_e69d91e5b3b6_700f7b6f.webp",
           "actualHeight": 157,
@@ -22832,6 +22940,30 @@
           "heightDiff": -2,
           "estimatedCup": "G",
           "cupDiff": 0,
+          "score": 159
+        },
+        {
+          "name": "Hitomi",
+          "image": "/images/hitomi_6f38ac9f.webp",
+          "actualHeight": 160,
+          "bust": 110,
+          "cup": "H",
+          "estimatedHeight": 159,
+          "heightDiff": -1,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 159
+        },
+        {
+          "name": "JULIA",
+          "image": "/images/julia_dcfafd1e.webp",
+          "actualHeight": 160,
+          "bust": 101,
+          "cup": "H",
+          "estimatedHeight": 159,
+          "heightDiff": -1,
+          "estimatedCup": "G",
+          "cupDiff": -1,
           "score": 159
         },
         {
@@ -25760,6 +25892,18 @@
           "heightDiff": 2,
           "estimatedCup": "G",
           "cupDiff": -1,
+          "score": 157
+        },
+        {
+          "name": "成海うるみ",
+          "image": "/images/jp_e68890e6b5b7_2799a851.webp",
+          "actualHeight": 155,
+          "bust": 97,
+          "cup": "H",
+          "estimatedHeight": 157,
+          "heightDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 0,
           "score": 157
         },
         {
@@ -29141,6 +29285,18 @@
           "score": 8
         },
         {
+          "name": "成海うるみ",
+          "image": "/images/jp_e68890e6b5b7_2799a851.webp",
+          "actualHeight": 155,
+          "bust": 97,
+          "cup": "H",
+          "estimatedHeight": 157,
+          "heightDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "score": 8
+        },
+        {
           "name": "澁谷果歩",
           "image": "/images/jp_e6be81e8b0b7_11adc6a2.webp",
           "actualHeight": 155,
@@ -29255,6 +29411,18 @@
           "bust": 95,
           "cup": "H",
           "estimatedHeight": 161,
+          "heightDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "score": 8
+        },
+        {
+          "name": "若菜奈央",
+          "image": "/images/jp_e88ba5e88f9c_bdf14f5f.webp",
+          "actualHeight": 160,
+          "bust": 95,
+          "cup": "H",
+          "estimatedHeight": 160,
           "heightDiff": 0,
           "estimatedCup": "H",
           "cupDiff": 0,
@@ -29933,6 +30101,18 @@
           "score": 8
         },
         {
+          "name": "Hitomi",
+          "image": "/images/hitomi_6f38ac9f.webp",
+          "actualHeight": 160,
+          "bust": 110,
+          "cup": "H",
+          "estimatedHeight": 159,
+          "heightDiff": -1,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 7
+        },
+        {
           "name": "益坂美亜",
           "image": "/images/jp_e79b8ae59d82_74741fc6.webp",
           "actualHeight": 150,
@@ -29976,6 +30156,18 @@
           "cup": "H",
           "estimatedHeight": 161,
           "heightDiff": -9,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "score": 7
+        },
+        {
+          "name": "JULIA",
+          "image": "/images/julia_dcfafd1e.webp",
+          "actualHeight": 160,
+          "bust": 101,
+          "cup": "H",
+          "estimatedHeight": 159,
+          "heightDiff": -1,
           "estimatedCup": "G",
           "cupDiff": -1,
           "score": 7
@@ -30410,6 +30602,18 @@
           "heightDiff": -9,
           "estimatedCup": "G",
           "cupDiff": 0,
+          "score": 7
+        },
+        {
+          "name": "水谷ケイ",
+          "image": "/images/jp_e6b0b4e8b0b7_b97c5d78.webp",
+          "actualHeight": 165,
+          "bust": 93,
+          "cup": "H",
+          "estimatedHeight": 162,
+          "heightDiff": -3,
+          "estimatedCup": "G",
+          "cupDiff": -1,
           "score": 7
         },
         {
@@ -32846,6 +33050,18 @@
           "heightDiff": 0,
           "estimatedCup": "G",
           "cupDiff": 0,
+          "score": 7
+        },
+        {
+          "name": "みひろ",
+          "image": "/images/jp_e381bfe381b2_c8b4c93a.webp",
+          "actualHeight": 157,
+          "bust": 84,
+          "cup": "H",
+          "estimatedHeight": 160,
+          "heightDiff": 3,
+          "estimatedCup": "G",
+          "cupDiff": -1,
           "score": 7
         },
         {
