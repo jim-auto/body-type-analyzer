@@ -334,25 +334,46 @@ function chunk(items, size) {
 }
 
 async function buildWikipediaIntroMap(wikipediaUrls) {
+  return buildWikipediaIntroMapFromEntries(
+    wikipediaUrls.map((wikipediaUrl) => ({
+      key: wikipediaUrl,
+      host: new URL(wikipediaUrl).host,
+      title: extractWikipediaTitle(wikipediaUrl),
+    }))
+  );
+}
+
+async function buildWikipediaIntroMapForNames(names, host = "ja.wikipedia.org") {
+  return buildWikipediaIntroMapFromEntries(
+    unique(names).map((name) => ({
+      key: name,
+      host,
+      title: name,
+    }))
+  );
+}
+
+function unique(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+async function buildWikipediaIntroMapFromEntries(entries) {
   const introByUrl = new Map();
   const groupedByHost = new Map();
 
-  for (const wikipediaUrl of wikipediaUrls) {
-    const title = extractWikipediaTitle(wikipediaUrl);
-
-    if (!title) {
-      introByUrl.set(wikipediaUrl, "");
+  for (const entry of entries) {
+    if (!entry.title) {
+      introByUrl.set(entry.key, "");
       continue;
     }
 
-    const host = new URL(wikipediaUrl).host;
-    const bucket = groupedByHost.get(host) ?? [];
-    bucket.push({ wikipediaUrl, title });
-    groupedByHost.set(host, bucket);
+    const bucket = groupedByHost.get(entry.host) ?? [];
+    bucket.push(entry);
+    groupedByHost.set(entry.host, bucket);
   }
 
   for (const [host, entries] of groupedByHost) {
-    const uniqueTitles = [...new Set(entries.map((entry) => entry.title))];
+    const uniqueTitles = unique(entries.map((entry) => entry.title));
     const introByTitle = new Map();
 
     for (const titleChunk of chunk(uniqueTitles, 20)) {
@@ -386,7 +407,7 @@ async function buildWikipediaIntroMap(wikipediaUrls) {
     }
 
     for (const entry of entries) {
-      introByUrl.set(entry.wikipediaUrl, introByTitle.get(entry.title) ?? "");
+      introByUrl.set(entry.key, introByTitle.get(entry.title) ?? "");
     }
   }
 
@@ -522,12 +543,16 @@ async function main() {
       .map((entry) => entry.wikipediaUrl)
       .filter((url) => typeof url === "string" && url.length > 0)
   );
+  const wikipediaIntroByName = await buildWikipediaIntroMapForNames(
+    femaleResults.map((entry) => entry.name)
+  );
 
   for (let index = 0; index < femaleResults.length; index += 1) {
     const entry = femaleResults[index];
-    const wikipediaIntro = entry.wikipediaUrl
-      ? wikipediaIntroByUrl.get(entry.wikipediaUrl) ?? ""
-      : "";
+    const wikipediaIntro =
+      (entry.wikipediaUrl ? wikipediaIntroByUrl.get(entry.wikipediaUrl) ?? "" : "") ||
+      wikipediaIntroByName.get(entry.name) ||
+      "";
 
     entry.occupations = detectOccupations({
       pageText: entry.pageText,

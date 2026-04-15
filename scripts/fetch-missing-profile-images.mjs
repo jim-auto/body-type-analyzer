@@ -549,19 +549,30 @@ function renderImagePaths(entries) {
 
 async function updateFetchSourceProfiles(replacements) {
   const source = await fs.readFile(FETCH_SOURCE_PROFILES_PATH, "utf8");
-  const match = source.match(/const IMAGE_PATHS = \{[\s\S]*?\n\};/u);
+  const startToken = "const IMAGE_PATHS = {";
+  const startIndex = source.indexOf(startToken);
 
-  if (!match) {
+  if (startIndex < 0) {
     throw new Error("Could not locate IMAGE_PATHS in fetch-source-profiles.mjs");
   }
 
-  const entries = parseImagePathEntries(match[0]);
+  const endIndex = source.indexOf("\n};", startIndex);
+
+  if (endIndex < 0) {
+    throw new Error("Could not locate IMAGE_PATHS terminator in fetch-source-profiles.mjs");
+  }
+
+  const block = source.slice(startIndex, endIndex + "\n};".length);
+  const entries = parseImagePathEntries(block);
 
   for (const [name, imagePath] of replacements.entries()) {
     entries.set(name, imagePath);
   }
 
-  const updated = source.replace(match[0], renderImagePaths(entries));
+  const updated =
+    source.slice(0, startIndex) +
+    renderImagePaths(entries) +
+    source.slice(endIndex + "\n};".length);
   await writeTextAtomic(FETCH_SOURCE_PROFILES_PATH, updated);
 }
 

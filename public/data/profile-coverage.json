@@ -1,69 +1,69 @@
 {
-  "generatedAt": "2026-04-15T08:47:34.841Z",
+  "generatedAt": "2026-04-15T10:16:02.431Z",
   "female": {
-    "total": 1136,
-    "tagged": 1051,
-    "untagged": 85,
+    "total": 1207,
+    "tagged": 1138,
+    "untagged": 69,
     "occupations": [
       {
         "occupation": "gravure",
         "label": "グラビア",
-        "count": 646,
-        "percentage": 56.9
+        "count": 704,
+        "percentage": 58.3
       },
       {
         "occupation": "av",
         "label": "AV女優",
-        "count": 8,
-        "percentage": 0.7
+        "count": 82,
+        "percentage": 6.8
       },
       {
         "occupation": "actress",
         "label": "女優",
-        "count": 859,
-        "percentage": 75.6
+        "count": 874,
+        "percentage": 72.4
       },
       {
         "occupation": "model",
         "label": "モデル",
-        "count": 221,
+        "count": 235,
         "percentage": 19.5
       },
       {
         "occupation": "talent",
         "label": "タレント",
-        "count": 515,
-        "percentage": 45.3
+        "count": 574,
+        "percentage": 47.6
       },
       {
         "occupation": "idol",
         "label": "アイドル",
-        "count": 596,
-        "percentage": 52.5
+        "count": 675,
+        "percentage": 55.9
       },
       {
         "occupation": "racequeen",
         "label": "レースクイーン",
-        "count": 68,
+        "count": 72,
         "percentage": 6
       },
       {
         "occupation": "cosplayer",
         "label": "コスプレイヤー",
-        "count": 14,
-        "percentage": 1.2
+        "count": 18,
+        "percentage": 1.5
       },
       {
         "occupation": "announcer",
         "label": "アナウンサー",
-        "count": 14,
-        "percentage": 1.2
+        "count": 16,
+        "percentage": 1.3
       },
       {
         "occupation": "singer",
         "label": "歌手",
-        "count": 86,
-        "percentage": 7.6
+        "count": 106,
+        "percentage": 8.8
       },
       {
         "occupation": "wrestler",
@@ -76,8 +76,8 @@
       "gravurefitLargeCup": {
         "label": "gravurefit F-Kカップ",
         "referenceTotal": 275,
-        "matchedProfiles": 130,
-        "coverageRate": 47.3
+        "matchedProfiles": 134,
+        "coverageRate": 48.7
       }
     },
     "notes": [

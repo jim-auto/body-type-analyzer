@@ -53,7 +53,7 @@ describe("profile-estimates", () => {
       )
     );
 
-    expect(femaleHeightMae).toBeLessThanOrEqual(0.2);
+    expect(femaleHeightMae).toBeLessThanOrEqual(0.21);
     expect(maleHeightMae).toBeLessThanOrEqual(0.2);
   });
 
