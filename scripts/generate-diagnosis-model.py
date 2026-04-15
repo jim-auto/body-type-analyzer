@@ -128,6 +128,8 @@ TRUSTED_LOCAL_SOURCES = {
     "y6nvocam.gdl-entertainment.tokyo",
     "manual",
     "dmm",
+    "dmm-fanza-search",
+    "dmm-minnano-av",
 }
 CURATED_LOCAL_HEIGHT_SOURCES = set(TRUSTED_LOCAL_SOURCES)
 CURATED_LOCAL_CUP_SOURCES = set(TRUSTED_LOCAL_SOURCES)
@@ -511,6 +513,9 @@ def source_family_for_profile(profile: Profile) -> str:
 
     if source == "dmm":
         return "official"
+
+    if source.startswith("dmm-"):
+        return "trusted-local"
 
     if source == "oricon":
         return "oricon"

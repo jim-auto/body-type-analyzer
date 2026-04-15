@@ -21,6 +21,7 @@ const CUP_ORDER = Array.from({ length: 26 }, (_, index) =>
   String.fromCharCode("A".charCodeAt(0) + index),
 );
 const USER_AGENT = "body-type-analyzer/1.0";
+const MINNANO_AV_PLACEHOLDER_PATTERN = /np\.gif|min-ogp\.png|header_logo\.png/i;
 
 function parseArgs(argv) {
   const options = {
@@ -93,12 +94,12 @@ function makeImageFilename(name, imageUrl) {
   return `dmm_training_${stem}_${digest}${ext}`;
 }
 
-function toTrainingProfile(actress, imagePath) {
+function toTrainingProfile(actress, imagePath, imageResolution) {
   const actualHeight = parseNumber(actress.height);
   const bust = parseNumber(actress.bust);
   const cup = normalizeCup(actress.cup);
-  const remoteImageUrl = sanitizeImageUrl(actress.imageURL?.large);
-  const sourceUrl = actress.listURL?.digital ?? "";
+  const remoteImageUrl = sanitizeImageUrl(imageResolution.remoteImageUrl);
+  const sourceUrl = imageResolution.sourceUrl || actress.listURL?.digital || "";
 
   if (
     !actress.name ||
@@ -118,7 +119,7 @@ function toTrainingProfile(actress, imagePath) {
     bust,
     cup,
     displayCup: cup,
-    source: "dmm",
+    source: imageResolution.source,
     sourceUrl,
     remoteImageUrl,
     scrapedHeight: null,
@@ -131,6 +132,106 @@ function toTrainingProfile(actress, imagePath) {
     waist: null,
     hip: null,
   };
+}
+
+function getDirectDmmImageUrl(actress) {
+  const imageUrl = actress.imageURL;
+
+  if (!imageUrl || typeof imageUrl !== "object") {
+    return "";
+  }
+
+  for (const key of ["large", "small", "list", "thumbnail"]) {
+    const value = sanitizeImageUrl(imageUrl[key]);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+async function resolveFanzaSearchImage(actress) {
+  const actressId = String(actress.id ?? "").trim();
+
+  if (!actressId) {
+    return null;
+  }
+
+  const remoteImageUrl = `https://fanza-search.com/img/actress/${actressId}.jpg`;
+  const response = await fetch(remoteImageUrl, {
+    method: "HEAD",
+    headers: {
+      "user-agent": USER_AGENT,
+    },
+  });
+
+  if (!response.ok || !String(response.headers.get("content-type") ?? "").startsWith("image/")) {
+    return null;
+  }
+
+  return {
+    remoteImageUrl,
+    source: "dmm-fanza-search",
+    sourceUrl: `https://fanza-search.com/actress/${actressId}`,
+  };
+}
+
+async function resolveMinnanoAvImage(actress) {
+  if (!actress.name) {
+    return null;
+  }
+
+  const searchUrl = new URL("https://www.minnano-av.com/search_result.php");
+  searchUrl.searchParams.set("search_scope", "actress");
+  searchUrl.searchParams.set("search_word", actress.name);
+
+  const response = await fetch(searchUrl, {
+    headers: {
+      "user-agent": USER_AGENT,
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const html = await response.text();
+  const canonical = html.match(/<link rel="canonical" href="([^"]+)"/i)?.[1] ?? "";
+  const remoteImageUrl =
+    html.match(/property="og:image" content="([^"]+)"/i)?.[1]?.trim() ?? "";
+
+  if (
+    !/\/actress\d+\.html/i.test(canonical) ||
+    !remoteImageUrl ||
+    MINNANO_AV_PLACEHOLDER_PATTERN.test(remoteImageUrl)
+  ) {
+    return null;
+  }
+
+  return {
+    remoteImageUrl,
+    source: "dmm-minnano-av",
+    sourceUrl: canonical,
+  };
+}
+
+async function resolveImageSource(actress) {
+  const directDmmImageUrl = getDirectDmmImageUrl(actress);
+
+  if (directDmmImageUrl) {
+    return {
+      remoteImageUrl: directDmmImageUrl,
+      source: "dmm",
+      sourceUrl: actress.listURL?.digital ?? "",
+    };
+  }
+
+  return (
+    (await resolveFanzaSearchImage(actress)) ??
+    (await resolveMinnanoAvImage(actress))
+  );
 }
 
 async function loadJson(filePath, fallback) {
@@ -258,14 +359,24 @@ async function main() {
 
   for (const actress of candidates) {
     try {
-      const remoteImageUrl = sanitizeImageUrl(actress.imageURL?.large);
+      const imageResolution = await resolveImageSource(actress);
+
+      if (!imageResolution?.remoteImageUrl) {
+        failures.push({
+          name: actress.name,
+          error: "No fallback image source",
+        });
+        continue;
+      }
+
+      const remoteImageUrl = sanitizeImageUrl(imageResolution.remoteImageUrl);
       const filename = makeImageFilename(actress.name, remoteImageUrl);
       const absoluteImagePath = path.join(TRAINING_IMAGES_DIR, filename);
       const relativeImagePath = path
         .join("local-data", "training-images", filename)
         .replace(/\\/gu, "/");
       const didDownload = await downloadImage(remoteImageUrl, absoluteImagePath);
-      const record = toTrainingProfile(actress, relativeImagePath);
+      const record = toTrainingProfile(actress, relativeImagePath, imageResolution);
 
       if (!record) {
         continue;
