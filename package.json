@@ -10,6 +10,7 @@
     "fetch:local-training": "node scripts/fetch-local-training-profiles.mjs",
     "generate:dmm-av-profiles": "node scripts/collect-dmm-av-profiles.mjs",
     "fetch:dmm-av-images": "node scripts/fetch-dmm-av-profile-images.mjs",
+    "import:dmm-high-cup-training": "node scripts/import-dmm-high-cup-training.mjs",
     "generate:profile-occupations": "node scripts/generate-profile-occupations.mjs",
     "optimize:images": "python scripts/optimize-public-images.py",
     "generate:ranking-image-qa": "python scripts/generate-ranking-image-qa.py",

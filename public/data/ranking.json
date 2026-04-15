@@ -97,9 +97,9 @@
           "displayCup": "I",
           "estimatedHeight": 163,
           "heightDiff": -9,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 78
         },
         {
@@ -293,9 +293,9 @@
           "displayCup": "I",
           "estimatedHeight": 162,
           "heightDiff": -8,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 76
         },
         {
@@ -405,9 +405,9 @@
           "displayCup": "K",
           "estimatedHeight": 161,
           "heightDiff": -7,
-          "estimatedCup": "I",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "J",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 75
         },
         {
@@ -769,9 +769,9 @@
           "displayCup": "J",
           "estimatedHeight": 160,
           "heightDiff": -6,
-          "estimatedCup": "H",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 73
         },
         {
@@ -853,9 +853,9 @@
           "displayCup": "H",
           "estimatedHeight": 163,
           "heightDiff": -5,
-          "estimatedCup": "I",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 73
         },
         {
@@ -895,9 +895,9 @@
           "displayCup": "H",
           "estimatedHeight": 163,
           "heightDiff": -5,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 73
         },
         {
@@ -965,9 +965,9 @@
           "displayCup": "G",
           "estimatedHeight": 163,
           "heightDiff": -7,
-          "estimatedCup": "G",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 73
         },
         {
@@ -1175,9 +1175,9 @@
           "displayCup": "K",
           "estimatedHeight": 162,
           "heightDiff": -3,
-          "estimatedCup": "I",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "J",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 72
         },
         {
@@ -1287,9 +1287,9 @@
           "displayCup": "H",
           "estimatedHeight": 162,
           "heightDiff": -5,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 72
         },
         {
@@ -1621,8 +1621,8 @@
           "bust": 100,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
+          "estimatedHeight": 163,
+          "heightDiff": -3,
           "estimatedCup": "H",
           "cupDiff": 0,
           "displayCupDiff": 0,
@@ -2673,9 +2673,9 @@
           "displayCup": "G",
           "estimatedHeight": 162,
           "heightDiff": -3,
-          "estimatedCup": "H",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 69
         },
         {
@@ -3219,9 +3219,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": -3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 68
         },
         {
@@ -3371,8 +3371,8 @@
           "bust": 96,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 160,
-          "heightDiff": -3,
+          "estimatedHeight": 161,
+          "heightDiff": -2,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -4101,9 +4101,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": -2,
-          "estimatedCup": "G",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 67
         },
         {
@@ -4169,8 +4169,8 @@
           "bust": 97,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 161,
-          "heightDiff": -1,
+          "estimatedHeight": 162,
+          "heightDiff": 0,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -4437,9 +4437,9 @@
           "displayCup": "G",
           "estimatedHeight": 160,
           "heightDiff": -3,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 67
         },
         {
@@ -5291,9 +5291,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 66
         },
         {
@@ -5403,9 +5403,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 66
         },
         {
@@ -6395,8 +6395,8 @@
           "bust": 105,
           "cup": "J",
           "displayCup": "J",
-          "estimatedHeight": 159,
-          "heightDiff": 2,
+          "estimatedHeight": 158,
+          "heightDiff": 1,
           "estimatedCup": "I",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -6495,9 +6495,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "J",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 65
         },
         {
@@ -6537,9 +6537,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": 1,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 65
         },
         {
@@ -7125,9 +7125,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "G",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 64
         },
         {
@@ -7461,9 +7461,9 @@
           "displayCup": "G",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "H",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 64
         },
         {
@@ -7475,9 +7475,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "G",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 64
         },
         {
@@ -7811,9 +7811,9 @@
           "displayCup": "F",
           "estimatedHeight": 160,
           "heightDiff": -2,
-          "estimatedCup": "H",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "I",
+          "cupDiff": 3,
+          "displayCupDiff": 3,
           "score": 64
         },
         {
@@ -8581,9 +8581,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 63
         },
         {
@@ -8635,8 +8635,8 @@
           "bust": 107,
           "cup": "I",
           "displayCup": "I",
-          "estimatedHeight": 160,
-          "heightDiff": 4,
+          "estimatedHeight": 159,
+          "heightDiff": 3,
           "estimatedCup": "H",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -8859,8 +8859,8 @@
           "bust": 98,
           "cup": "F",
           "displayCup": "F",
-          "estimatedHeight": 159,
-          "heightDiff": -1,
+          "estimatedHeight": 158,
+          "heightDiff": -2,
           "estimatedCup": "G",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -8889,9 +8889,9 @@
           "displayCup": "F",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "I",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "H",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 63
         },
         {
@@ -9449,9 +9449,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 62
         },
         {
@@ -9545,11 +9545,11 @@
           "bust": 95,
           "cup": "I",
           "displayCup": "I",
-          "estimatedHeight": 157,
-          "heightDiff": 2,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedHeight": 158,
+          "heightDiff": 3,
+          "estimatedCup": "J",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 62
         },
         {
@@ -9729,9 +9729,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 62
         },
         {
@@ -10709,9 +10709,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 61
         },
         {
@@ -10737,9 +10737,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 61
         },
         {
@@ -10765,9 +10765,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 5,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 61
         },
         {
@@ -10849,9 +10849,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 61
         },
         {
@@ -10931,8 +10931,8 @@
           "bust": 96,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 159,
-          "heightDiff": 4,
+          "estimatedHeight": 160,
+          "heightDiff": 5,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -11171,9 +11171,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": 2,
-          "estimatedCup": "J",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 61
         },
         {
@@ -12011,9 +12011,9 @@
           "displayCup": "L",
           "estimatedHeight": 156,
           "heightDiff": 4,
-          "estimatedCup": "I",
-          "cupDiff": -3,
-          "displayCupDiff": -3,
+          "estimatedCup": "J",
+          "cupDiff": -2,
+          "displayCupDiff": -2,
           "score": 60
         },
         {
@@ -13269,8 +13269,8 @@
           "bust": 100,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 156,
-          "heightDiff": 3,
+          "estimatedHeight": 157,
+          "heightDiff": 4,
           "estimatedCup": "G",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -14403,8 +14403,8 @@
           "bust": 95,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 158,
-          "heightDiff": 6,
+          "estimatedHeight": 156,
+          "heightDiff": 4,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -16057,9 +16057,9 @@
           "displayCup": "G",
           "estimatedHeight": 157,
           "heightDiff": 6,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 56
         },
         {
@@ -23483,9 +23483,9 @@
           "displayCup": "I",
           "estimatedHeight": 163,
           "heightDiff": -9,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 172
         },
         {
@@ -23749,9 +23749,9 @@
           "displayCup": "G",
           "estimatedHeight": 163,
           "heightDiff": -7,
-          "estimatedCup": "G",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 170
         },
         {
@@ -23777,9 +23777,9 @@
           "displayCup": "I",
           "estimatedHeight": 162,
           "heightDiff": -8,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 170
         },
         {
@@ -24253,9 +24253,9 @@
           "displayCup": "H",
           "estimatedHeight": 163,
           "heightDiff": -5,
-          "estimatedCup": "I",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 168
         },
         {
@@ -24393,9 +24393,9 @@
           "displayCup": "K",
           "estimatedHeight": 161,
           "heightDiff": -7,
-          "estimatedCup": "I",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "J",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 168
         },
         {
@@ -24729,9 +24729,9 @@
           "displayCup": "H",
           "estimatedHeight": 163,
           "heightDiff": -5,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 168
         },
         {
@@ -25247,9 +25247,9 @@
           "displayCup": "H",
           "estimatedHeight": 162,
           "heightDiff": -5,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 167
         },
         {
@@ -26253,8 +26253,8 @@
           "bust": 100,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
+          "estimatedHeight": 163,
+          "heightDiff": -3,
           "estimatedCup": "H",
           "cupDiff": 0,
           "displayCupDiff": 0,
@@ -26507,9 +26507,9 @@
           "displayCup": "J",
           "estimatedHeight": 160,
           "heightDiff": -6,
-          "estimatedCup": "H",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 166
         },
         {
@@ -27767,9 +27767,9 @@
           "displayCup": "G",
           "estimatedHeight": 162,
           "heightDiff": -3,
-          "estimatedCup": "H",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 165
         },
         {
@@ -28061,9 +28061,9 @@
           "displayCup": "K",
           "estimatedHeight": 162,
           "heightDiff": -3,
-          "estimatedCup": "I",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "J",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 165
         },
         {
@@ -29321,9 +29321,9 @@
           "displayCup": "G",
           "estimatedHeight": 160,
           "heightDiff": -3,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 163
         },
         {
@@ -29543,8 +29543,8 @@
           "bust": 96,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 160,
-          "heightDiff": -3,
+          "estimatedHeight": 161,
+          "heightDiff": -2,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -31265,8 +31265,8 @@
           "bust": 97,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 161,
-          "heightDiff": -1,
+          "estimatedHeight": 162,
+          "heightDiff": 0,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -31631,9 +31631,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": -2,
-          "estimatedCup": "G",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 162
         },
         {
@@ -31799,9 +31799,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": -3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 162
         },
         {
@@ -31995,9 +31995,9 @@
           "displayCup": "F",
           "estimatedHeight": 160,
           "heightDiff": -2,
-          "estimatedCup": "H",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "I",
+          "cupDiff": 3,
+          "displayCupDiff": 3,
           "score": 162
         },
         {
@@ -33493,9 +33493,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "G",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 160
         },
         {
@@ -33619,9 +33619,9 @@
           "displayCup": "F",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "I",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "H",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 160
         },
         {
@@ -34667,8 +34667,8 @@
           "bust": 98,
           "cup": "F",
           "displayCup": "F",
-          "estimatedHeight": 159,
-          "heightDiff": -1,
+          "estimatedHeight": 158,
+          "heightDiff": -2,
           "estimatedCup": "G",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -35523,9 +35523,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 160
         },
         {
@@ -35663,9 +35663,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 160
         },
         {
@@ -35705,9 +35705,9 @@
           "displayCup": "G",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "H",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 160
         },
         {
@@ -35761,9 +35761,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": 1,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 159
         },
         {
@@ -36503,9 +36503,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "G",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 158
         },
         {
@@ -37399,9 +37399,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 158
         },
         {
@@ -37861,9 +37861,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "J",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 158
         },
         {
@@ -38755,8 +38755,8 @@
           "bust": 105,
           "cup": "J",
           "displayCup": "J",
-          "estimatedHeight": 159,
-          "heightDiff": 2,
+          "estimatedHeight": 158,
+          "heightDiff": 1,
           "estimatedCup": "I",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -39401,9 +39401,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": 2,
-          "estimatedCup": "J",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 157
         },
         {
@@ -39891,9 +39891,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 156
         },
         {
@@ -40267,8 +40267,8 @@
           "bust": 107,
           "cup": "I",
           "displayCup": "I",
-          "estimatedHeight": 160,
-          "heightDiff": 4,
+          "estimatedHeight": 159,
+          "heightDiff": 3,
           "estimatedCup": "H",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -40983,9 +40983,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 155
         },
         {
@@ -41037,8 +41037,8 @@
           "bust": 96,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 159,
-          "heightDiff": 4,
+          "estimatedHeight": 160,
+          "heightDiff": 5,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -41513,11 +41513,11 @@
           "bust": 95,
           "cup": "I",
           "displayCup": "I",
-          "estimatedHeight": 157,
-          "heightDiff": 2,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedHeight": 158,
+          "heightDiff": 3,
+          "estimatedCup": "J",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 155
         },
         {
@@ -41935,9 +41935,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 155
         },
         {
@@ -42495,9 +42495,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 154
         },
         {
@@ -42593,9 +42593,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 5,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 154
         },
         {
@@ -42607,9 +42607,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 154
         },
         {
@@ -43543,8 +43543,8 @@
           "bust": 100,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 156,
-          "heightDiff": 3,
+          "estimatedHeight": 157,
+          "heightDiff": 4,
           "estimatedCup": "G",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -43963,8 +43963,8 @@
           "bust": 95,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 158,
-          "heightDiff": 6,
+          "estimatedHeight": 156,
+          "heightDiff": 4,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -44091,9 +44091,9 @@
           "displayCup": "L",
           "estimatedHeight": 156,
           "heightDiff": 4,
-          "estimatedCup": "I",
-          "cupDiff": -3,
-          "displayCupDiff": -3,
+          "estimatedCup": "J",
+          "cupDiff": -2,
+          "displayCupDiff": -2,
           "score": 152
         },
         {
@@ -44245,9 +44245,9 @@
           "displayCup": "G",
           "estimatedHeight": 157,
           "heightDiff": 6,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 151
         },
         {
@@ -45693,9 +45693,9 @@
           "displayCup": "L",
           "estimatedHeight": 156,
           "heightDiff": 4,
-          "estimatedCup": "I",
-          "cupDiff": -3,
-          "displayCupDiff": -3,
+          "estimatedCup": "J",
+          "cupDiff": -2,
+          "displayCupDiff": -2,
           "score": 12
         },
         {
@@ -45861,9 +45861,9 @@
           "displayCup": "K",
           "estimatedHeight": 162,
           "heightDiff": -3,
-          "estimatedCup": "I",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "J",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 11
         },
         {
@@ -46155,9 +46155,9 @@
           "displayCup": "K",
           "estimatedHeight": 161,
           "heightDiff": -7,
-          "estimatedCup": "I",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "J",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 11
         },
         {
@@ -46559,8 +46559,8 @@
           "bust": 105,
           "cup": "J",
           "displayCup": "J",
-          "estimatedHeight": 159,
-          "heightDiff": 2,
+          "estimatedHeight": 158,
+          "heightDiff": 1,
           "estimatedCup": "I",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -46897,9 +46897,9 @@
           "displayCup": "J",
           "estimatedHeight": 160,
           "heightDiff": -6,
-          "estimatedCup": "H",
-          "cupDiff": -2,
-          "displayCupDiff": -2,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 10
         },
         {
@@ -46967,9 +46967,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -46981,9 +46981,9 @@
           "displayCup": "I",
           "estimatedHeight": 163,
           "heightDiff": -9,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -47147,8 +47147,8 @@
           "bust": 107,
           "cup": "I",
           "displayCup": "I",
-          "estimatedHeight": 160,
-          "heightDiff": 4,
+          "estimatedHeight": 159,
+          "heightDiff": 3,
           "estimatedCup": "H",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -47345,9 +47345,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -47513,9 +47513,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -47555,9 +47555,9 @@
           "displayCup": "I",
           "estimatedHeight": 162,
           "heightDiff": -8,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -47667,9 +47667,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": -3,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -47751,9 +47751,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "J",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 9
         },
         {
@@ -47807,9 +47807,9 @@
           "displayCup": "I",
           "estimatedHeight": 158,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -48115,9 +48115,9 @@
           "displayCup": "I",
           "estimatedHeight": 159,
           "heightDiff": 5,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 9
         },
         {
@@ -48281,11 +48281,11 @@
           "bust": 95,
           "cup": "I",
           "displayCup": "I",
-          "estimatedHeight": 157,
-          "heightDiff": 2,
-          "estimatedCup": "I",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedHeight": 158,
+          "heightDiff": 3,
+          "estimatedCup": "J",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 9
         },
         {
@@ -48437,9 +48437,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 8
         },
         {
@@ -48549,9 +48549,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "G",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 8
         },
         {
@@ -48799,8 +48799,8 @@
           "bust": 100,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 162,
-          "heightDiff": -4,
+          "estimatedHeight": 163,
+          "heightDiff": -3,
           "estimatedCup": "H",
           "cupDiff": 0,
           "displayCupDiff": 0,
@@ -48885,9 +48885,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": -2,
-          "estimatedCup": "G",
-          "cupDiff": -1,
-          "displayCupDiff": -1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 8
         },
         {
@@ -48955,9 +48955,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 8
         },
         {
@@ -49039,9 +49039,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": 4,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "G",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 8
         },
         {
@@ -49079,8 +49079,8 @@
           "bust": 100,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 156,
-          "heightDiff": 3,
+          "estimatedHeight": 157,
+          "heightDiff": 4,
           "estimatedCup": "G",
           "cupDiff": -1,
           "displayCupDiff": -1,
@@ -49417,9 +49417,9 @@
           "displayCup": "H",
           "estimatedHeight": 160,
           "heightDiff": 1,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 8
         },
         {
@@ -49583,8 +49583,8 @@
           "bust": 97,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 161,
-          "heightDiff": -1,
+          "estimatedHeight": 162,
+          "heightDiff": 0,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -49725,9 +49725,9 @@
           "displayCup": "H",
           "estimatedHeight": 163,
           "heightDiff": -5,
-          "estimatedCup": "I",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "H",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 8
         },
         {
@@ -49739,9 +49739,9 @@
           "displayCup": "H",
           "estimatedHeight": 162,
           "heightDiff": -5,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 8
         },
         {
@@ -49807,8 +49807,8 @@
           "bust": 96,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 160,
-          "heightDiff": -3,
+          "estimatedHeight": 161,
+          "heightDiff": -2,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -50045,8 +50045,8 @@
           "bust": 96,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 159,
-          "heightDiff": 4,
+          "estimatedHeight": 160,
+          "heightDiff": 5,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -50409,8 +50409,8 @@
           "bust": 95,
           "cup": "H",
           "displayCup": "H",
-          "estimatedHeight": 158,
-          "heightDiff": 6,
+          "estimatedHeight": 156,
+          "heightDiff": 4,
           "estimatedCup": "I",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -50551,9 +50551,9 @@
           "displayCup": "H",
           "estimatedHeight": 163,
           "heightDiff": -5,
-          "estimatedCup": "H",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 8
         },
         {
@@ -51545,9 +51545,9 @@
           "displayCup": "G",
           "estimatedHeight": 163,
           "heightDiff": -7,
-          "estimatedCup": "G",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 7
         },
         {
@@ -51727,9 +51727,9 @@
           "displayCup": "G",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "H",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 7
         },
         {
@@ -51951,9 +51951,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "G",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 7
         },
         {
@@ -52161,9 +52161,9 @@
           "displayCup": "G",
           "estimatedHeight": 157,
           "heightDiff": 6,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 7
         },
         {
@@ -52245,9 +52245,9 @@
           "displayCup": "G",
           "estimatedHeight": 162,
           "heightDiff": -3,
-          "estimatedCup": "H",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 7
         },
         {
@@ -52329,9 +52329,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 7
         },
         {
@@ -52371,9 +52371,9 @@
           "displayCup": "G",
           "estimatedHeight": 159,
           "heightDiff": 2,
-          "estimatedCup": "J",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "I",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 7
         },
         {
@@ -52525,9 +52525,9 @@
           "displayCup": "G",
           "estimatedHeight": 160,
           "heightDiff": -3,
-          "estimatedCup": "I",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "H",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 7
         },
         {
@@ -55421,8 +55421,8 @@
           "bust": 98,
           "cup": "F",
           "displayCup": "F",
-          "estimatedHeight": 159,
-          "heightDiff": -1,
+          "estimatedHeight": 158,
+          "heightDiff": -2,
           "estimatedCup": "G",
           "cupDiff": 1,
           "displayCupDiff": 1,
@@ -55521,9 +55521,9 @@
           "displayCup": "F",
           "estimatedHeight": 160,
           "heightDiff": 0,
-          "estimatedCup": "I",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "H",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 6
         },
         {
@@ -55619,9 +55619,9 @@
           "displayCup": "F",
           "estimatedHeight": 160,
           "heightDiff": -2,
-          "estimatedCup": "H",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "I",
+          "cupDiff": 3,
+          "displayCupDiff": 3,
           "score": 6
         },
         {

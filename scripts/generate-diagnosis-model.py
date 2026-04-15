@@ -127,6 +127,7 @@ TRUSTED_LOCAL_SOURCES = {
     "mache.tv",
     "y6nvocam.gdl-entertainment.tokyo",
     "manual",
+    "dmm",
 }
 CURATED_LOCAL_HEIGHT_SOURCES = set(TRUSTED_LOCAL_SOURCES)
 CURATED_LOCAL_CUP_SOURCES = set(TRUSTED_LOCAL_SOURCES)
@@ -506,6 +507,9 @@ def source_family_for_profile(profile: Profile) -> str:
         return "public"
 
     if source == "talent-databank":
+        return "official"
+
+    if source == "dmm":
         return "official"
 
     if source == "oricon":
