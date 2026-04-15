@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-04-15T08:47:34.841Z",
+  "female": {
+    "total": 1136,
+    "tagged": 1051,
+    "untagged": 85,
+    "occupations": [
+      {
+        "occupation": "gravure",
+        "label": "グラビア",
+        "count": 646,
+        "percentage": 56.9
+      },
+      {
+        "occupation": "av",
+        "label": "AV女優",
+        "count": 8,
+        "percentage": 0.7
+      },
+      {
+        "occupation": "actress",
+        "label": "女優",
+        "count": 859,
+        "percentage": 75.6
+      },
+      {
+        "occupation": "model",
+        "label": "モデル",
+        "count": 221,
+        "percentage": 19.5
+      },
+      {
+        "occupation": "talent",
+        "label": "タレント",
+        "count": 515,
+        "percentage": 45.3
+      },
+      {
+        "occupation": "idol",
+        "label": "アイドル",
+        "count": 596,
+        "percentage": 52.5
+      },
+      {
+        "occupation": "racequeen",
+        "label": "レースクイーン",
+        "count": 68,
+        "percentage": 6
+      },
+      {
+        "occupation": "cosplayer",
+        "label": "コスプレイヤー",
+        "count": 14,
+        "percentage": 1.2
+      },
+      {
+        "occupation": "announcer",
+        "label": "アナウンサー",
+        "count": 14,
+        "percentage": 1.2
+      },
+      {
+        "occupation": "singer",
+        "label": "歌手",
+        "count": 86,
+        "percentage": 7.6
+      },
+      {
+        "occupation": "wrestler",
+        "label": "プロレスラー",
+        "count": 8,
+        "percentage": 0.7
+      }
+    ],
+    "referenceCoverage": {
+      "gravurefitLargeCup": {
+        "label": "gravurefit F-Kカップ",
+        "referenceTotal": 275,
+        "matchedProfiles": 130,
+        "coverageRate": 47.3
+      }
+    },
+    "notes": [
+      "occupation は idolprof の個別プロフィール本文と、リンクされている Wikipedia の導入文から自動推定した参考値です。",
+      "真の業界総数ではなく、公開プロフィール母集団に対して何人を職種タグ付きで追えているかを見るための集計です。"
+    ]
+  }
+}

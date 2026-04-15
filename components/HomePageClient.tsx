@@ -8,6 +8,7 @@ import type {
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
 import { DIAGNOSIS_MODEL_METRICS } from "@/lib/diagnosis-model";
+import type { FemaleProfileCoverageSummary } from "@/lib/profile-occupations";
 import {
   formatSignedDifference,
   getMismatchEmoji,
@@ -25,6 +26,7 @@ type Gender = "female" | "male";
 type HomePageClientProps = {
   data: RankingData;
   femaleCupDistribution: FemaleCupDistributionSummary;
+  femaleOccupationCoverage: FemaleProfileCoverageSummary;
   maleHeightDistribution: MaleHeightDistributionSummary;
 };
 
@@ -227,6 +229,7 @@ function DistributionSeriesCard({
 export default function HomePageClient({
   data,
   femaleCupDistribution,
+  femaleOccupationCoverage,
   maleHeightDistribution,
 }: HomePageClientProps) {
   const [gender, setGender] = useState<Gender>("female");
@@ -272,6 +275,15 @@ export default function HomePageClient({
     gender === "female"
       ? "bg-pink-500 text-white shadow-md"
       : "bg-blue-600 text-white shadow-md";
+  const gravureCount =
+    femaleOccupationCoverage.occupations.find(
+      (entry) => entry.occupation === "gravure"
+    )?.count ?? 0;
+  const avCount =
+    femaleOccupationCoverage.occupations.find((entry) => entry.occupation === "av")
+      ?.count ?? 0;
+  const gravurefitCoverage =
+    femaleOccupationCoverage.referenceCoverage.gravurefitLargeCup;
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-50 to-white px-4 py-8 sm:py-12">
@@ -337,6 +349,80 @@ export default function HomePageClient({
             男性
           </button>
         </div>
+
+        {gender === "female" ? (
+          <section className="rounded-[1.75rem] border border-amber-100 bg-[linear-gradient(135deg,_rgba(251,191,36,0.14),_rgba(255,255,255,0.96))] p-5 shadow-sm sm:p-6">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
+                Coverage
+              </p>
+              <h2 className="text-2xl font-bold text-slate-900">
+                職種タグのカバレッジ
+              </h2>
+              <p className="text-sm leading-6 text-slate-500 sm:text-base">
+                公開女性プロフィール {femaleOccupationCoverage.total} 人に対して、
+                `グラビア / AV女優 / 女優 / モデル` などの職種タグを別データで管理しています。
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  label: "タグ付与済み",
+                  value: `${femaleOccupationCoverage.tagged}人`,
+                  tone: "bg-white/90 text-slate-900",
+                },
+                {
+                  label: "グラビア",
+                  value: `${gravureCount}人`,
+                  tone: "bg-pink-50 text-pink-700",
+                },
+                {
+                  label: "AV女優",
+                  value: `${avCount}人`,
+                  tone: "bg-rose-50 text-rose-700",
+                },
+                {
+                  label: "未判定",
+                  value: `${femaleOccupationCoverage.untagged}人`,
+                  tone: "bg-slate-100 text-slate-700",
+                },
+              ].map((item) => (
+                <article
+                  key={item.label}
+                  className={`rounded-2xl px-4 py-3 shadow-sm ring-1 ring-black/5 ${item.tone}`}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-70">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-2xl font-bold">{item.value}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {femaleOccupationCoverage.occupations
+                .filter((entry) => entry.count > 0)
+                .slice(0, 6)
+                .map((entry) => (
+                  <span
+                    key={entry.occupation}
+                    className="rounded-full bg-white/85 px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200"
+                  >
+                    {entry.label} {entry.count}人
+                  </span>
+                ))}
+            </div>
+
+            <p className="mt-4 text-sm text-slate-600">
+              参考集合: {gravurefitCoverage.label} {gravurefitCoverage.matchedProfiles} /{" "}
+              {gravurefitCoverage.referenceTotal} ({gravurefitCoverage.coverageRate}%)
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              {femaleOccupationCoverage.notes[0]}
+            </p>
+          </section>
+        ) : null}
 
         <section className="space-y-8">
           <div className="flex flex-wrap justify-center gap-2">

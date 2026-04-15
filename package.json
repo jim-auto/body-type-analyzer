@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "fetch:local-training": "node scripts/fetch-local-training-profiles.mjs",
+    "generate:profile-occupations": "node scripts/generate-profile-occupations.mjs",
     "optimize:images": "python scripts/optimize-public-images.py",
     "generate:ranking-image-qa": "python scripts/generate-ranking-image-qa.py",
     "generate:diagnosis-model": "python scripts/generate-diagnosis-model.py",
