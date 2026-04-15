@@ -19,6 +19,7 @@ POSE_MODEL_PATH = Path(__file__).resolve().parents[1] / "local-data" / "pose_lan
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = REPO_ROOT / "public" / "data" / "diagnosis-model.json"
 LOCAL_TRAINING_DATA_PATH = REPO_ROOT / "local-data" / "training-profiles.json"
+IMAGE_CREDITS_PATH = REPO_ROOT / "public" / "data" / "image-credits.json"
 
 CUP_ORDER = [chr(code) for code in range(ord("A"), ord("Z") + 1)]
 REGIONS = {
@@ -129,6 +130,7 @@ TRUSTED_LOCAL_SOURCES = {
 }
 CURATED_LOCAL_HEIGHT_SOURCES = set(TRUSTED_LOCAL_SOURCES)
 CURATED_LOCAL_CUP_SOURCES = set(TRUSTED_LOCAL_SOURCES)
+EXCLUDED_PUBLIC_IMAGE_PROVIDERS = {"bing"}
 
 
 @dataclass(frozen=True)
@@ -414,17 +416,23 @@ def load_profiles() -> list[Profile]:
     )
     profiles = json.loads(result.stdout)
 
+    image_provider_by_path = load_image_provider_by_path()
     base_profiles = []
     for profile in profiles:
         public_cup = profile.get("displayCup") or profile["cup"]
+        image_path = profile["image"]
+        provider = image_provider_by_path.get(image_path)
 
-        if not profile["image"].startswith("/images/") or public_cup not in CUP_ORDER:
+        if not image_path.startswith("/images/") or public_cup not in CUP_ORDER:
+            continue
+
+        if provider in EXCLUDED_PUBLIC_IMAGE_PROVIDERS:
             continue
 
         base_profiles.append(
             Profile(
                 name=profile["name"],
-                image=profile["image"],
+                image=image_path,
                 actual_height=float(profile["actualHeight"]),
                 cup=public_cup,
                 source="public",
@@ -437,6 +445,19 @@ def load_profiles() -> list[Profile]:
         merged[profile.name] = profile
 
     return list(merged.values())
+
+
+def load_image_provider_by_path() -> dict[str, str]:
+    if not IMAGE_CREDITS_PATH.exists():
+        return {}
+
+    records = json.loads(IMAGE_CREDITS_PATH.read_text(encoding="utf-8"))
+
+    return {
+        str(record.get("image", "")): str(record.get("provider", ""))
+        for record in records
+        if record.get("image")
+    }
 
 
 def load_local_training_profiles() -> list[Profile]:
