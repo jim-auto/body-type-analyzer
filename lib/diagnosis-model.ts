@@ -174,7 +174,7 @@ export type SimilarityMetrics = {
 export type DiagnosisModelEntry = {
   name: string;
   image: string;
-  actualHeight: number;
+  actualHeight: number | null;
   cup: DiagnosisCup;
   silhouetteType: SilhouetteType;
   availability: {
@@ -340,6 +340,7 @@ function getNeighbors(
 
   return DIAGNOSIS_MODEL_ENTRIES.filter((entry) => entry.name !== excludeName)
     .filter((entry) => entry.availability[availabilityKey])
+    .filter((entry) => availabilityKey === "cup" || entry.actualHeight !== null)
     .filter(
       (entry) =>
         (entry.featureWeights?.[featureSetName] ??
@@ -479,7 +480,7 @@ function predictHeight(
 
     return {
       neighbors,
-      prediction: weightedMean(neighbors, (entry) => entry.actualHeight),
+      prediction: weightedMean(neighbors, (entry) => entry.actualHeight ?? HEIGHT_MIN),
     };
   });
   const predictions = modelPredictions.map((model) => model.prediction).sort((a, b) => a - b);
@@ -540,7 +541,7 @@ function getSimilarCelebrities(
     name: neighbor.entry.name,
     image: neighbor.entry.image,
     similarity: clamp(Math.round(62 + neighbor.distanceScore * 34), 62, 96),
-    actualHeight: neighbor.entry.actualHeight,
+    actualHeight: neighbor.entry.actualHeight ?? HEIGHT_MIN,
     cup: neighbor.entry.cup,
   }));
 }
@@ -759,7 +760,9 @@ export function normalizeMaleFeatures(
 }
 
 export function evaluateDiagnosisModel(): DiagnosisModelEvaluation {
-  const heightEntries = DIAGNOSIS_MODEL_ENTRIES.filter((entry) => entry.availability.height);
+  const heightEntries = DIAGNOSIS_MODEL_ENTRIES.filter(
+    (entry) => entry.availability.height && entry.actualHeight !== null
+  );
   const cupEntries = DIAGNOSIS_MODEL_ENTRIES.filter((entry) => entry.availability.cup);
   const heightResults = heightEntries.map((entry) =>
     diagnoseFromFeatures(

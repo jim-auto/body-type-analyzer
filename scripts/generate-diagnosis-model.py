@@ -128,6 +128,7 @@ TRUSTED_LOCAL_SOURCES = {
     "y6nvocam.gdl-entertainment.tokyo",
     "manual",
     "dmm",
+    "dmm-cup-only",
     "dmm-fanza-search",
     "dmm-minnano-av",
 }
@@ -140,7 +141,7 @@ EXCLUDED_PUBLIC_IMAGE_PROVIDERS = {"bing"}
 class Profile:
     name: str
     image: str
-    actual_height: float
+    actual_height: float | None
     cup: str
     source: str = "public"
     use_for_height: bool = True
@@ -485,17 +486,30 @@ def load_local_training_profiles() -> list[Profile]:
             )
         ) and source in CURATED_LOCAL_HEIGHT_SOURCES
         use_for_cup = bool(record.get("useForCup", False)) and source in CURATED_LOCAL_CUP_SOURCES
+        use_for_similarity = bool(record.get("useForSimilarity", False))
+        actual_height_raw = record.get("actualHeight")
+        actual_height = (
+            None
+            if actual_height_raw is None or actual_height_raw == ""
+            else float(actual_height_raw)
+        )
+
+        if use_for_height and actual_height is None:
+            continue
+
+        if actual_height is None:
+            use_for_similarity = False
 
         profiles.append(
             Profile(
                 name=record["name"],
                 image=record["imagePath"],
-                actual_height=float(record["actualHeight"]),
+                actual_height=actual_height,
                 cup=cup,
                 source=source,
                 use_for_height=use_for_height,
                 use_for_cup=use_for_cup,
-                use_for_similarity=bool(record.get("useForSimilarity", False)),
+                use_for_similarity=use_for_similarity,
             )
         )
 
@@ -1339,7 +1353,10 @@ def build_stratified_holdout_splits(
     ]
 
 
-def infer_silhouette(actual_height: float, cup: str) -> str:
+def infer_silhouette(actual_height: float | None, cup: str) -> str:
+    if actual_height is None:
+        return "X"
+
     cup_value = CUP_ORDER.index(cup)
 
     if actual_height <= 158 and cup_value >= CUP_ORDER.index("E"):

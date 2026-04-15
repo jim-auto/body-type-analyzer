@@ -16,6 +16,7 @@
     "generate:ranking-image-qa": "python scripts/generate-ranking-image-qa.py",
     "generate:diagnosis-model": "python scripts/generate-diagnosis-model.py",
     "experiment:diagnosis-model": "python scripts/run-diagnosis-experiments.py",
+    "benchmark:diagnosis-model": "node scripts/evaluate-diagnosis-model-benchmark.mjs",
     "test": "jest --runInBand",
     "test:watch": "jest --watch"
   },

@@ -100,10 +100,13 @@ function toTrainingProfile(actress, imagePath, imageResolution) {
   const cup = normalizeCup(actress.cup);
   const remoteImageUrl = sanitizeImageUrl(imageResolution.remoteImageUrl);
   const sourceUrl = imageResolution.sourceUrl || actress.listURL?.digital || "";
+  const source =
+    actualHeight === null && imageResolution.source === "dmm"
+      ? "dmm-cup-only"
+      : imageResolution.source;
 
   if (
     !actress.name ||
-    actualHeight === null ||
     bust === null ||
     cup === null ||
     !remoteImageUrl ||
@@ -119,7 +122,7 @@ function toTrainingProfile(actress, imagePath, imageResolution) {
     bust,
     cup,
     displayCup: cup,
-    source: imageResolution.source,
+    source,
     sourceUrl,
     remoteImageUrl,
     scrapedHeight: null,
@@ -355,6 +358,7 @@ async function main() {
   const nextRecords = [...trainingRecords];
   const addedCounts = Object.fromEntries(CUP_ORDER.map((cup) => [cup, 0]));
   let downloadedCount = 0;
+  let addedWithoutHeight = 0;
   const failures = [];
 
   for (const actress of candidates) {
@@ -384,6 +388,9 @@ async function main() {
 
       nextRecords.push(record);
       addedCounts[record.cup] += 1;
+      if (record.actualHeight === null) {
+        addedWithoutHeight += 1;
+      }
 
       if (didDownload) {
         downloadedCount += 1;
@@ -413,6 +420,7 @@ async function main() {
         requestedLimit: options.limit,
         addedProfiles: nextRecords.length - trainingRecords.length,
         downloadedImages: downloadedCount,
+        addedWithoutHeight,
         addedByCup: addedSummary,
         failed: failures.length,
         failures,
