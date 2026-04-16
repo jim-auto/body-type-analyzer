@@ -23,6 +23,7 @@ IMAGES_DIR = REPO_ROOT / "public" / "images"
 FEMALE_QUERY_SUFFIXES = ("グラビア", "プロフィール", "モデル", "宣材写真")
 MALE_QUERY_SUFFIXES = ("俳優", "プロフィール", "宣材写真", "アー写")
 QUERY_OVERRIDES = {
+    "じろう": ["シソンヌ じろう", "じろう シソンヌ"],
     "清水みさと": ["清水みさと 女優", "清水みさと タレント", "清水みさと グラビア"],
     "高橋茂雄": ["高橋茂雄 サバンナ", "サバンナ 高橋茂雄", "高橋茂雄 芸人"],
     "榎木孝明": ["榎木孝明 俳優"],
@@ -161,6 +162,24 @@ def image_download_candidates(page, target: Target) -> list[str]:
     return urls
 
 
+def is_rejected_bing_image_url(image_url: str) -> bool:
+    lower = image_url.lower()
+
+    return any(
+        marker in lower
+        for marker in (
+            "storage.ko-fi.com",
+            "1girl",
+            "masterpiece",
+            "illustration",
+            "ai-generated",
+            "ai_generated",
+            "radiko.jp",
+            "logo",
+        )
+    )
+
+
 def validate_and_save_image(image_bytes: bytes, destination: Path) -> bool:
     return validate_and_save_image_with_thresholds(
         image_bytes,
@@ -227,6 +246,9 @@ def download_target_image(
         return output_path, "cached"
 
     for image_url in image_download_candidates(page, target):
+        if is_rejected_bing_image_url(image_url):
+            continue
+
         request = urllib.request.Request(
             image_url,
             headers={
@@ -275,13 +297,37 @@ def update_source_profiles(replacements: dict[str, str]) -> None:
 
 def parse_image_path_entries(block: str) -> dict[str, str]:
     entries: dict[str, str] = {}
-    pattern = re.compile(r'^\s{2}(?:"([^"]+)"|([^:]+)):\s+"([^"]+)",$', re.MULTILINE)
+    pattern = re.compile(
+        r'^\s{2}((?:"(?:\\.|[^"\\])*")|[^:]+):\s+"([^"]+)",$',
+        re.MULTILINE,
+    )
 
     for match in pattern.finditer(block):
-        key = (match.group(1) or match.group(2)).strip()
-        entries[key] = match.group(3)
+        raw_key = match.group(1).strip()
+        key = json.loads(raw_key) if raw_key.startswith('"') else raw_key
+        entries[normalize_image_path_key(key)] = match.group(2)
 
     return entries
+
+
+def normalize_image_path_key(key: str) -> str:
+    normalized = key.strip()
+
+    for _ in range(4):
+        if not (normalized.startswith('"') and normalized.endswith('"')):
+            break
+
+        try:
+            parsed = json.loads(normalized)
+        except json.JSONDecodeError:
+            break
+
+        if not isinstance(parsed, str) or parsed == normalized:
+            break
+
+        normalized = parsed
+
+    return normalized
 
 
 def render_image_paths(entries: dict[str, str]) -> str:
@@ -358,6 +404,12 @@ def main() -> int:
         help="Which ranking gender buckets to scan",
     )
     parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Only process the first N selected targets",
+    )
+    parser.add_argument(
         "--min-bytes",
         type=int,
         default=MIN_BYTES,
@@ -387,6 +439,8 @@ def main() -> int:
     targets = load_targets(
         only_names, args.top_n, args.gender, refresh_existing=args.refresh_existing
     )
+    if args.limit > 0:
+        targets = targets[: args.limit]
     replacements: dict[str, str] = {}
     credits: dict[str, dict[str, object]] = {}
     failures: list[dict[str, str]] = []
