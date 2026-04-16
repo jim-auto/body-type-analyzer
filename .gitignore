@@ -26,6 +26,7 @@
 /local-data/
 /tmp_*.html
 /talent_search_*.html
+.claude/settings.local.json
 
 # debug
 npm-debug.log*
