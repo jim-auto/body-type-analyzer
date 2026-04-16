@@ -43,6 +43,7 @@ QUERY_OVERRIDES = {
     "瀬下豊": ["天竺鼠 瀬下豊", "瀬下豊 天竺鼠", "瀬下豊 芸人"],
     "川瀬名人": ["ゆにばーす 川瀬名人", "川瀬名人 ゆにばーす", "川瀬名人 芸人"],
     "トシ": ["タカアンドトシ トシ", "トシ タカアンドトシ", "タカトシ トシ 芸人"],
+    "成瀬かのん": ["成瀬かのん グラビア", "成瀬かのん BLACK PRINCESS", "成瀬かのん アイドル"],
 }
 MIN_BYTES = 10 * 1024
 MIN_SIDE = 180
@@ -85,7 +86,11 @@ def make_filename(name: str) -> str:
 
 
 def load_targets(
-    only_names: set[str], top_n: int, gender_filter: str, refresh_existing: bool = False
+    only_names: set[str],
+    top_n: int,
+    gender_filter: str,
+    refresh_existing: bool = False,
+    preferred_order: list[str] | None = None,
 ) -> list[Target]:
     ranking = json.loads(RANKING_PATH.read_text(encoding="utf-8"))
     female_categories = ranking["female"] if gender_filter in ("female", "all") else []
@@ -125,6 +130,10 @@ def load_targets(
             seen.add(name)
             deduped.append(Target(name=name, gender=gender))
 
+    if preferred_order:
+        order_index = {name: index for index, name in enumerate(preferred_order)}
+        deduped.sort(key=lambda target: order_index.get(target.name, len(order_index)))
+
     return deduped
 
 
@@ -141,6 +150,27 @@ def load_only_names(raw_names: str, names_file: str) -> set[str]:
         names.update(file_names)
 
     return names
+
+
+def load_only_name_order(raw_names: str, names_file: str) -> list[str]:
+    ordered_names: list[str] = []
+    seen: set[str] = set()
+
+    for name in raw_names.split(","):
+        normalized = name.strip()
+        if normalized and normalized not in seen:
+            seen.add(normalized)
+            ordered_names.append(normalized)
+
+    if names_file:
+        file_path = Path(names_file)
+        for line in file_path.read_text(encoding="utf-8").splitlines():
+            normalized = line.strip()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                ordered_names.append(normalized)
+
+    return ordered_names
 
 
 def build_queries(target: Target) -> list[str]:
@@ -435,6 +465,11 @@ def main() -> int:
         help="Only process the first N selected targets",
     )
     parser.add_argument(
+        "--preserve-names-order",
+        action="store_true",
+        help="Process selected targets in the same order as --only-names and --only-names-file",
+    )
+    parser.add_argument(
         "--min-bytes",
         type=int,
         default=MIN_BYTES,
@@ -461,8 +496,17 @@ def main() -> int:
     args = parser.parse_args()
 
     only_names = load_only_names(args.only_names, args.only_names_file)
+    preferred_order = (
+        load_only_name_order(args.only_names, args.only_names_file)
+        if args.preserve_names_order
+        else None
+    )
     targets = load_targets(
-        only_names, args.top_n, args.gender, refresh_existing=args.refresh_existing
+        only_names,
+        args.top_n,
+        args.gender,
+        refresh_existing=args.refresh_existing,
+        preferred_order=preferred_order,
     )
     if args.limit > 0:
         targets = targets[: args.limit]
