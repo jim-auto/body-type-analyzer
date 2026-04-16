@@ -37,6 +37,12 @@ QUERY_OVERRIDES = {
     "宮地れな": ["宮地れな グラビア", "宮地れな アイドル", "宮地れな タレント"],
     "哀川翔": ["哀川翔 俳優", "哀川翔 プロフィール", "哀川翔 宣材写真"],
     "三浦貴大": ["三浦貴大 俳優", "三浦貴大 プロフィール", "三浦貴大 宣材写真"],
+    "玲音": ["玲音 グラビアアイドル", "玲音 グラビア プロフィール", "玲音 タレント"],
+    "リリー": ["見取り図 リリー", "リリー 見取り図", "見取り図 リリー 芸人"],
+    "ビル・ゲイツ": ["Bill Gates portrait", "Bill Gates profile", "ビル・ゲイツ 顔写真"],
+    "瀬下豊": ["天竺鼠 瀬下豊", "瀬下豊 天竺鼠", "瀬下豊 芸人"],
+    "川瀬名人": ["ゆにばーす 川瀬名人", "川瀬名人 ゆにばーす", "川瀬名人 芸人"],
+    "トシ": ["タカアンドトシ トシ", "トシ タカアンドトシ", "タカトシ トシ 芸人"],
 }
 MIN_BYTES = 10 * 1024
 MIN_SIDE = 180
@@ -188,9 +194,13 @@ def is_rejected_bing_image_url(image_url: str) -> bool:
             "pixabay.com",
             "deviantart.net",
             "wixmp.com",
+            "zhimg.com",
+            "zhihu.com",
             "ssl-images-amazon.com",
             "mercdn.net",
             "pexels.com",
+            "microcms-assets.io",
+            "bookwalker.jp",
         )
     )
 
