@@ -25,6 +25,24 @@ const CUP_TYPICAL_BUST_BY_ACTUAL = {
 const EXTENDED_CUP_H_BUST = 96;
 const EXTENDED_CUP_BUST_STEP_CM = 4;
 const CUP_MEDIAN_TRUST_BAND_CM = 5;
+const DEFAULT_FEMALE_HEIGHT_FOR_WEIGHT = 160;
+const DEFAULT_FEMALE_BUST_FOR_WEIGHT = 84;
+const DEFAULT_FEMALE_CUP_INDEX_FOR_WEIGHT = 2;
+const FEMALE_WEIGHT_ESTIMATE_BASE = -56.10081929;
+const FEMALE_WEIGHT_HEIGHT_COEFFICIENT = 0.38059393;
+const FEMALE_WEIGHT_BUST_COEFFICIENT = 0.49493558;
+const FEMALE_WEIGHT_CUP_COEFFICIENT = -0.31081718;
+const FEMALE_WEIGHT_JITTER_SEQUENCE = [0, 0.4, -0.4, 0.8, -0.8] as const;
+const MALE_WEIGHT_BMI_BASE = 20.5;
+const MALE_WEIGHT_BMI_JITTER_SEQUENCE = [
+  0,
+  0.4,
+  -0.4,
+  0.8,
+  -0.8,
+  0.2,
+  -0.2,
+] as const;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -70,6 +88,64 @@ export function getDeterministicHeightDelta(name: string): number {
 
 export function getEstimatedHeight(actualHeight: number, name: string): number {
   return actualHeight + getDeterministicHeightDelta(name);
+}
+
+export function getValidActualWeight(weight: number | null): number | null {
+  if (weight === null || weight < 25 || weight > 95) {
+    return null;
+  }
+
+  return weight;
+}
+
+function getWeightJitter(
+  name: string,
+  sequence: readonly number[]
+): number {
+  return sequence[getNameSeed(name) % sequence.length] ?? 0;
+}
+
+export function getEstimatedFemaleWeight(
+  actualHeight: number,
+  bust: number | null,
+  actualCup: string | null | undefined,
+  name: string
+): number {
+  const height =
+    actualHeight > 0
+      ? actualHeight
+      : DEFAULT_FEMALE_HEIGHT_FOR_WEIGHT + getDeterministicHeightDelta(name);
+  const estimatedCupFromBust = getEstimatedCupFromBust(bust);
+  const cupIndex =
+    getCupIndex(actualCup) ??
+    getCupIndex(estimatedCupFromBust) ??
+    DEFAULT_FEMALE_CUP_INDEX_FOR_WEIGHT;
+  const bustForEstimate =
+    bust ??
+    getTypicalBustForCup(actualCup) ??
+    getTypicalBustForCup(estimatedCupFromBust) ??
+    DEFAULT_FEMALE_BUST_FOR_WEIGHT;
+  const rawWeight =
+    FEMALE_WEIGHT_ESTIMATE_BASE +
+    FEMALE_WEIGHT_HEIGHT_COEFFICIENT * height +
+    FEMALE_WEIGHT_BUST_COEFFICIENT * bustForEstimate +
+    FEMALE_WEIGHT_CUP_COEFFICIENT * cupIndex +
+    getWeightJitter(name, FEMALE_WEIGHT_JITTER_SEQUENCE);
+
+  return clamp(Math.round(rawWeight), 35, 78);
+}
+
+export function getEstimatedMaleWeight(
+  actualHeight: number,
+  name: string
+): number {
+  const height = actualHeight > 0 ? actualHeight : 172;
+  const heightMeters = height / 100;
+  const bmi =
+    MALE_WEIGHT_BMI_BASE +
+    getWeightJitter(name, MALE_WEIGHT_BMI_JITTER_SEQUENCE);
+
+  return clamp(Math.round(heightMeters * heightMeters * bmi), 50, 98);
 }
 
 export function getMismatchEmoji(diff: number): string {

@@ -6,6 +6,9 @@ import {
 import {
   getCupDifference,
   getDisplayCupDifference,
+  getEstimatedFemaleWeight,
+  getEstimatedMaleWeight,
+  getValidActualWeight,
 } from "./profile-estimates.ts";
 import {
   getFemaleRankingEstimatedCup,
@@ -28,9 +31,17 @@ function buildFemaleBaseEntry(
   const estimatedHeight = getFemaleRankingEstimatedHeight(profile);
   const estimatedCup = getFemaleRankingEstimatedCup(profile);
   const comparableCup = getPreferredCupLabel(profile);
+  const actualWeight = getValidActualWeight(profile.actualWeight);
 
   return {
     ...profile,
+    actualWeight,
+    estimatedWeight: getEstimatedFemaleWeight(
+      profile.actualHeight,
+      profile.bust,
+      comparableCup,
+      profile.name
+    ),
     estimatedHeight,
     heightDiff: estimatedHeight - profile.actualHeight,
     estimatedCup,
@@ -49,6 +60,8 @@ function buildMaleBaseEntry(
 
   return {
     ...profile,
+    actualWeight: null,
+    estimatedWeight: getEstimatedMaleWeight(profile.actualHeight, profile.name),
     estimatedHeight,
     heightDiff: estimatedHeight - profile.actualHeight,
   };

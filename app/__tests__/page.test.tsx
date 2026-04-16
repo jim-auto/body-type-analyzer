@@ -64,20 +64,46 @@ const femaleStyleNonAvEntry = femaleStyleCategory.ranking.find(
 const femaleStyleAvCount = femaleStyleCategory.ranking.filter((entry) =>
   getFemaleProfileOccupations(entry.name).includes("av")
 ).length;
+const getDisplayedWeight = (entry: {
+  actualWeight: number | null;
+  estimatedWeight: number;
+}) => entry.actualWeight ?? entry.estimatedWeight;
+const getWeightChipText = (entry: {
+  actualWeight: number | null;
+  estimatedWeight: number;
+}) => `${entry.actualWeight !== null ? "公表" : "推定"}${getDisplayedWeight(entry)}kg`;
 const femaleStyleKnownWeightEntryIndex = femaleStyleCategory.ranking.findIndex(
   (entry) => entry.actualWeight !== null
 );
 const femaleStyleKnownWeightEntry =
   femaleStyleCategory.ranking[femaleStyleKnownWeightEntryIndex];
+const femaleStyleEstimatedWeightEntryIndex = femaleStyleCategory.ranking.findIndex(
+  (entry) => entry.actualWeight === null
+);
+const femaleStyleEstimatedWeightEntry =
+  femaleStyleCategory.ranking[femaleStyleEstimatedWeightEntryIndex];
 const femaleStyleUnder45Entry = femaleStyleCategory.ranking.find(
-  (entry) => entry.actualWeight !== null && entry.actualWeight < 45
+  (entry) => getDisplayedWeight(entry) < 45
 )!;
 const femaleStyleNonUnder45Entry = femaleStyleCategory.ranking.find(
-  (entry) => entry.actualWeight === null || entry.actualWeight >= 45
+  (entry) => getDisplayedWeight(entry) >= 45
 )!;
 const femaleStyleUnder45Count = femaleStyleCategory.ranking.filter(
-  (entry) => entry.actualWeight !== null && entry.actualWeight < 45
+  (entry) => getDisplayedWeight(entry) < 45
 ).length;
+const maleStyle55To59Entry = maleStyleCategory.ranking.find((entry) => {
+  const weight = getDisplayedWeight(entry);
+
+  return weight >= 55 && weight < 60;
+})!;
+const maleStyleNon55To59Entry = maleStyleCategory.ranking.find(
+  (entry) => getDisplayedWeight(entry) >= 60
+)!;
+const maleStyle55To59Count = maleStyleCategory.ranking.filter((entry) => {
+  const weight = getDisplayedWeight(entry);
+
+  return weight >= 55 && weight < 60;
+}).length;
 
 function getFemaleCupSampleCount(cup: string | null | undefined): number | null {
   const normalizedCup = normalizeCupLabel(cup);
@@ -293,7 +319,31 @@ describe("Home (Ranking Page)", () => {
     expect(card).not.toBeNull();
     expect(
       within(card as HTMLElement).getByText(
-        `${femaleStyleKnownWeightEntry.actualWeight}kg`
+        getWeightChipText(femaleStyleKnownWeightEntry)
+      )
+    ).toBeInTheDocument();
+  });
+
+  test("Ranking cards show estimated weight chips when public weight is missing", () => {
+    expect(femaleStyleEstimatedWeightEntryIndex).toBeGreaterThanOrEqual(0);
+
+    renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
+
+    const pageNumber =
+      Math.floor(femaleStyleEstimatedWeightEntryIndex / PAGE_SIZE) + 1;
+    if (pageNumber > 1) {
+      clickPageNumber(pageNumber);
+    }
+
+    const card = screen
+      .getByText(femaleStyleEstimatedWeightEntry.name)
+      .closest("div.rounded-2xl");
+
+    expect(card).not.toBeNull();
+    expect(
+      within(card as HTMLElement).getByText(
+        getWeightChipText(femaleStyleEstimatedWeightEntry)
       )
     ).toBeInTheDocument();
   });
@@ -311,15 +361,17 @@ describe("Home (Ranking Page)", () => {
     ).toBeInTheDocument();
   });
 
-  test("Weight filter is hidden on male ranking", () => {
+  test("Weight filter narrows male ranking entries by selected range", () => {
     renderHome();
-    clickWeightFilter("Under 45kg");
     clickGenderTab("男性");
 
-    expect(screen.queryByText("Weight Filter")).not.toBeInTheDocument();
+    clickWeightFilter("55-59kg");
+
+    expect(screen.getByText(maleStyle55To59Entry.name)).toBeInTheDocument();
+    expect(screen.queryByText(maleStyleNon55To59Entry.name)).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^Under 45kg\s/ })
-    ).not.toBeInTheDocument();
+      screen.getByText(`1-20位 / ${maleStyle55To59Count}人`)
+    ).toBeInTheDocument();
   });
 
   test("女性 style ランキングで公表値の要約が表示される", () => {

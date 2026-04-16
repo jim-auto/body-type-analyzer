@@ -8,6 +8,7 @@ export type FemaleRankingEntry = {
   displayCup: string | null;
   actualHeight: number;
   actualWeight: number | null;
+  estimatedWeight: number;
   bust: number | null;
   estimatedHeight: number;
   heightDiff: number;
@@ -21,6 +22,8 @@ export type MaleRankingEntry = {
   score: number;
   image: string;
   actualHeight: number;
+  actualWeight: null;
+  estimatedWeight: number;
   estimatedHeight: number;
   heightDiff: number;
 };

@@ -194,6 +194,20 @@ function getDisplayedCup(entry: FemaleRankingEntry): string | null {
   return entry.displayCup ?? entry.cup;
 }
 
+function getDisplayedWeight(entry: RankingEntry): number | null {
+  return entry.actualWeight ?? entry.estimatedWeight ?? null;
+}
+
+function getWeightChipLabel(entry: RankingEntry): string | null {
+  const weight = getDisplayedWeight(entry);
+
+  if (weight === null) {
+    return null;
+  }
+
+  return `${entry.actualWeight !== null ? "公表" : "推定"}${weight}kg`;
+}
+
 function getCupSampleCount(
   summary: FemaleCupTrainingCoverageSummary,
   cup: string | null | undefined
@@ -405,49 +419,41 @@ export default function HomePageClient({
           getFemaleProfileOccupations(entry.name).includes(activeOccupationFilter)
         )
       : currentRanking;
-  const femaleWeightFilterCounts =
-    gender === "female"
-      ? WEIGHT_FILTERS.reduce<Record<WeightFilter, number>>(
-          (counts, filter) => {
-            counts[filter.id] =
-              filter.id === "all"
-                ? occupationFilteredRanking.length
-                : occupationFilteredRanking.filter(
-                    (entry) =>
-                      isFemaleEntry(entry) && filter.matches(entry.actualWeight)
-                  ).length;
+  const weightFilterCounts = WEIGHT_FILTERS.reduce<Record<WeightFilter, number>>(
+    (counts, filter) => {
+      counts[filter.id] =
+        filter.id === "all"
+          ? occupationFilteredRanking.length
+          : occupationFilteredRanking.filter((entry) =>
+              filter.matches(getDisplayedWeight(entry))
+            ).length;
 
-            return counts;
-          },
-          {
-            all: 0,
-            under45: 0,
-            "45-49": 0,
-            "50-54": 0,
-            "55-59": 0,
-            "60plus": 0,
-            unknown: 0,
-          }
-        )
-      : null;
+      return counts;
+    },
+    {
+      all: 0,
+      under45: 0,
+      "45-49": 0,
+      "50-54": 0,
+      "55-59": 0,
+      "60plus": 0,
+      unknown: 0,
+    }
+  );
   const activeWeightFilterConfig = WEIGHT_FILTERS.find(
     (filter) => filter.id === activeWeightFilter
   );
-  const femaleWeightFilterOptions =
-    gender === "female" && femaleWeightFilterCounts
-      ? WEIGHT_FILTERS.filter(
-          (filter) =>
-            filter.id === "all" ||
-            (femaleWeightFilterCounts[filter.id] ?? 0) > 0 ||
-            activeWeightFilter === filter.id
-        )
-      : [];
+  const weightFilterOptions = WEIGHT_FILTERS.filter(
+    (filter) =>
+      filter.id === "all" ||
+      (weightFilterCounts[filter.id] ?? 0) > 0 ||
+      activeWeightFilter === filter.id
+  );
   const weightFilteredRanking =
-    gender === "female" && activeWeightFilter !== "all"
+    activeWeightFilter !== "all"
       ? occupationFilteredRanking.filter(
           (entry) =>
-            isFemaleEntry(entry) &&
-            (activeWeightFilterConfig?.matches(entry.actualWeight) ?? true)
+            activeWeightFilterConfig?.matches(getDisplayedWeight(entry)) ?? true
         )
       : occupationFilteredRanking;
   const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
@@ -786,34 +792,31 @@ export default function HomePageClient({
                       </div>
                     </div>
                   ) : null}
-                  {gender === "female" ? (
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-                        Weight Filter
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {femaleWeightFilterOptions.map((filter) => (
-                          <button
-                            key={filter.id}
-                            type="button"
-                            onClick={() => {
-                              setActiveWeightFilter(filter.id);
-                              setActivePage(0);
-                            }}
-                            aria-pressed={activeWeightFilter === filter.id}
-                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                              activeWeightFilter === filter.id
-                                ? activeCategoryStyle
-                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            {filter.label}{" "}
-                            {femaleWeightFilterCounts?.[filter.id] ?? 0}
-                          </button>
-                        ))}
-                      </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                      Weight Filter
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {weightFilterOptions.map((filter) => (
+                        <button
+                          key={filter.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveWeightFilter(filter.id);
+                            setActivePage(0);
+                          }}
+                          aria-pressed={activeWeightFilter === filter.id}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                            activeWeightFilter === filter.id
+                              ? activeCategoryStyle
+                              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {filter.label} {weightFilterCounts[filter.id] ?? 0}
+                        </button>
+                      ))}
                     </div>
-                  ) : null}
+                  </div>
                   <label
                     htmlFor="ranking-search"
                     className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400"
@@ -914,6 +917,7 @@ export default function HomePageClient({
                   const femaleOccupationLabels = femaleEntry
                     ? getFemaleOccupationLabels(entry.name)
                     : [];
+                  const weightChipLabel = getWeightChipLabel(entry);
                   const hasCupDataWarning = femaleEntry
                     ? hasInsufficientCupData(femaleEntry, femaleCupTrainingCoverage)
                     : false;
@@ -968,9 +972,15 @@ export default function HomePageClient({
                             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
                               {entry.actualHeight}cm
                             </span>
-                            {femaleEntry && femaleEntry.actualWeight !== null ? (
-                              <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                                {femaleEntry.actualWeight}kg
+                            {weightChipLabel ? (
+                              <span
+                                className={`rounded px-2 py-0.5 text-xs font-semibold ring-1 ${
+                                  entry.actualWeight !== null
+                                    ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                                    : "bg-cyan-50 text-cyan-700 ring-cyan-100"
+                                }`}
+                              >
+                                {weightChipLabel}
                               </span>
                             ) : null}
                           </div>

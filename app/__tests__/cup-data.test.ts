@@ -9,6 +9,9 @@ import {
   getDisplayCupDifference,
   getAdjustedEstimatedCup,
   getEstimatedHeight,
+  getEstimatedFemaleWeight,
+  getEstimatedMaleWeight,
+  getValidActualWeight,
 } from "@/lib/profile-estimates";
 import {
   getFemaleRankingEstimatedCup,
@@ -40,6 +43,9 @@ const maleCategories = rankingData.male;
 const allCategories = [...femaleCategories, ...maleCategories];
 const femaleEntries = femaleCategories.flatMap((category) => category.ranking);
 const maleEntries = maleCategories.flatMap((category) => category.ranking);
+const femaleSourceByName = new Map(
+  femaleProfilePool.map((entry) => [entry.name, entry])
+);
 const validCups = new Set(EXTENDED_CUP_ORDER);
 const publicCupOrder = EXTENDED_CUP_ORDER;
 const uiAvatarPattern =
@@ -137,13 +143,31 @@ describe("ranking.json actual profile data", () => {
 
   test("全エントリに actualHeight、estimatedHeight、heightDiff がある", () => {
     femaleEntries.forEach((entry) => {
+      const sourceEntry = femaleSourceByName.get(entry.name);
+
+      expect(sourceEntry).toBeDefined();
       expect(entry.actualHeight).toEqual(expect.any(Number));
+      expect(entry.actualWeight).toBe(
+        getValidActualWeight(sourceEntry!.actualWeight)
+      );
+      expect(entry.estimatedWeight).toBe(
+        getEstimatedFemaleWeight(
+          entry.actualHeight,
+          entry.bust,
+          getPreferredCupLabel(entry),
+          entry.name
+        )
+      );
       expect(entry.estimatedHeight).toBe(getFemaleRankingEstimatedHeight(entry));
       expect(entry.heightDiff).toBe(entry.estimatedHeight - entry.actualHeight);
     });
 
     maleEntries.forEach((entry) => {
       expect(entry.actualHeight).toEqual(expect.any(Number));
+      expect(entry.actualWeight).toBeNull();
+      expect(entry.estimatedWeight).toBe(
+        getEstimatedMaleWeight(entry.actualHeight, entry.name)
+      );
       expect(entry.estimatedHeight).toBe(getMaleRankingEstimatedHeight(entry));
       expect(entry.heightDiff).toBe(entry.estimatedHeight - entry.actualHeight);
     });
