@@ -72,6 +72,10 @@ const getWeightChipText = (entry: {
   actualWeight: number | null;
   estimatedWeight: number;
 }) => `${entry.actualWeight !== null ? "公表" : "推定"}${getDisplayedWeight(entry)}kg`;
+const getDisplayedCup = (entry: {
+  cup: string | null;
+  displayCup: string | null;
+}) => entry.displayCup ?? entry.cup;
 const femaleStyleKnownWeightEntryIndex = femaleStyleCategory.ranking.findIndex(
   (entry) => entry.actualWeight !== null
 );
@@ -90,6 +94,15 @@ const femaleStyleNonUnder45Entry = femaleStyleCategory.ranking.find(
 )!;
 const femaleStyleUnder45Count = femaleStyleCategory.ranking.filter(
   (entry) => getDisplayedWeight(entry) < 45
+).length;
+const femaleStyleGCupEntry = femaleStyleCategory.ranking.find(
+  (entry) => getDisplayedCup(entry) === "G"
+)!;
+const femaleStyleNonGCupEntry = femaleStyleCategory.ranking.find(
+  (entry) => getDisplayedCup(entry) !== "G"
+)!;
+const femaleStyleGCupCount = femaleStyleCategory.ranking.filter(
+  (entry) => getDisplayedCup(entry) === "G"
 ).length;
 const maleStyle55To59Entry = maleStyleCategory.ranking.find((entry) => {
   const weight = getDisplayedWeight(entry);
@@ -148,6 +161,10 @@ const clickPageNumber = (pageNumber: number) => {
 };
 
 const clickOccupationFilter = (label: string) => {
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${label}\\s`) }));
+};
+
+const clickCupFilter = (label: string) => {
   fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${label}\\s`) }));
 };
 
@@ -298,6 +315,27 @@ describe("Home (Ranking Page)", () => {
       screen.queryByRole("button", {
         name: new RegExp(`^${PROFILE_OCCUPATION_LABELS.av}\\s`),
       })
+    ).not.toBeInTheDocument();
+  });
+
+  test("Cup filter narrows female ranking entries by selected cup", () => {
+    renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
+
+    clickCupFilter("Gカップ");
+
+    expect(screen.getByText(femaleStyleGCupEntry.name)).toBeInTheDocument();
+    expect(screen.queryByText(femaleStyleNonGCupEntry.name)).not.toBeInTheDocument();
+    expect(screen.getByText(`1-20位 / ${femaleStyleGCupCount}人`)).toBeInTheDocument();
+  });
+
+  test("Cup filter is hidden on male ranking", () => {
+    renderHome();
+    clickGenderTab("男性");
+
+    expect(screen.queryByText("Cup Filter")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^Gカップ\s/ })
     ).not.toBeInTheDocument();
   });
 

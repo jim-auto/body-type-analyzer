@@ -8,7 +8,11 @@ import type {
   FemaleCupDistributionSummary,
   MaleHeightDistributionSummary,
 } from "@/lib/distributions";
-import { getCupIndex, normalizeCupLabel } from "@/lib/cup-order";
+import {
+  EXTENDED_CUP_ORDER,
+  getCupIndex,
+  normalizeCupLabel,
+} from "@/lib/cup-order";
 import {
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
@@ -46,6 +50,7 @@ type DistributionBucket = {
 };
 
 type OccupationFilter = "all" | ProfileOccupation;
+type CupFilter = "all" | "unknown" | (typeof EXTENDED_CUP_ORDER)[number];
 type WeightFilter =
   | "all"
   | "under45"
@@ -94,6 +99,29 @@ const WEIGHT_FILTERS: Array<{
     id: "unknown",
     label: "Weight unknown",
     matches: (weight) => weight === null,
+  },
+];
+
+const CUP_FILTERS: Array<{
+  id: CupFilter;
+  label: string;
+  matches: (cup: string | null) => boolean;
+}> = [
+  {
+    id: "all",
+    label: "All",
+    matches: () => true,
+  },
+  ...EXTENDED_CUP_ORDER.map((cup) => ({
+    id: cup,
+    label: `${cup}カップ`,
+    matches: (displayedCup: string | null) =>
+      normalizeCupLabel(displayedCup) === cup,
+  })),
+  {
+    id: "unknown",
+    label: "カップ不明",
+    matches: (cup) => normalizeCupLabel(cup) === null,
   },
 ];
 
@@ -353,6 +381,8 @@ export default function HomePageClient({
   const [activePage, setActivePage] = useState(0);
   const [activeOccupationFilter, setActiveOccupationFilter] =
     useState<OccupationFilter>("all");
+  const [activeCupFilter, setActiveCupFilter] =
+    useState<CupFilter>("all");
   const [activeWeightFilter, setActiveWeightFilter] =
     useState<WeightFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -367,12 +397,14 @@ export default function HomePageClient({
     setActiveTab(getDefaultCategoryIndex(data[nextGender], nextGender));
     setActivePage(0);
     setActiveOccupationFilter("all");
+    setActiveCupFilter("all");
     setActiveWeightFilter("all");
   };
 
   const handleCategoryChange = (nextTab: number) => {
     setActiveTab(nextTab);
     setActivePage(0);
+    setActiveCupFilter("all");
     setActiveWeightFilter("all");
   };
 
@@ -419,12 +451,50 @@ export default function HomePageClient({
           getFemaleProfileOccupations(entry.name).includes(activeOccupationFilter)
         )
       : currentRanking;
+  const cupFilterCounts = CUP_FILTERS.reduce<Record<CupFilter, number>>(
+    (counts, filter) => {
+      counts[filter.id] =
+        gender === "female"
+          ? filter.id === "all"
+            ? occupationFilteredRanking.length
+            : occupationFilteredRanking.filter(
+                (entry) =>
+                  isFemaleEntry(entry) && filter.matches(getDisplayedCup(entry))
+              ).length
+          : 0;
+
+      return counts;
+    },
+    Object.fromEntries(
+      CUP_FILTERS.map((filter) => [filter.id, 0])
+    ) as Record<CupFilter, number>
+  );
+  const activeCupFilterConfig = CUP_FILTERS.find(
+    (filter) => filter.id === activeCupFilter
+  );
+  const cupFilterOptions =
+    gender === "female"
+      ? CUP_FILTERS.filter(
+          (filter) =>
+            filter.id === "all" ||
+            (cupFilterCounts[filter.id] ?? 0) > 0 ||
+            activeCupFilter === filter.id
+        )
+      : [];
+  const cupFilteredRanking =
+    gender === "female" && activeCupFilter !== "all"
+      ? occupationFilteredRanking.filter(
+          (entry) =>
+            isFemaleEntry(entry) &&
+            (activeCupFilterConfig?.matches(getDisplayedCup(entry)) ?? true)
+        )
+      : occupationFilteredRanking;
   const weightFilterCounts = WEIGHT_FILTERS.reduce<Record<WeightFilter, number>>(
     (counts, filter) => {
       counts[filter.id] =
         filter.id === "all"
-          ? occupationFilteredRanking.length
-          : occupationFilteredRanking.filter((entry) =>
+          ? cupFilteredRanking.length
+          : cupFilteredRanking.filter((entry) =>
               filter.matches(getDisplayedWeight(entry))
             ).length;
 
@@ -451,11 +521,11 @@ export default function HomePageClient({
   );
   const weightFilteredRanking =
     activeWeightFilter !== "all"
-      ? occupationFilteredRanking.filter(
+      ? cupFilteredRanking.filter(
           (entry) =>
             activeWeightFilterConfig?.matches(getDisplayedWeight(entry)) ?? true
         )
-      : occupationFilteredRanking;
+      : cupFilteredRanking;
   const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
   const filteredRanking =
     normalizedSearchQuery.length === 0
@@ -496,6 +566,7 @@ export default function HomePageClient({
     activeOccupationFilter === "all"
       ? "All"
       : PROFILE_OCCUPATION_LABELS[activeOccupationFilter];
+  const activeCupFilterLabel = activeCupFilterConfig?.label ?? "All";
   const activeWeightFilterLabel =
     activeWeightFilterConfig?.label ?? "All";
 
@@ -740,6 +811,9 @@ export default function HomePageClient({
                     {activeOccupationFilter !== "all"
                       ? ` ・ ${activeOccupationFilterLabel} filter`
                       : ""}
+                    {activeCupFilter !== "all"
+                      ? ` ・ ${activeCupFilterLabel} filter`
+                      : ""}
                     {activeWeightFilter !== "all"
                       ? ` ・ ${activeWeightFilterLabel} filter`
                       : ""}
@@ -787,6 +861,33 @@ export default function HomePageClient({
                           >
                             {entry.label}{" "}
                             {femaleRankingOccupationCounts?.[entry.occupation] ?? 0}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {gender === "female" ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        Cup Filter
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {cupFilterOptions.map((filter) => (
+                          <button
+                            key={filter.id}
+                            type="button"
+                            onClick={() => {
+                              setActiveCupFilter(filter.id);
+                              setActivePage(0);
+                            }}
+                            aria-pressed={activeCupFilter === filter.id}
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                              activeCupFilter === filter.id
+                                ? activeCategoryStyle
+                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {filter.label} {cupFilterCounts[filter.id] ?? 0}
                           </button>
                         ))}
                       </div>
