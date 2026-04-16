@@ -28,6 +28,15 @@ QUERY_OVERRIDES = {
     "高橋茂雄": ["高橋茂雄 サバンナ", "サバンナ 高橋茂雄", "高橋茂雄 芸人"],
     "榎木孝明": ["榎木孝明 俳優"],
     "原口あきまさ": ["原口あきまさ ものまね", "原口あきまさ タレント"],
+    "梨花": ["梨花 モデル", "モデル 梨花", "梨花 タレント"],
+    "KURO": [
+        "KURO HOME MADE 家族 プロフィール",
+        "HOME MADE 家族 KURO プロフィール",
+        "クロ HOME MADE 家族 プロフィール",
+    ],
+    "宮地れな": ["宮地れな グラビア", "宮地れな アイドル", "宮地れな タレント"],
+    "哀川翔": ["哀川翔 俳優", "哀川翔 プロフィール", "哀川翔 宣材写真"],
+    "三浦貴大": ["三浦貴大 俳優", "三浦貴大 プロフィール", "三浦貴大 宣材写真"],
 }
 MIN_BYTES = 10 * 1024
 MIN_SIDE = 180
@@ -176,6 +185,12 @@ def is_rejected_bing_image_url(image_url: str) -> bool:
             "ai_generated",
             "radiko.jp",
             "logo",
+            "pixabay.com",
+            "deviantart.net",
+            "wixmp.com",
+            "ssl-images-amazon.com",
+            "mercdn.net",
+            "pexels.com",
         )
     )
 
