@@ -585,7 +585,7 @@ describe("Home (Ranking Page)", () => {
 
     expect(card).not.toBeNull();
     expect(
-      within(card as HTMLElement).getByText("そのカップ数はデータ不足")
+      within(card as HTMLElement).getByText("データ不足なカップ数")
     ).toBeInTheDocument();
   });
 

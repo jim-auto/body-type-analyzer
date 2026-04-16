@@ -966,7 +966,7 @@ export default function HomePageClient({
                             ) : null}
                             {hasCupDataWarning ? (
                               <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
-                                そのカップ数はデータ不足
+                                データ不足なカップ数
                               </span>
                             ) : null}
                             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
