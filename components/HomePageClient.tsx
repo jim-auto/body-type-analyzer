@@ -46,6 +46,56 @@ type DistributionBucket = {
 };
 
 type OccupationFilter = "all" | ProfileOccupation;
+type WeightFilter =
+  | "all"
+  | "under45"
+  | "45-49"
+  | "50-54"
+  | "55-59"
+  | "60plus"
+  | "unknown";
+
+const WEIGHT_FILTERS: Array<{
+  id: WeightFilter;
+  label: string;
+  matches: (weight: number | null) => boolean;
+}> = [
+  {
+    id: "all",
+    label: "All",
+    matches: () => true,
+  },
+  {
+    id: "under45",
+    label: "Under 45kg",
+    matches: (weight) => weight !== null && weight < 45,
+  },
+  {
+    id: "45-49",
+    label: "45-49kg",
+    matches: (weight) => weight !== null && weight >= 45 && weight < 50,
+  },
+  {
+    id: "50-54",
+    label: "50-54kg",
+    matches: (weight) => weight !== null && weight >= 50 && weight < 55,
+  },
+  {
+    id: "55-59",
+    label: "55-59kg",
+    matches: (weight) => weight !== null && weight >= 55 && weight < 60,
+  },
+  {
+    id: "60plus",
+    label: "60kg+",
+    matches: (weight) => weight !== null && weight >= 60,
+  },
+  {
+    id: "unknown",
+    label: "Weight unknown",
+    matches: (weight) => weight === null,
+  },
+];
 
 const PAGE_SIZE = 20;
 const EARLY_PAGE_COUNT = 5;
@@ -289,6 +339,8 @@ export default function HomePageClient({
   const [activePage, setActivePage] = useState(0);
   const [activeOccupationFilter, setActiveOccupationFilter] =
     useState<OccupationFilter>("all");
+  const [activeWeightFilter, setActiveWeightFilter] =
+    useState<WeightFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const basePath =
     process.env.NODE_ENV === "production" ? "/body-type-analyzer" : "";
@@ -301,16 +353,19 @@ export default function HomePageClient({
     setActiveTab(getDefaultCategoryIndex(data[nextGender], nextGender));
     setActivePage(0);
     setActiveOccupationFilter("all");
+    setActiveWeightFilter("all");
   };
 
   const handleCategoryChange = (nextTab: number) => {
     setActiveTab(nextTab);
     setActivePage(0);
+    setActiveWeightFilter("all");
   };
 
   const categories = data[gender];
   const current = categories[activeTab];
   const currentRanking = current?.ranking ?? [];
+  const currentRankingEntries: readonly RankingEntry[] = currentRanking;
   const femaleRankingOccupationCounts =
     gender === "female"
       ? currentRanking.reduce<Record<ProfileOccupation, number>>(
@@ -350,11 +405,56 @@ export default function HomePageClient({
           getFemaleProfileOccupations(entry.name).includes(activeOccupationFilter)
         )
       : currentRanking;
+  const femaleWeightFilterCounts =
+    gender === "female"
+      ? WEIGHT_FILTERS.reduce<Record<WeightFilter, number>>(
+          (counts, filter) => {
+            counts[filter.id] =
+              filter.id === "all"
+                ? occupationFilteredRanking.length
+                : occupationFilteredRanking.filter(
+                    (entry) =>
+                      isFemaleEntry(entry) && filter.matches(entry.actualWeight)
+                  ).length;
+
+            return counts;
+          },
+          {
+            all: 0,
+            under45: 0,
+            "45-49": 0,
+            "50-54": 0,
+            "55-59": 0,
+            "60plus": 0,
+            unknown: 0,
+          }
+        )
+      : null;
+  const activeWeightFilterConfig = WEIGHT_FILTERS.find(
+    (filter) => filter.id === activeWeightFilter
+  );
+  const femaleWeightFilterOptions =
+    gender === "female" && femaleWeightFilterCounts
+      ? WEIGHT_FILTERS.filter(
+          (filter) =>
+            filter.id === "all" ||
+            (femaleWeightFilterCounts[filter.id] ?? 0) > 0 ||
+            activeWeightFilter === filter.id
+        )
+      : [];
+  const weightFilteredRanking =
+    gender === "female" && activeWeightFilter !== "all"
+      ? occupationFilteredRanking.filter(
+          (entry) =>
+            isFemaleEntry(entry) &&
+            (activeWeightFilterConfig?.matches(entry.actualWeight) ?? true)
+        )
+      : occupationFilteredRanking;
   const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
   const filteredRanking =
     normalizedSearchQuery.length === 0
-      ? occupationFilteredRanking
-      : occupationFilteredRanking.filter((entry) =>
+      ? weightFilteredRanking
+      : weightFilteredRanking.filter((entry) =>
           normalizeSearchQuery(entry.name).includes(normalizedSearchQuery)
         );
   const totalPages = Math.max(1, Math.ceil(filteredRanking.length / PAGE_SIZE));
@@ -390,6 +490,8 @@ export default function HomePageClient({
     activeOccupationFilter === "all"
       ? "All"
       : PROFILE_OCCUPATION_LABELS[activeOccupationFilter];
+  const activeWeightFilterLabel =
+    activeWeightFilterConfig?.label ?? "All";
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-50 to-white px-4 py-8 sm:py-12">
@@ -632,6 +734,9 @@ export default function HomePageClient({
                     {activeOccupationFilter !== "all"
                       ? ` ・ ${activeOccupationFilterLabel} filter`
                       : ""}
+                    {activeWeightFilter !== "all"
+                      ? ` ・ ${activeWeightFilterLabel} filter`
+                      : ""}
                     {normalizedSearchQuery.length > 0
                       ? ` ・ 「${searchQuery.trim()}」の検索結果`
                       : ""}
@@ -676,6 +781,34 @@ export default function HomePageClient({
                           >
                             {entry.label}{" "}
                             {femaleRankingOccupationCounts?.[entry.occupation] ?? 0}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {gender === "female" ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        Weight Filter
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {femaleWeightFilterOptions.map((filter) => (
+                          <button
+                            key={filter.id}
+                            type="button"
+                            onClick={() => {
+                              setActiveWeightFilter(filter.id);
+                              setActivePage(0);
+                            }}
+                            aria-pressed={activeWeightFilter === filter.id}
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                              activeWeightFilter === filter.id
+                                ? activeCategoryStyle
+                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {filter.label}{" "}
+                            {femaleWeightFilterCounts?.[filter.id] ?? 0}
                           </button>
                         ))}
                       </div>
@@ -772,7 +905,7 @@ export default function HomePageClient({
                 </div>
               ) : (
                 pagedRanking.map((entry) => {
-                  const absoluteIndex = currentRanking.indexOf(entry);
+                  const absoluteIndex = currentRankingEntries.indexOf(entry);
                   const rankIndex =
                     absoluteIndex >= 0 ? absoluteIndex : pageStart + pagedRanking.indexOf(entry);
                   const rankNumber = rankIndex + 1;
@@ -835,6 +968,11 @@ export default function HomePageClient({
                             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
                               {entry.actualHeight}cm
                             </span>
+                            {femaleEntry && femaleEntry.actualWeight !== null ? (
+                              <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                                {femaleEntry.actualWeight}kg
+                              </span>
+                            ) : null}
                           </div>
                           {femaleOccupationLabels.length > 0 ? (
                             <div className="flex flex-wrap gap-1.5">

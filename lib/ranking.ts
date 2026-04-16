@@ -7,6 +7,7 @@ export type FemaleRankingEntry = {
   cup: string | null;
   displayCup: string | null;
   actualHeight: number;
+  actualWeight: number | null;
   bust: number | null;
   estimatedHeight: number;
   heightDiff: number;

@@ -47,9 +47,11 @@ const femaleSearchQueryEntry = femaleStyleCategory.ranking.find(
       candidate.name.includes(entry.name)
     ).length <= PAGE_SIZE
 )!;
-const femaleStyleLocalImageEntry = femaleStyleCategory.ranking.find((entry) =>
-  entry.image.startsWith("/")
-)!;
+const femaleStyleLocalImageEntryIndex = femaleStyleCategory.ranking.findIndex(
+  (entry) => entry.image.startsWith("/")
+);
+const femaleStyleLocalImageEntry =
+  femaleStyleCategory.ranking[femaleStyleLocalImageEntryIndex];
 const femaleStyleOccupationEntry = femaleStyleCategory.ranking.find(
   (entry) => getFemaleProfileOccupations(entry.name).length > 0
 )!;
@@ -61,6 +63,20 @@ const femaleStyleNonAvEntry = femaleStyleCategory.ranking.find(
 )!;
 const femaleStyleAvCount = femaleStyleCategory.ranking.filter((entry) =>
   getFemaleProfileOccupations(entry.name).includes("av")
+).length;
+const femaleStyleKnownWeightEntryIndex = femaleStyleCategory.ranking.findIndex(
+  (entry) => entry.actualWeight !== null
+);
+const femaleStyleKnownWeightEntry =
+  femaleStyleCategory.ranking[femaleStyleKnownWeightEntryIndex];
+const femaleStyleUnder45Entry = femaleStyleCategory.ranking.find(
+  (entry) => entry.actualWeight !== null && entry.actualWeight < 45
+)!;
+const femaleStyleNonUnder45Entry = femaleStyleCategory.ranking.find(
+  (entry) => entry.actualWeight === null || entry.actualWeight >= 45
+)!;
+const femaleStyleUnder45Count = femaleStyleCategory.ranking.filter(
+  (entry) => entry.actualWeight !== null && entry.actualWeight < 45
 ).length;
 
 function getFemaleCupSampleCount(cup: string | null | undefined): number | null {
@@ -106,6 +122,10 @@ const clickPageNumber = (pageNumber: number) => {
 };
 
 const clickOccupationFilter = (label: string) => {
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${label}\\s`) }));
+};
+
+const clickWeightFilter = (label: string) => {
   fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${label}\\s`) }));
 };
 
@@ -255,6 +275,53 @@ describe("Home (Ranking Page)", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("Ranking cards show public weight chips for female profiles", () => {
+    expect(femaleStyleKnownWeightEntryIndex).toBeGreaterThanOrEqual(0);
+
+    renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
+
+    const pageNumber = Math.floor(femaleStyleKnownWeightEntryIndex / PAGE_SIZE) + 1;
+    if (pageNumber > 1) {
+      clickPageNumber(pageNumber);
+    }
+
+    const card = screen
+      .getByText(femaleStyleKnownWeightEntry.name)
+      .closest("div.rounded-2xl");
+
+    expect(card).not.toBeNull();
+    expect(
+      within(card as HTMLElement).getByText(
+        `${femaleStyleKnownWeightEntry.actualWeight}kg`
+      )
+    ).toBeInTheDocument();
+  });
+
+  test("Weight filter narrows female ranking entries by selected range", () => {
+    renderHome();
+    clickCategoryTab(femaleStyleCategory.title);
+
+    clickWeightFilter("Under 45kg");
+
+    expect(screen.getByText(femaleStyleUnder45Entry.name)).toBeInTheDocument();
+    expect(screen.queryByText(femaleStyleNonUnder45Entry.name)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(`1-20位 / ${femaleStyleUnder45Count}人`)
+    ).toBeInTheDocument();
+  });
+
+  test("Weight filter is hidden on male ranking", () => {
+    renderHome();
+    clickWeightFilter("Under 45kg");
+    clickGenderTab("男性");
+
+    expect(screen.queryByText("Weight Filter")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^Under 45kg\s/ })
+    ).not.toBeInTheDocument();
+  });
+
   test("女性 style ランキングで公表値の要約が表示される", () => {
     const topEntry = femaleStyleCategory.ranking[0];
     const displayedCup = topEntry.displayCup ?? topEntry.cup;
@@ -389,9 +456,16 @@ describe("Home (Ranking Page)", () => {
   });
 
   test("productionではローカル画像にbasePathが付与される", () => {
+    expect(femaleStyleLocalImageEntryIndex).toBeGreaterThanOrEqual(0);
+
     mutableEnv.NODE_ENV = "production";
     renderHome();
     clickCategoryTab(femaleStyleCategory.title);
+
+    const pageNumber = Math.floor(femaleStyleLocalImageEntryIndex / PAGE_SIZE) + 1;
+    if (pageNumber > 1) {
+      clickPageNumber(pageNumber);
+    }
 
     const localImage = screen.getByAltText(femaleStyleLocalImageEntry.name);
     expect(localImage).toHaveAttribute(

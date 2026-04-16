@@ -527,14 +527,39 @@ async function updateSourceProfiles(replacements) {
 
 function parseImagePathEntries(block) {
   const entries = new Map();
-  const pattern = /^\s{2}(?:"([^"]+)"|([^:]+)):\s+"([^"]+)",$/gmu;
+  const pattern = /^\s{2}((?:"(?:\\.|[^"\\])*")|[^:]+):\s+"([^"]+)",$/gmu;
 
   for (const match of block.matchAll(pattern)) {
-    const key = match[1] ?? match[2];
-    entries.set(key.trim(), match[3]);
+    const key = match[1].trim();
+    const parsedKey = key.startsWith('"') ? JSON.parse(key) : key;
+    entries.set(normalizeImagePathKey(parsedKey), match[2]);
   }
 
   return entries;
+}
+
+function normalizeImagePathKey(key) {
+  let normalized = key.trim();
+
+  for (let index = 0; index < 4; index += 1) {
+    if (!normalized.startsWith('"') || !normalized.endsWith('"')) {
+      break;
+    }
+
+    try {
+      const parsed = JSON.parse(normalized);
+
+      if (typeof parsed !== "string" || parsed === normalized) {
+        break;
+      }
+
+      normalized = parsed;
+    } catch {
+      break;
+    }
+  }
+
+  return normalized;
 }
 
 function renderImagePaths(entries) {
