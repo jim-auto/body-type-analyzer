@@ -27,6 +27,8 @@ function parseArgs(argv) {
   const options = {
     minCup: "I",
     limit: null,
+    includeFemalePool: false,
+    onlyNamesFile: "",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -42,10 +44,35 @@ function parseArgs(argv) {
       const rawLimit = Number(argv[index + 1] ?? "");
       options.limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : null;
       index += 1;
+      continue;
+    }
+
+    if (arg === "--include-female-pool") {
+      options.includeFemalePool = true;
+      continue;
+    }
+
+    if (arg === "--only-names-file") {
+      options.onlyNamesFile = argv[index + 1] ?? options.onlyNamesFile;
+      index += 1;
     }
   }
 
   return options;
+}
+
+async function loadOnlyNames(filePath) {
+  if (!filePath) {
+    return new Set();
+  }
+
+  const raw = await fs.readFile(path.resolve(process.cwd(), filePath), "utf8");
+  return new Set(
+    raw
+      .split(/\r?\n/gu)
+      .map((name) => name.trim())
+      .filter(Boolean),
+  );
 }
 
 function normalizeCup(cup) {
@@ -308,13 +335,17 @@ async function main() {
   }
 
   const trainingRecords = await loadJson(TRAINING_DATA_PATH, []);
+  const onlyNames = await loadOnlyNames(options.onlyNamesFile);
   const femalePoolNames = await loadFemalePoolNames();
   const existingTrainingNames = new Set(
     trainingRecords
       .filter((record) => typeof record?.name === "string" && record.name)
       .map((record) => record.name),
   );
-  const skippedNames = new Set([...femalePoolNames, ...existingTrainingNames]);
+  const skippedNames = new Set([
+    ...(options.includeFemalePool ? [] : [...femalePoolNames]),
+    ...existingTrainingNames,
+  ]);
   const candidates = [];
   const candidateNames = new Set();
 
@@ -329,6 +360,10 @@ async function main() {
       const cup = normalizeCup(actress.cup);
 
       if (!cup || getCupIndex(cup) < minCupIndex) {
+        continue;
+      }
+
+      if (onlyNames.size > 0 && !onlyNames.has(actress.name)) {
         continue;
       }
 
@@ -412,6 +447,18 @@ async function main() {
   const addedSummary = Object.fromEntries(
     Object.entries(addedCounts).filter(([, count]) => count > 0),
   );
+  const unresolvedOnlyNames =
+    onlyNames.size === 0
+      ? []
+      : [...onlyNames].filter(
+          (name) =>
+            !candidateNames.has(name) &&
+            !existingTrainingNames.has(name) &&
+            !(
+              !options.includeFemalePool &&
+              femalePoolNames.has(name)
+            ),
+        );
 
   console.log(
     JSON.stringify(
@@ -422,6 +469,8 @@ async function main() {
         downloadedImages: downloadedCount,
         addedWithoutHeight,
         addedByCup: addedSummary,
+        requestedOnlyNames: onlyNames.size,
+        unresolvedOnlyNames,
         failed: failures.length,
         failures,
       },
