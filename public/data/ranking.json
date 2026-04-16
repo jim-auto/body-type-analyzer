@@ -1231,9 +1231,9 @@
           "displayCup": "J",
           "estimatedHeight": 160,
           "heightDiff": -5,
-          "estimatedCup": "J",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 72
         },
         {
@@ -2421,9 +2421,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "H",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 69
         },
         {
@@ -2449,9 +2449,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 69
         },
         {
@@ -2477,9 +2477,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 69
         },
         {
@@ -5221,9 +5221,9 @@
           "displayCup": "J",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "J",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 66
         },
         {
@@ -5305,9 +5305,9 @@
           "displayCup": "H",
           "estimatedHeight": 161,
           "heightDiff": 1,
-          "estimatedCup": "K",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "J",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 66
         },
         {
@@ -5529,9 +5529,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "J",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 66
         },
         {
@@ -7027,9 +7027,9 @@
           "displayCup": "J",
           "estimatedHeight": 158,
           "heightDiff": 2,
-          "estimatedCup": "K",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "J",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 64
         },
         {
@@ -14363,9 +14363,9 @@
           "displayCup": "I",
           "estimatedHeight": 156,
           "heightDiff": 5,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 58
         },
         {
@@ -15889,9 +15889,9 @@
           "displayCup": "I",
           "estimatedHeight": 157,
           "heightDiff": 8,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 56
         },
         {
@@ -28033,9 +28033,9 @@
           "displayCup": "J",
           "estimatedHeight": 160,
           "heightDiff": -5,
-          "estimatedCup": "J",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 165
         },
         {
@@ -29391,9 +29391,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 163
         },
         {
@@ -29573,9 +29573,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 163
         },
         {
@@ -29783,9 +29783,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "H",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 163
         },
         {
@@ -33661,9 +33661,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "J",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 160
         },
         {
@@ -34179,9 +34179,9 @@
           "displayCup": "H",
           "estimatedHeight": 161,
           "heightDiff": 1,
-          "estimatedCup": "K",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "J",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 160
         },
         {
@@ -37217,9 +37217,9 @@
           "displayCup": "J",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "J",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 158
         },
         {
@@ -39485,9 +39485,9 @@
           "displayCup": "J",
           "estimatedHeight": 158,
           "heightDiff": 2,
-          "estimatedCup": "K",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "J",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 156
         },
         {
@@ -44343,9 +44343,9 @@
           "displayCup": "I",
           "estimatedHeight": 156,
           "heightDiff": 5,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 151
         },
         {
@@ -44833,9 +44833,9 @@
           "displayCup": "I",
           "estimatedHeight": 157,
           "heightDiff": 8,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 149
         },
         {
@@ -46379,9 +46379,9 @@
           "displayCup": "J",
           "estimatedHeight": 158,
           "heightDiff": 2,
-          "estimatedCup": "K",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "J",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 10
         },
         {
@@ -46589,9 +46589,9 @@
           "displayCup": "J",
           "estimatedHeight": 160,
           "heightDiff": -5,
-          "estimatedCup": "J",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 10
         },
         {
@@ -46939,9 +46939,9 @@
           "displayCup": "J",
           "estimatedHeight": 159,
           "heightDiff": 1,
-          "estimatedCup": "J",
-          "cupDiff": 0,
-          "displayCupDiff": 0,
+          "estimatedCup": "I",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 10
         },
         {
@@ -47275,9 +47275,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "H",
+          "cupDiff": -1,
+          "displayCupDiff": -1,
           "score": 9
         },
         {
@@ -47625,9 +47625,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -47863,9 +47863,9 @@
           "displayCup": "I",
           "estimatedHeight": 157,
           "heightDiff": 8,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -47975,9 +47975,9 @@
           "displayCup": "I",
           "estimatedHeight": 161,
           "heightDiff": -2,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -48143,9 +48143,9 @@
           "displayCup": "I",
           "estimatedHeight": 156,
           "heightDiff": 5,
-          "estimatedCup": "J",
-          "cupDiff": 1,
-          "displayCupDiff": 1,
+          "estimatedCup": "I",
+          "cupDiff": 0,
+          "displayCupDiff": 0,
           "score": 9
         },
         {
@@ -48493,9 +48493,9 @@
           "displayCup": "H",
           "estimatedHeight": 161,
           "heightDiff": 1,
-          "estimatedCup": "K",
-          "cupDiff": 3,
-          "displayCupDiff": 3,
+          "estimatedCup": "J",
+          "cupDiff": 2,
+          "displayCupDiff": 2,
           "score": 8
         },
         {
@@ -49935,9 +49935,9 @@
           "displayCup": "H",
           "estimatedHeight": 159,
           "heightDiff": -1,
-          "estimatedCup": "J",
-          "cupDiff": 2,
-          "displayCupDiff": 2,
+          "estimatedCup": "I",
+          "cupDiff": 1,
+          "displayCupDiff": 1,
           "score": 8
         },
         {

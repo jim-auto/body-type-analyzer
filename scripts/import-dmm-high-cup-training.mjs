@@ -121,16 +121,20 @@ function makeImageFilename(name, imageUrl) {
   return `dmm_training_${stem}_${digest}${ext}`;
 }
 
-function toTrainingProfile(actress, imagePath, imageResolution) {
+function toTrainingProfile(actress, imagePath, imageResolution, options) {
   const actualHeight = parseNumber(actress.height);
   const bust = parseNumber(actress.bust);
   const cup = normalizeCup(actress.cup);
   const remoteImageUrl = sanitizeImageUrl(imageResolution.remoteImageUrl);
   const sourceUrl = imageResolution.sourceUrl || actress.listURL?.digital || "";
-  const source =
-    actualHeight === null && imageResolution.source === "dmm"
-      ? "dmm-cup-only"
-      : imageResolution.source;
+  const includeFemalePool = Boolean(options?.includeFemalePool);
+  let source = imageResolution.source;
+
+  if (includeFemalePool && imageResolution.source === "dmm") {
+    source = "dmm-public-thumb";
+  } else if (actualHeight === null && imageResolution.source === "dmm") {
+    source = "dmm-cup-only";
+  }
 
   if (
     !actress.name ||
@@ -156,7 +160,7 @@ function toTrainingProfile(actress, imagePath, imageResolution) {
     scrapedBust: null,
     scrapedWaist: null,
     scrapedHip: null,
-    useForHeight: false,
+    useForHeight: actualHeight !== null && source === "dmm-public-thumb",
     useForCup: true,
     useForSimilarity: false,
     waist: null,
@@ -415,7 +419,12 @@ async function main() {
         .join("local-data", "training-images", filename)
         .replace(/\\/gu, "/");
       const didDownload = await downloadImage(remoteImageUrl, absoluteImagePath);
-      const record = toTrainingProfile(actress, relativeImagePath, imageResolution);
+      const record = toTrainingProfile(
+        actress,
+        relativeImagePath,
+        imageResolution,
+        options,
+      );
 
       if (!record) {
         continue;

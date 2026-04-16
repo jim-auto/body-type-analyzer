@@ -132,8 +132,11 @@ TRUSTED_LOCAL_SOURCES = {
     "dmm-fanza-search",
     "dmm-minnano-av",
 }
-CURATED_LOCAL_HEIGHT_SOURCES = set(TRUSTED_LOCAL_SOURCES)
-CURATED_LOCAL_CUP_SOURCES = set(TRUSTED_LOCAL_SOURCES)
+PUBLIC_THUMB_LOCAL_SOURCES = {
+    "dmm-public-thumb",
+}
+CURATED_LOCAL_HEIGHT_SOURCES = set(TRUSTED_LOCAL_SOURCES) | set(PUBLIC_THUMB_LOCAL_SOURCES)
+CURATED_LOCAL_CUP_SOURCES = set(TRUSTED_LOCAL_SOURCES) | set(PUBLIC_THUMB_LOCAL_SOURCES)
 EXCLUDED_PUBLIC_IMAGE_PROVIDERS = {"bing"}
 
 
@@ -399,8 +402,38 @@ SOURCE_WEIGHT_PRESETS: dict[str, SourceWeightPreset] = {
         collision_groups=("height", "cup"),
         gate_groups=("height",),
     ),
+    "height-gate-cup-thumb-soft": SourceWeightPreset(
+        key="height-gate-cup-thumb-soft",
+        description="Height hard gate with soft downweight for public DMM thumbnail cup teachers",
+        family_weights={
+            "manual": TaskSourceWeights(height=1.0, cup=1.0, similarity=1.0),
+            "dmm-public-thumb": TaskSourceWeights(height=0.0, cup=0.85, similarity=0.0),
+        },
+        quality_strength=0.7,
+        collision_power=1.0,
+        quality_gate_threshold=0.25,
+        collision_gate_min_size=8,
+        quality_groups=("height", "cup"),
+        collision_groups=("height", "cup"),
+        gate_groups=("height",),
+    ),
+    "height-gate-cup-thumb-light": SourceWeightPreset(
+        key="height-gate-cup-thumb-light",
+        description="Height hard gate with stronger downweight for public DMM thumbnail cup teachers",
+        family_weights={
+            "manual": TaskSourceWeights(height=1.0, cup=1.0, similarity=1.0),
+            "dmm-public-thumb": TaskSourceWeights(height=0.0, cup=0.7, similarity=0.0),
+        },
+        quality_strength=0.7,
+        collision_power=1.0,
+        quality_gate_threshold=0.25,
+        collision_gate_min_size=8,
+        quality_groups=("height", "cup"),
+        collision_groups=("height", "cup"),
+        gate_groups=("height",),
+    ),
 }
-DEFAULT_SOURCE_WEIGHT_PRESET = SOURCE_WEIGHT_PRESETS["height-gate-cup-soft"]
+DEFAULT_SOURCE_WEIGHT_PRESET = SOURCE_WEIGHT_PRESETS["height-gate-cup-thumb-light"]
 
 
 def load_profiles() -> list[Profile]:
@@ -524,6 +557,9 @@ def source_family_for_profile(profile: Profile) -> str:
 
     if source == "talent-databank":
         return "official"
+
+    if source == "dmm-public-thumb":
+        return "dmm-public-thumb"
 
     if source == "dmm":
         return "official"
