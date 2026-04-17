@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import hashlib
 import importlib.util
 import io
@@ -34,6 +35,8 @@ QUERY_OVERRIDES = {
         "HOME MADE 家族 KURO プロフィール",
         "クロ HOME MADE 家族 プロフィール",
     ],
+    "DABO": ["DABO NITRO MICROPHONE UNDERGROUND", "DABO 日本語ラップ", "DABO rapper Japan"],
+    "HIRO": ["EXILE HIRO 五十嵐広行", "EXILE HIRO プロフィール", "LDH HIRO"],
     "宮地れな": ["宮地れな グラビア", "宮地れな アイドル", "宮地れな タレント"],
     "哀川翔": ["哀川翔 俳優", "哀川翔 プロフィール", "哀川翔 宣材写真"],
     "三浦貴大": ["三浦貴大 俳優", "三浦貴大 プロフィール", "三浦貴大 宣材写真"],
@@ -43,7 +46,14 @@ QUERY_OVERRIDES = {
     "瀬下豊": ["天竺鼠 瀬下豊", "瀬下豊 天竺鼠", "瀬下豊 芸人"],
     "川瀬名人": ["ゆにばーす 川瀬名人", "川瀬名人 ゆにばーす", "川瀬名人 芸人"],
     "トシ": ["タカアンドトシ トシ", "トシ タカアンドトシ", "タカトシ トシ 芸人"],
+    "タカ": ["タカアンドトシ タカ", "タカ トシ 芸人", "タカアンドトシ タカ 宣材写真"],
+    "お抹茶": ["トンツカタン お抹茶", "お抹茶 トンツカタン", "トンツカタン お抹茶 宣材写真"],
     "成瀬かのん": ["成瀬かのん グラビア", "成瀬かのん BLACK PRINCESS", "成瀬かのん アイドル"],
+    "青葉さくら": ["青葉さくら グラビア", "青葉さくら プロフィール", "青葉さくら アイドル"],
+    "皆川彩月": ["皆川彩月 グラビア", "皆川彩月 プロフィール", "皆川彩月 アイドル"],
+    "MEW": ["MEW AV女優", "MEW FANZA 女優", "MEW DMM 女優"],
+    "TERU": ["GLAY TERU", "TERU GLAY プロフィール", "TERU GLAY 顔写真"],
+    "YAMATO": ["ORANGE RANGE YAMATO", "YAMATO ORANGE RANGE", "YAMATO オレンジレンジ"],
 }
 MIN_BYTES = 10 * 1024
 MIN_SIDE = 180
@@ -68,6 +78,11 @@ def load_collector():
 
 
 collector = load_collector()
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 
 def make_filename(name: str) -> str:
@@ -221,6 +236,19 @@ def is_rejected_bing_image_url(image_url: str) -> bool:
             "ai_generated",
             "radiko.jp",
             "logo",
+            "pokemon",
+            "pokemondb.net",
+            "bulbagarden",
+            "dabodetroit",
+            "harrypotterfanon",
+            "hiro_hamada",
+            "hiro-hamada",
+            "zerochan.net",
+            "teruterubouzu",
+            "matsudaira_teru",
+            "dragongate",
+            "dragon_gate",
+            "prowrestling",
             "pixabay.com",
             "deviantart.net",
             "wixmp.com",
@@ -435,6 +463,77 @@ def update_image_credits(credits_by_name: dict[str, dict[str, object]]) -> None:
     )
 
 
+def fetch_targets_worker(
+    worker_id: int,
+    targets: list[Target],
+    refresh_existing: bool,
+    min_bytes: int,
+    min_side: int,
+    min_ratio: float,
+    max_ratio: float,
+) -> dict[str, object]:
+    replacements: dict[str, str] = {}
+    credits: dict[str, dict[str, object]] = {}
+    failures: list[dict[str, str]] = []
+
+    if not targets:
+        return {"replacements": replacements, "credits": credits, "failures": failures}
+
+    with collector.sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page(user_agent=collector.REQUEST_HEADERS["User-Agent"])
+
+        for target in targets:
+            try:
+                output_path, source = download_target_image(
+                    page,
+                    target,
+                    refresh_existing=refresh_existing,
+                    min_bytes=min_bytes,
+                    min_side=min_side,
+                    min_ratio=min_ratio,
+                    max_ratio=max_ratio,
+                )
+                if output_path is None:
+                    failures.append({"name": target.name, "reason": "no-image-found"})
+                    print(f"[worker {worker_id}] {target.name} -> failed", flush=True)
+                    continue
+
+                image_path = f"/images/{output_path.name}"
+                replacements[target.name] = image_path
+                credits[target.name] = {
+                    "name": target.name,
+                    "image": image_path,
+                    "title": target.name,
+                    "creator": None,
+                    "creatorUrl": None,
+                    "source": source,
+                    "provider": "bing",
+                    "license": "",
+                    "licenseVersion": "",
+                    "licenseUrl": "",
+                    "foreignLandingUrl": source,
+                    "attribution": "",
+                }
+                print(f"[worker {worker_id}] {target.name} -> {source}", flush=True)
+            except Exception as exc:
+                failures.append({"name": target.name, "reason": str(exc)})
+                print(f"[worker {worker_id}] {target.name} -> failed", flush=True)
+
+        browser.close()
+
+    return {"replacements": replacements, "credits": credits, "failures": failures}
+
+
+def split_targets(targets: list[Target], worker_count: int) -> list[list[Target]]:
+    chunks = [[] for _ in range(worker_count)]
+
+    for index, target in enumerate(targets):
+        chunks[index % worker_count].append(target)
+
+    return [chunk for chunk in chunks if chunk]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Fetch Bing profile images for top-ranking entries"
@@ -493,6 +592,12 @@ def main() -> int:
         default=MAX_RATIO,
         help="Maximum allowed height/width ratio",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Download with this many isolated worker processes before updating shared data files",
+    )
     args = parser.parse_args()
 
     only_names = load_only_names(args.only_names, args.only_names_file)
@@ -515,6 +620,55 @@ def main() -> int:
     failures: list[dict[str, str]] = []
 
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+    if args.workers > 1 and len(targets) > 1:
+        worker_count = min(args.workers, len(targets))
+
+        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+            futures = [
+                executor.submit(
+                    fetch_targets_worker,
+                    worker_id,
+                    chunk,
+                    args.refresh_existing,
+                    args.min_bytes,
+                    args.min_side,
+                    args.min_ratio,
+                    args.max_ratio,
+                )
+                for worker_id, chunk in enumerate(split_targets(targets, worker_count), start=1)
+            ]
+
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                except Exception as exc:
+                    failures.append({"name": "worker", "reason": str(exc)})
+                    continue
+
+                replacements.update(result["replacements"])
+                credits.update(result["credits"])
+                failures.extend(result["failures"])
+
+        if replacements:
+            update_source_profiles(replacements)
+            update_fetch_source_profiles(replacements)
+            update_image_credits(credits)
+
+        print(
+            json.dumps(
+                {
+                    "requested": len(targets),
+                    "updated": len(replacements),
+                    "failed": len(failures),
+                    "failures": failures,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+
+        return 1 if failures else 0
 
     with collector.sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)

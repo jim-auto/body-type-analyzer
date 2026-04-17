@@ -50,7 +50,7 @@ const validCups = new Set(EXTENDED_CUP_ORDER);
 const publicCupOrder = EXTENDED_CUP_ORDER;
 const uiAvatarPattern =
   /^https:\/\/ui-avatars\.com\/api\/\?name=.+&size=300&background=random&color=fff&bold=true$/;
-const knownAmbiguousImageNames = [
+const verifiedAmbiguousLocalImageNames = [
   "鎌倉美咲",
   "若槻千夏",
   "中村倫也",
@@ -289,14 +289,17 @@ describe("ranking.json actual profile data", () => {
     expect(imageFiles.some((filename) => /\.jpe?g$/iu.test(filename))).toBe(false);
   });
 
-  test("曖昧な名前のプロフィールは安全のため ui-avatars を使う", () => {
-    knownAmbiguousImageNames.forEach((name) => {
+  test("曖昧だった名前のプロフィールは検証済みローカル画像を使う", () => {
+    verifiedAmbiguousLocalImageNames.forEach((name) => {
       const entry = [...femaleProfilePool, ...maleProfilePool].find(
         (profile) => profile.name === name
       );
 
       expect(entry).toBeDefined();
-      expect(entry?.image).toMatch(uiAvatarPattern);
+      expect(entry?.image.startsWith("/images/")).toBe(true);
+
+      const imagePath = path.join(process.cwd(), "public", entry!.image.slice(1));
+      expect(fs.existsSync(imagePath)).toBe(true);
     });
   });
 
