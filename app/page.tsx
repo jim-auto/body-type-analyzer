@@ -6,7 +6,6 @@ import {
 } from "@/lib/distributions";
 import {
   FEMALE_PROFILE_COVERAGE_SUMMARY,
-  FEMALE_PROFILE_GOAL_SUMMARY,
 } from "@/lib/profile-occupations";
 import type { RankingData } from "@/lib/ranking";
 import rankingDataJson from "../public/data/ranking.json";
@@ -22,7 +21,6 @@ export default function Home() {
       femaleCupDistribution={femaleCupDistribution}
       femaleCupTrainingCoverage={FEMALE_CUP_TRAINING_COVERAGE_SUMMARY}
       femaleOccupationCoverage={FEMALE_PROFILE_COVERAGE_SUMMARY}
-      femaleOccupationGoals={FEMALE_PROFILE_GOAL_SUMMARY}
       maleHeightDistribution={maleHeightDistribution}
     />
   );

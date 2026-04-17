@@ -8,7 +8,6 @@ import {
   buildMaleHeightDistributionSummary,
 } from "@/lib/distributions";
 import {
-  FEMALE_PROFILE_GOAL_SUMMARY,
   getFemaleProfileOccupations,
   PROFILE_OCCUPATION_LABELS,
 } from "@/lib/profile-occupations";
@@ -209,34 +208,6 @@ describe("Home (Ranking Page)", () => {
     expect(
       screen.getByRole("link", { name: "モデル性能を見る" })
     ).toHaveAttribute("href", "/analyze#model-performance");
-  });
-
-  test("Coverage section shows occupation targets and remaining counts", () => {
-    const avGoal = FEMALE_PROFILE_GOAL_SUMMARY.occupations.find(
-      (entry) => entry.occupation === "av"
-    )!;
-
-    renderHome();
-
-    const avCard =
-      screen
-        .getAllByText(avGoal.label)
-        .map((element) => element.closest("article"))
-        .find((element): element is HTMLElement =>
-          Boolean(element?.textContent?.includes("Current / Goal / Left"))
-        ) ?? null;
-
-    expect(
-      screen.getByRole("heading", { level: 3, name: "Targets" })
-    ).toBeInTheDocument();
-    expect(avCard).not.toBeNull();
-    expect(within(avCard as HTMLElement).getByText(avGoal.label)).toBeInTheDocument();
-    expect(
-      within(avCard as HTMLElement).getByText(
-        new RegExp(`${avGoal.count}\\s*/\\s*${avGoal.target}人`)
-      )
-    ).toBeInTheDocument();
-    expect(within(avCard as HTMLElement).getByText(String(avGoal.remaining))).toBeInTheDocument();
   });
 
   test("初期表示で女性の公表カップ数ランキングが表示される", () => {

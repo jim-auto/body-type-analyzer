@@ -18,7 +18,6 @@ import {
   PROFILE_OCCUPATION_LABELS,
   type ProfileOccupation,
   type FemaleProfileCoverageSummary,
-  type FemaleProfileGoalSummary,
 } from "@/lib/profile-occupations";
 import {
   formatSignedDifference,
@@ -39,7 +38,6 @@ type HomePageClientProps = {
   femaleCupDistribution: FemaleCupDistributionSummary;
   femaleCupTrainingCoverage: FemaleCupTrainingCoverageSummary;
   femaleOccupationCoverage: FemaleProfileCoverageSummary;
-  femaleOccupationGoals: FemaleProfileGoalSummary;
   maleHeightDistribution: MaleHeightDistributionSummary;
 };
 
@@ -371,7 +369,6 @@ export default function HomePageClient({
   femaleCupDistribution,
   femaleCupTrainingCoverage,
   femaleOccupationCoverage,
-  femaleOccupationGoals,
   maleHeightDistribution,
 }: HomePageClientProps) {
   const [gender, setGender] = useState<Gender>("female");
@@ -545,23 +542,6 @@ export default function HomePageClient({
     gender === "female"
       ? "bg-pink-500 text-white shadow-md"
       : "bg-blue-600 text-white shadow-md";
-  const gravureCount =
-    femaleOccupationCoverage.occupations.find(
-      (entry) => entry.occupation === "gravure"
-    )?.count ?? 0;
-  const avCount =
-    femaleOccupationCoverage.occupations.find((entry) => entry.occupation === "av")
-      ?.count ?? 0;
-  const gravurefitCoverage =
-    femaleOccupationCoverage.referenceCoverage.gravurefitLargeCup;
-  const topGoalProgress = femaleOccupationGoals.occupations.reduce(
-    (total, entry) => total + Math.min(entry.count, entry.target),
-    0
-  );
-  const topGoalTarget = femaleOccupationGoals.occupations.reduce(
-    (total, entry) => total + entry.target,
-    0
-  );
   const activeOccupationFilterLabel =
     activeOccupationFilter === "all"
       ? "All"
@@ -634,144 +614,6 @@ export default function HomePageClient({
             男性
           </button>
         </div>
-
-        {gender === "female" ? (
-          <section className="rounded-[1.75rem] border border-amber-100 bg-[linear-gradient(135deg,_rgba(251,191,36,0.14),_rgba(255,255,255,0.96))] p-5 shadow-sm sm:p-6">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
-                Coverage
-              </p>
-              <h2 className="text-2xl font-bold text-slate-900">
-                職種タグのカバレッジ
-              </h2>
-              <p className="text-sm leading-6 text-slate-500 sm:text-base">
-                公開女性プロフィール {femaleOccupationCoverage.total} 人に対して、
-                `グラビア / AV女優 / 女優 / モデル` などの職種タグを別データで管理しています。
-              </p>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                {
-                  label: "タグ付与済み",
-                  value: `${femaleOccupationCoverage.tagged}人`,
-                  tone: "bg-white/90 text-slate-900",
-                },
-                {
-                  label: "グラビア",
-                  value: `${gravureCount}人`,
-                  tone: "bg-pink-50 text-pink-700",
-                },
-                {
-                  label: "AV女優",
-                  value: `${avCount}人`,
-                  tone: "bg-rose-50 text-rose-700",
-                },
-                {
-                  label: "未判定",
-                  value: `${femaleOccupationCoverage.untagged}人`,
-                  tone: "bg-slate-100 text-slate-700",
-                },
-              ].map((item) => (
-                <article
-                  key={item.label}
-                  className={`rounded-2xl px-4 py-3 shadow-sm ring-1 ring-black/5 ${item.tone}`}
-                >
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-70">
-                    {item.label}
-                  </p>
-                  <p className="mt-2 text-2xl font-bold">{item.value}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              {femaleOccupationCoverage.occupations
-                .filter((entry) => entry.count > 0)
-                .slice(0, 6)
-                .map((entry) => (
-                  <span
-                    key={entry.occupation}
-                    className="rounded-full bg-white/85 px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200"
-                  >
-                    {entry.label} {entry.count}人
-                  </span>
-                ))}
-            </div>
-
-            <div className="mt-6 rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm ring-1 ring-black/5 sm:p-5">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-slate-900">Targets</h3>
-                  <p className="text-sm text-slate-500">
-                    Pool {femaleOccupationGoals.totalCurrent} /{" "}
-                    {femaleOccupationGoals.totalTarget} people, left{" "}
-                    {femaleOccupationGoals.totalRemaining}
-                  </p>
-                </div>
-                <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-amber-700 ring-1 ring-amber-200">
-                  {topGoalProgress} / {topGoalTarget}
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {femaleOccupationGoals.occupations.map((entry) => (
-                  <article
-                    key={entry.occupation}
-                    className="rounded-2xl border border-slate-100 bg-slate-50/85 p-4 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-800">
-                          {entry.label}
-                        </p>
-                        <p className="text-xs uppercase tracking-[0.12em] text-slate-400">
-                          Current / Goal / Left
-                        </p>
-                      </div>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${
-                          entry.remaining === 0
-                            ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                            : "bg-amber-50 text-amber-700 ring-amber-200"
-                        }`}
-                      >
-                        {entry.remaining}
-                      </span>
-                    </div>
-
-                    <p className="mt-3 text-base font-bold text-slate-900">
-                      {entry.count} / {entry.target}人
-                    </p>
-
-                    <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className={`h-full rounded-full ${
-                          entry.remaining === 0
-                            ? "bg-gradient-to-r from-emerald-500 to-teal-400"
-                            : "bg-gradient-to-r from-amber-500 to-orange-400"
-                        }`}
-                        style={{ width: `${Math.min(entry.progressRate, 100)}%` }}
-                      />
-                    </div>
-
-                    <p className="mt-2 text-xs text-slate-400">
-                      {entry.progressRate.toFixed(1)}% of target
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </div>
-
-            <p className="mt-4 text-sm text-slate-600">
-              参考集合: {gravurefitCoverage.label} {gravurefitCoverage.matchedProfiles} /{" "}
-              {gravurefitCoverage.referenceTotal} ({gravurefitCoverage.coverageRate}%)
-            </p>
-            <p className="mt-1 text-xs text-slate-400">
-              {femaleOccupationCoverage.notes[0]}
-            </p>
-          </section>
-        ) : null}
 
         <section className="space-y-8">
           <div className="flex flex-wrap justify-center gap-2">
