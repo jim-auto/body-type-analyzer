@@ -99,7 +99,7 @@ npm run build  Compiled successfully, prerendered /, /analyze, /credits
 
 2. **Add stress-case images to the QA harness.** Current 25-sample set is all standard publicity portraits. Adding seated, side-facing, multi-person, very-low-resolution, and busy-background cases would let the next person verify whether A-E predictions ever appear (they didn't in the current sample, but it's plausibly fine).
 
-3. **Tune `CUP_PRIOR_EXPONENT`.** Currently 0.5 (sqrt smoothing). Try 0.4 or 0.6 and re-run QA. Too low and the large-cup bias comes back; too high and honest gravure images under-predict.
+3. **Tune `CUP_PRIOR_EXPONENT`.** Swept 0.3 / 0.5 / 0.7 this session against the 25-image QA set. Summary: 0.3 narrows the spread (G=10/25, still no A-E); 0.5 (current) gives F=4 G=8 H=8 I=2 J=2 K=1; 0.7 adds one E and one L prediction but the leave-one-out cup exactRate drops 23.4% → 20.9% and within-1 drops 62.7% → 59.2% — ~3 pp accuracy cost for 2 extra class labels. Kept 0.5 as the Pareto-optimal choice. Re-tune only if the training distribution or user feedback changes.
 
 4. **Consider a mild large-cup boost in `voteCups` if tuning 3 doesn't suffice.** Previously `+0.35`, now `0`. A small value like `0.10` could be safe.
 
