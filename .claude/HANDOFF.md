@@ -11,6 +11,9 @@ Analyze page: `https://jim-auto.github.io/body-type-analyzer/analyze`
 Latest deployed commits (top is newest):
 
 ```text
+3b34158 Reword cup feature box legend to acknowledge multi-region extraction
+107c740 Refresh 47 more lowest-quality ranking profile images (batch 4)
+095041f Final handoff refresh covering mask fix and image batches 2-3
 b1d1fab Refresh 47 more lowest-quality ranking profile images (batch 3)
 d927dac Fix body mask polygon drawing inward instead of outward
 8e769d3 Record CUP_PRIOR_EXPONENT tuning result in handoff docs
@@ -31,9 +34,9 @@ bc90a08 Add cup visualization QA harness script
 Latest successful GitHub Pages workflow:
 
 ```text
-Run id: 24615287388
-Commit: b1d1fab
-URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24615287388
+Run id: 24616569527
+Commit: 3b34158
+URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24616569527
 ```
 
 ## What This Session Produced
@@ -100,8 +103,15 @@ Ranking-image-qa flag count:
 start               : 406 flagged of 1401 profiles (29 %)
 after 49208cc (48)  : 358
 after cbd5c7f (47)  : 318
-after b1d1fab (47)  : 273  (total −133, ~35 % fixed)
+after b1d1fab (47)  : 273
+after 107c740 (47)  : 226  (total −180, ~44 % fixed)
 ```
+
+Cup feature box visualization caveat (added in `3b34158`): the rose
+dashed box on the result page is the primary `top` region of the
+focus crop only. The actual cup model also pulls features from
+`mid`, `topCenter`, and `torsoCenter`. The legend now spells this
+out so users do not assume only the visible band feeds the model.
 
 ## Verification Baseline
 
@@ -122,7 +132,7 @@ npm run build  Compiled successfully, prerendered /, /analyze, /credits
 
 ## Recommended Next Tasks (priority order)
 
-1. **Continue the image-quality refresh.** After 3 batches (48+47+47 fetched), `ranking-image-qa` flag count is down from 406 → 273. Continue with the same recipe: generate next-50 target list from `local-data/qa/ranking-image-qa-top500.json` sorted by `width × height`, run `python scripts/fetch-bing-ranking-profile-images.py --only-names-file <list> --refresh-existing --top-n 0 --preserve-names-order --gender all --limit 50 --min-bytes 12000 --min-side 300`, then `npm run optimize:images`, then `node scripts/generate-ranking.mjs`. `--top-n 0` is mandatory — default 100 silently limits the scan. About 3 names fail every batch (`八木あずさ`, `堀川奈美`, etc.) and need either a manual source or a wider `--min-side` floor.
+1. **Continue the image-quality refresh.** After 4 batches (48+47+47+47 fetched), `ranking-image-qa` flag count is down from 406 → 226. Continue with the same recipe: generate next-50 target list from `local-data/qa/ranking-image-qa-top500.json` sorted by `width × height`, run `python scripts/fetch-bing-ranking-profile-images.py --only-names-file <list> --refresh-existing --top-n 0 --preserve-names-order --gender all --limit 50 --min-bytes 12000 --min-side 300`, then `npm run optimize:images`, then `node scripts/generate-ranking.mjs`. `--top-n 0` is mandatory — default 100 silently limits the scan. About 3 names fail every batch (`八木あずさ`, `堀川奈美`, etc.) and need either a manual source or a wider `--min-side` floor.
 
 2. **Add stress-case images to the QA harness.** Current 25-sample set is all standard publicity portraits. Adding seated, side-facing, multi-person, very-low-resolution, and busy-background cases would let the next person verify whether A-E predictions ever appear (they didn't in the current sample, but it's plausibly fine).
 

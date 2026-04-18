@@ -11,6 +11,9 @@ Current live analyze page: `https://jim-auto.github.io/body-type-analyzer/analyz
 Latest deployed commits (top is newest):
 
 ```text
+3b34158 Reword cup feature box legend to acknowledge multi-region extraction
+107c740 Refresh 47 more lowest-quality ranking profile images (batch 4)
+095041f Final handoff refresh covering mask fix and image batches 2-3
 b1d1fab Refresh 47 more lowest-quality ranking profile images (batch 3)
 d927dac Fix body mask polygon drawing inward instead of outward
 8e769d3 Record CUP_PRIOR_EXPONENT tuning result in handoff docs
@@ -31,10 +34,10 @@ bc90a08 Add cup visualization QA harness script
 Latest GitHub Pages workflow:
 
 ```text
-Run id: 24615287388
+Run id: 24616569527
 Status: success
-Commit: b1d1fab
-URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24615287388
+Commit: 3b34158
+URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24616569527
 ```
 
 Important local state:
