@@ -197,6 +197,7 @@ export type DiagnosisVisualizationOverlay = {
   bodyMaskDataUrl: string | null;
   bodyMaskCoverage: number | null;
   poseKeypoints: PoseKeypoint[] | null;
+  isUpperBodyMissing: boolean;
 };
 
 export class DiagnosisInputQualityError extends Error {
@@ -1041,6 +1042,32 @@ function buildPoseKeypoints(
   return keypoints.length > 0 ? keypoints : null;
 }
 
+const SHOULDER_LOWER_BOUND_FOR_UPPER_BODY = 0.8;
+
+export function detectUpperBodyMissing(
+  landmarks: PoseLandmark[] | null
+): boolean {
+  if (!landmarks || landmarks.length === 0) {
+    return false;
+  }
+
+  const leftShoulder = landmarks[11];
+  const rightShoulder = landmarks[12];
+
+  if (!leftShoulder || !rightShoulder) {
+    return false;
+  }
+
+  const inFrame =
+    isLandmarkInFrame(leftShoulder) && isLandmarkInFrame(rightShoulder);
+  if (!inFrame) {
+    return true;
+  }
+
+  const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+  return shoulderY > SHOULDER_LOWER_BOUND_FOR_UPPER_BODY;
+}
+
 function buildDiagnosisVisualization(
   image: HTMLImageElement,
   focusBox: RatioBox,
@@ -1064,6 +1091,7 @@ function buildDiagnosisVisualization(
     bodyMaskDataUrl: bodyMask?.dataUrl ?? null,
     bodyMaskCoverage: bodyMask?.coverage ?? null,
     poseKeypoints: buildPoseKeypoints(poseAnalysis.landmarks),
+    isUpperBodyMissing: detectUpperBodyMissing(poseAnalysis.landmarks),
   };
 }
 

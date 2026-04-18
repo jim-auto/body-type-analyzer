@@ -2,7 +2,7 @@
 
 Updated: 2026-04-18 JST (afternoon session, after `fd628f3`)
 
-Repository: `local checkout of body-type-analyzer (path varies by workstation)`
+Repository: local checkout of `body-type-analyzer` (path varies by workstation)
 
 Public site: `https://jim-auto.github.io/body-type-analyzer/`
 

@@ -4,6 +4,7 @@ import {
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
   buildChestBoxFromPose,
+  detectUpperBodyMissing,
   diagnose,
   isLowInformationDiagnosisImageQuality,
 } from "@/lib/image-analyzer";
@@ -141,6 +142,46 @@ describe("image-analyzer", () => {
         visibility: 0.9,
       }));
       expect(buildChestBoxFromPose(incomplete)).toBeNull();
+    });
+  });
+
+  describe("detectUpperBodyMissing", () => {
+    const makeWithShoulders = (shoulderY: number, inFrame = true) => {
+      const landmarks = Array.from({ length: 33 }, () => ({
+        x: 0.5,
+        y: 0.5,
+        visibility: 0.9,
+      }));
+      landmarks[11] = { x: inFrame ? 0.4 : 1.4, y: shoulderY, visibility: 0.9 };
+      landmarks[12] = { x: inFrame ? 0.6 : 1.6, y: shoulderY, visibility: 0.9 };
+      return landmarks;
+    };
+
+    test("肩が画像中央にあれば false", () => {
+      expect(detectUpperBodyMissing(makeWithShoulders(0.3))).toBe(false);
+    });
+
+    test("肩が y=0.8 ちょうどでは false（境界外）", () => {
+      expect(detectUpperBodyMissing(makeWithShoulders(0.8))).toBe(false);
+    });
+
+    test("肩が y > 0.8 では true (顔のみクロップ判定)", () => {
+      expect(detectUpperBodyMissing(makeWithShoulders(0.85))).toBe(true);
+      expect(detectUpperBodyMissing(makeWithShoulders(0.95))).toBe(true);
+    });
+
+    test("肩が画像外にある (x>1) と true", () => {
+      expect(detectUpperBodyMissing(makeWithShoulders(0.5, false))).toBe(true);
+    });
+
+    test("landmarks=null や肩なしのときは false", () => {
+      expect(detectUpperBodyMissing(null)).toBe(false);
+      expect(detectUpperBodyMissing([])).toBe(false);
+      expect(
+        detectUpperBodyMissing(
+          Array.from({ length: 5 }, () => ({ x: 0.5, y: 0.5, visibility: 0.9 }))
+        )
+      ).toBe(false);
     });
   });
 });

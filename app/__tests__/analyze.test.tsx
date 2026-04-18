@@ -105,6 +105,7 @@ const mockVisualization = {
     { name: "leftHip" as const, x: 0.42, y: 0.55, visibility: 0.85 },
     { name: "rightHip" as const, x: 0.58, y: 0.55, visibility: 0.85 },
   ],
+  isUpperBodyMissing: false,
 };
 
 const mockMaleResult: MaleDiagnosisResult = {
@@ -402,7 +403,7 @@ describe("AnalyzePage", () => {
     expect(screen.getByText("マスク面積 42%")).toBeInTheDocument();
   });
 
-  test("マスク被覆が通常域なら上半身警告は表示されない", async () => {
+  test("通常画像 (isUpperBodyMissing=false) では上半身警告は表示されない", async () => {
     renderPage();
 
     await uploadImage();
@@ -413,11 +414,11 @@ describe("AnalyzePage", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("マスク被覆が5%以下のときは上半身警告を表示する", async () => {
+  test("isUpperBodyMissing=true のときは上半身警告を表示する", async () => {
     mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
       features: mockFeatures,
       isLowQuality: false,
-      visualization: { ...mockVisualization, bodyMaskCoverage: 0.04 },
+      visualization: { ...mockVisualization, isUpperBodyMissing: true },
     });
     renderPage();
 
@@ -429,44 +430,17 @@ describe("AnalyzePage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "検出できた人物領域がとても小さいため、カップ推定は参考値です。胸まで写った別の画像でお試しください。"
+        "肩のランドマークが画像下端付近または検出できないため、カップ推定は参考値です。胸まで写った別の画像でお試しください。"
       )
     ).toBeInTheDocument();
   });
 
-  test("マスク被覆がちょうど5%でも上半身警告を表示する", async () => {
+  test("男性モードでは isUpperBodyMissing=true でも上半身警告を表示しない", async () => {
     mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
       features: mockFeatures,
       isLowQuality: false,
-      visualization: { ...mockVisualization, bodyMaskCoverage: 0.05 },
+      visualization: { ...mockVisualization, isUpperBodyMissing: true },
     });
-    renderPage();
-
-    await uploadImage();
-    await finishAnalysis();
-
-    expect(
-      screen.getByText("上半身が十分に写っていません")
-    ).toBeInTheDocument();
-  });
-
-  test("マスク被覆が未取得 (null) のときは上半身警告を表示しない", async () => {
-    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
-      features: mockFeatures,
-      isLowQuality: false,
-      visualization: { ...mockVisualization, bodyMaskCoverage: null },
-    });
-    renderPage();
-
-    await uploadImage();
-    await finishAnalysis();
-
-    expect(
-      screen.queryByText("上半身が十分に写っていません")
-    ).not.toBeInTheDocument();
-  });
-
-  test("男性モードではマスクが小さくても上半身警告を表示しない", async () => {
     renderPage();
 
     await act(async () => {

@@ -68,11 +68,6 @@ function formatMaskCoverage(coverage: number | null): string {
   return `${Math.round(coverage * 100)}%`;
 }
 
-const LOW_MASK_THRESHOLD = 0.05;
-
-function isLowBodyMaskCoverage(coverage: number | null): boolean {
-  return coverage !== null && coverage <= LOW_MASK_THRESHOLD;
-}
 
 const POSE_KEYPOINT_CLASS: Record<PoseKeypointName, string> = {
   nose: "bg-emerald-400",
@@ -579,14 +574,14 @@ export default function AnalyzePage() {
 
                 {gender === "female" &&
                 visualization &&
-                isLowBodyMaskCoverage(visualization.bodyMaskCoverage) ? (
+                visualization.isUpperBodyMissing ? (
                   <div
                     role="status"
                     className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"
                   >
                     <p className="font-semibold">上半身が十分に写っていません</p>
                     <p className="mt-1 leading-6">
-                      検出できた人物領域がとても小さいため、カップ推定は参考値です。胸まで写った別の画像でお試しください。
+                      肩のランドマークが画像下端付近または検出できないため、カップ推定は参考値です。胸まで写った別の画像でお試しください。
                     </p>
                   </div>
                 ) : null}
