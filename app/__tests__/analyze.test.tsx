@@ -96,8 +96,8 @@ const mockVisualization = {
   cupFeatureBox: { left: 0.1, top: 0.05, width: 0.8, height: 0.4 },
   chestBox: { left: 0.3, top: 0.24, width: 0.4, height: 0.16 },
   chestBoxSource: "pose" as const,
-  segmentationMaskDataUrl: "data:image/png;base64,segmentation",
-  segmentationMaskCoverage: 0.42,
+  bodyMaskDataUrl: "data:image/png;base64,body-mask",
+  bodyMaskCoverage: 0.42,
 };
 
 const mockMaleResult: MaleDiagnosisResult = {
@@ -386,9 +386,9 @@ describe("AnalyzePage", () => {
       "src",
       "blob:preview-url"
     );
-    expect(screen.getByAltText("人物セグメンテーション結果")).toHaveAttribute(
+    expect(screen.getByAltText("人物領域マスク")).toHaveAttribute(
       "src",
-      mockVisualization.segmentationMaskDataUrl
+      mockVisualization.bodyMaskDataUrl
     );
     expect(screen.getByText("胸部ROI")).toBeInTheDocument();
     expect(screen.getByText("カップ特徴量範囲")).toBeInTheDocument();

@@ -648,7 +648,7 @@ export default function AnalyzePage() {
                   カップ推定の可視化
                 </h2>
                 <p className="max-w-2xl text-sm leading-6 text-slate-500">
-                  人物セグメンテーション、胸部ROI、実際にカップ特徴量を取る上半身範囲を重ねています。
+                  人物領域マスク、胸部ROI、実際にカップ特徴量を取る上半身範囲を重ねています。
                   枠やマスクが大きくずれる画像では推定を参考程度に見てください。
                 </p>
               </div>
@@ -675,12 +675,12 @@ export default function AnalyzePage() {
                   alt="カップ推定可視化の元画像"
                   className="absolute inset-0 h-full w-full object-fill"
                 />
-                {visualization.segmentationMaskDataUrl ? (
+                {visualization.bodyMaskDataUrl ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element -- generated data URLs cannot be optimized by next/image */}
                     <img
-                      src={visualization.segmentationMaskDataUrl}
-                      alt="人物セグメンテーション結果"
+                      src={visualization.bodyMaskDataUrl}
+                      alt="人物領域マスク"
                       className="absolute inset-0 h-full w-full object-fill"
                     />
                   </>
@@ -726,10 +726,10 @@ export default function AnalyzePage() {
                 <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
                   <div className="flex items-center gap-2 font-bold text-sky-900">
                     <span className="h-3 w-3 rounded-sm bg-sky-400/70" />
-                    人物セグメンテーション
+                    人物領域マスク
                   </div>
                   <p className="mt-2 leading-6">
-                    マスク面積 {formatMaskCoverage(visualization.segmentationMaskCoverage)}
+                    マスク面積 {formatMaskCoverage(visualization.bodyMaskCoverage)}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

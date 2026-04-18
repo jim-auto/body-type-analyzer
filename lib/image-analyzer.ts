@@ -160,8 +160,6 @@ type PoseLandmark = {
 type PoseAnalysis = {
   features: number[];
   landmarks: PoseLandmark[] | null;
-  segmentationMaskDataUrl: string | null;
-  segmentationMaskCoverage: number | null;
 };
 
 export type DiagnosisImageQualityMetrics = {
@@ -182,8 +180,8 @@ export type DiagnosisVisualizationOverlay = {
   cupFeatureBox: RatioBox;
   chestBox: RatioBox;
   chestBoxSource: "pose" | "feature-crop";
-  segmentationMaskDataUrl: string | null;
-  segmentationMaskCoverage: number | null;
+  bodyMaskDataUrl: string | null;
+  bodyMaskCoverage: number | null;
 };
 
 export class DiagnosisInputQualityError extends Error {
@@ -785,23 +783,17 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-function buildSegmentationMaskVisualization(mask: {
-  width: number;
-  height: number;
-  hasFloat32Array: () => boolean;
-  getAsFloat32Array: () => Float32Array;
-  getAsUint8Array: () => Uint8Array;
-}): { dataUrl: string; coverage: number } | null {
-  const width = mask.width;
-  const height = mask.height;
+function buildBodyMaskVisualization(
+  image: HTMLImageElement,
+  focusBox: RatioBox,
+  landmarks: PoseLandmark[] | null
+): { dataUrl: string; coverage: number } | null {
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
 
   if (width <= 0 || height <= 0) {
     return null;
   }
-
-  const rawMask = mask.hasFloat32Array()
-    ? mask.getAsFloat32Array()
-    : mask.getAsUint8Array();
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
 
@@ -811,26 +803,62 @@ function buildSegmentationMaskVisualization(mask: {
 
   canvas.width = width;
   canvas.height = height;
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = "rgba(14, 165, 233, 0.36)";
 
-  const imageData = context.createImageData(width, height);
-  let activePixels = 0;
+  const leftShoulder = landmarks?.[11];
+  const rightShoulder = landmarks?.[12];
+  const leftHip = landmarks?.[23];
+  const rightHip = landmarks?.[24];
+  const hasTorso =
+    leftShoulder &&
+    rightShoulder &&
+    leftHip &&
+    rightHip &&
+    mean([leftShoulder, rightShoulder, leftHip, rightHip].map((point) => point.visibility ?? 1)) >= 0.2;
 
-  for (let index = 0; index < width * height; index += 1) {
-    const rawValue = rawMask[index] ?? 0;
-    const confidence = rawMask instanceof Float32Array ? rawValue : rawValue / 255;
-    const pixelOffset = index * 4;
+  if (hasTorso) {
+    const shoulderPadding = Math.abs(rightShoulder.x - leftShoulder.x) * 0.22;
+    const hipPadding = Math.abs(rightHip.x - leftHip.x) * 0.16;
+    const topPadding = Math.max(0.02, (leftHip.y + rightHip.y - leftShoulder.y - rightShoulder.y) * 0.04);
 
-    if (confidence > 0.08) {
-      activePixels += 1;
-    }
+    context.beginPath();
+    context.moveTo(
+      (leftShoulder.x - shoulderPadding) * width,
+      (leftShoulder.y - topPadding) * height
+    );
+    context.quadraticCurveTo(
+      ((leftShoulder.x + rightShoulder.x) / 2) * width,
+      (Math.min(leftShoulder.y, rightShoulder.y) - topPadding * 2) * height,
+      (rightShoulder.x + shoulderPadding) * width,
+      (rightShoulder.y - topPadding) * height
+    );
+    context.lineTo((rightHip.x + hipPadding) * width, rightHip.y * height);
+    context.quadraticCurveTo(
+      ((leftHip.x + rightHip.x) / 2) * width,
+      (Math.max(leftHip.y, rightHip.y) + topPadding * 2) * height,
+      (leftHip.x - hipPadding) * width,
+      leftHip.y * height
+    );
+    context.closePath();
+    context.fill();
+  } else {
+    const left = focusBox.left * width;
+    const top = focusBox.top * height;
+    const boxWidth = focusBox.width * width;
+    const boxHeight = focusBox.height * height;
 
-    imageData.data[pixelOffset] = 14;
-    imageData.data[pixelOffset + 1] = 165;
-    imageData.data[pixelOffset + 2] = 233;
-    imageData.data[pixelOffset + 3] = Math.round(clamp(confidence, 0, 1) * 105);
+    context.fillRect(left, top, boxWidth, boxHeight);
   }
 
-  context.putImageData(imageData, 0, 0);
+  const pixels = context.getImageData(0, 0, width, height).data;
+  let activePixels = 0;
+
+  for (let index = 3; index < pixels.length; index += 4) {
+    if ((pixels[index] ?? 0) > 8) {
+      activePixels += 1;
+    }
+  }
 
   return {
     dataUrl: canvas.toDataURL("image/png"),
@@ -943,6 +971,11 @@ function buildDiagnosisVisualization(
 ): DiagnosisVisualizationOverlay {
   const fallbackChestBox = projectRegionToSourceBox(focusBox, "topCenter");
   const chestBox = buildChestBoxFromPose(poseAnalysis.landmarks);
+  const bodyMask = buildBodyMaskVisualization(
+    image,
+    focusBox,
+    poseAnalysis.landmarks
+  );
 
   return {
     imageWidth: image.naturalWidth,
@@ -951,8 +984,8 @@ function buildDiagnosisVisualization(
     cupFeatureBox: projectRegionToSourceBox(focusBox, "top"),
     chestBox: chestBox ?? fallbackChestBox,
     chestBoxSource: chestBox ? "pose" : "feature-crop",
-    segmentationMaskDataUrl: poseAnalysis.segmentationMaskDataUrl,
-    segmentationMaskCoverage: poseAnalysis.segmentationMaskCoverage,
+    bodyMaskDataUrl: bodyMask?.dataUrl ?? null,
+    bodyMaskCoverage: bodyMask?.coverage ?? null,
   };
 }
 
@@ -973,7 +1006,6 @@ async function extractPoseAnalysis(
       },
       runningMode: "IMAGE",
       minPoseDetectionConfidence: 0.2,
-      outputSegmentationMasks: true,
     });
 
     try {
@@ -984,8 +1016,6 @@ async function extractPoseAnalysis(
         return {
           features: POSE_ZERO_FEATURES,
           landmarks: null,
-          segmentationMaskDataUrl: null,
-          segmentationMaskCoverage: null,
         };
       }
 
@@ -997,25 +1027,17 @@ async function extractPoseAnalysis(
 
       try {
         const landmarks = result.landmarks?.[0] ?? null;
-        const mask = result.segmentationMasks?.[0];
-        const maskVisualization = mask
-          ? buildSegmentationMaskVisualization(mask)
-          : null;
 
         if (!landmarks) {
           return {
             features: POSE_ZERO_FEATURES,
             landmarks: null,
-            segmentationMaskDataUrl: maskVisualization?.dataUrl ?? null,
-            segmentationMaskCoverage: maskVisualization?.coverage ?? null,
           };
         }
 
         return {
           features: computePoseFeatures(landmarks),
           landmarks,
-          segmentationMaskDataUrl: maskVisualization?.dataUrl ?? null,
-          segmentationMaskCoverage: maskVisualization?.coverage ?? null,
         };
       } finally {
         result.close();
@@ -1027,8 +1049,6 @@ async function extractPoseAnalysis(
     return {
       features: POSE_ZERO_FEATURES,
       landmarks: null,
-      segmentationMaskDataUrl: null,
-      segmentationMaskCoverage: null,
     };
   }
 }
