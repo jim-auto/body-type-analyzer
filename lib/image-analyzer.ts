@@ -835,27 +835,46 @@ function buildBodyMaskVisualization(
     mean([leftShoulder, rightShoulder, leftHip, rightHip].map((point) => point.visibility ?? 1)) >= 0.2;
 
   if (hasTorso) {
-    const shoulderPadding = Math.abs(rightShoulder.x - leftShoulder.x) * 0.22;
-    const hipPadding = Math.abs(rightHip.x - leftHip.x) * 0.16;
-    const topPadding = Math.max(0.02, (leftHip.y + rightHip.y - leftShoulder.y - rightShoulder.y) * 0.04);
+    // MediaPipe labels "left"/"right" anatomically (subject-relative), so on a
+    // forward-facing portrait the "left shoulder" landmark lives on the right
+    // half of the image. Resolve screen-space edges explicitly so padding goes
+    // outward from the torso, not inward.
+    const shoulderLeftX = Math.min(leftShoulder.x, rightShoulder.x);
+    const shoulderRightX = Math.max(leftShoulder.x, rightShoulder.x);
+    const hipLeftX = Math.min(leftHip.x, rightHip.x);
+    const hipRightX = Math.max(leftHip.x, rightHip.x);
+
+    const shoulderLeftY =
+      leftShoulder.x <= rightShoulder.x ? leftShoulder.y : rightShoulder.y;
+    const shoulderRightY =
+      leftShoulder.x <= rightShoulder.x ? rightShoulder.y : leftShoulder.y;
+    const hipLeftY = leftHip.x <= rightHip.x ? leftHip.y : rightHip.y;
+    const hipRightY = leftHip.x <= rightHip.x ? rightHip.y : leftHip.y;
+
+    const shoulderPadding = (shoulderRightX - shoulderLeftX) * 0.22;
+    const hipPadding = (hipRightX - hipLeftX) * 0.16;
+    const topPadding = Math.max(
+      0.02,
+      (leftHip.y + rightHip.y - leftShoulder.y - rightShoulder.y) * 0.04
+    );
 
     context.beginPath();
     context.moveTo(
-      (leftShoulder.x - shoulderPadding) * width,
-      (leftShoulder.y - topPadding) * height
+      (shoulderLeftX - shoulderPadding) * width,
+      (shoulderLeftY - topPadding) * height
     );
     context.quadraticCurveTo(
-      ((leftShoulder.x + rightShoulder.x) / 2) * width,
-      (Math.min(leftShoulder.y, rightShoulder.y) - topPadding * 2) * height,
-      (rightShoulder.x + shoulderPadding) * width,
-      (rightShoulder.y - topPadding) * height
+      ((shoulderLeftX + shoulderRightX) / 2) * width,
+      (Math.min(shoulderLeftY, shoulderRightY) - topPadding * 2) * height,
+      (shoulderRightX + shoulderPadding) * width,
+      (shoulderRightY - topPadding) * height
     );
-    context.lineTo((rightHip.x + hipPadding) * width, rightHip.y * height);
+    context.lineTo((hipRightX + hipPadding) * width, hipRightY * height);
     context.quadraticCurveTo(
-      ((leftHip.x + rightHip.x) / 2) * width,
-      (Math.max(leftHip.y, rightHip.y) + topPadding * 2) * height,
-      (leftHip.x - hipPadding) * width,
-      leftHip.y * height
+      ((hipLeftX + hipRightX) / 2) * width,
+      (Math.max(hipLeftY, hipRightY) + topPadding * 2) * height,
+      (hipLeftX - hipPadding) * width,
+      hipLeftY * height
     );
     context.closePath();
     context.fill();
