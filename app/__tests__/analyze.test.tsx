@@ -89,6 +89,17 @@ const mockFeatures: DiagnosisFeatures = {
   similarity: [0.7, 0.8, 0.9],
 };
 
+const mockVisualization = {
+  imageWidth: 800,
+  imageHeight: 1200,
+  focusBox: { left: 0.1, top: 0.05, width: 0.8, height: 0.9 },
+  cupFeatureBox: { left: 0.1, top: 0.05, width: 0.8, height: 0.4 },
+  chestBox: { left: 0.3, top: 0.24, width: 0.4, height: 0.16 },
+  chestBoxSource: "pose" as const,
+  segmentationMaskDataUrl: "data:image/png;base64,segmentation",
+  segmentationMaskCoverage: 0.42,
+};
+
 const mockMaleResult: MaleDiagnosisResult = {
   estimatedHeight: 178,
   heightDeviation: 62,
@@ -115,8 +126,6 @@ const renderPage = () => render(<AnalyzePage />);
 const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 const formatErrorBound = (value: number) =>
   Number.isInteger(value) ? `${value}` : value.toFixed(1);
-const formatCoverageText = (rate: number, maxError: number, unit: string) =>
-  `${Math.round(rate * 10)}割が±${formatErrorBound(maxError)}${unit}以内`;
 
 const flushPromises = async () => {
   await act(async () => {
@@ -148,6 +157,7 @@ const finishAnalysis = async () => {
 const mockFeatureResult: DiagnosisFeatureResult = {
   features: mockFeatures,
   isLowQuality: false,
+  visualization: mockVisualization,
 };
 
 beforeEach(() => {
@@ -359,6 +369,30 @@ describe("AnalyzePage", () => {
     expect(screen.getByText("偏差値 59")).toBeInTheDocument();
     expect(screen.getByText("偏差値 54")).toBeInTheDocument();
     expect(screen.getByText("AI信頼度")).toBeInTheDocument();
+  });
+
+  test("女性モードではカップ推定の可視化が表示される", async () => {
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    const visualizationSection = screen.getByRole("region", {
+      name: "カップ推定の可視化",
+    });
+
+    expect(visualizationSection).toBeInTheDocument();
+    expect(screen.getByAltText("カップ推定可視化の元画像")).toHaveAttribute(
+      "src",
+      "blob:preview-url"
+    );
+    expect(screen.getByAltText("人物セグメンテーション結果")).toHaveAttribute(
+      "src",
+      mockVisualization.segmentationMaskDataUrl
+    );
+    expect(screen.getByText("胸部ROI")).toBeInTheDocument();
+    expect(screen.getByText("カップ特徴量範囲")).toBeInTheDocument();
+    expect(screen.getByText("マスク面積 42%")).toBeInTheDocument();
   });
 
   test("似ている有名人が 3 件表示される", async () => {

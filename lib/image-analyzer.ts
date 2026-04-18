@@ -134,6 +134,12 @@ type FeatureRegion = keyof typeof REGION_BOUNDS;
 type FeatureMode = "gray" | "profile" | "edge" | "gray_histogram" | "edge_histogram" | "lbp" | "dct" | "hog";
 type FeatureSpec = { region: FeatureRegion; size: number; mode: FeatureMode };
 type FocusRange = { start: number; end: number };
+type RatioBox = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
 type FocusCropConfig = {
   lowQuantile: number;
   highQuantile: number;
@@ -141,6 +147,21 @@ type FocusCropConfig = {
   minHeightRatio: number;
   horizontalPaddingRatio: number;
   verticalPaddingRatio: number;
+};
+type FocusedCanvasResult = {
+  canvas: HTMLCanvasElement;
+  box: RatioBox;
+};
+type PoseLandmark = {
+  x: number;
+  y: number;
+  visibility?: number;
+};
+type PoseAnalysis = {
+  features: number[];
+  landmarks: PoseLandmark[] | null;
+  segmentationMaskDataUrl: string | null;
+  segmentationMaskCoverage: number | null;
 };
 
 export type DiagnosisImageQualityMetrics = {
@@ -152,6 +173,17 @@ export type DiagnosisImageQualityMetrics = {
   edgeMean: number;
   edgeP90: number;
   entropy: number;
+};
+
+export type DiagnosisVisualizationOverlay = {
+  imageWidth: number;
+  imageHeight: number;
+  focusBox: RatioBox;
+  cupFeatureBox: RatioBox;
+  chestBox: RatioBox;
+  chestBoxSource: "pose" | "feature-crop";
+  segmentationMaskDataUrl: string | null;
+  segmentationMaskCoverage: number | null;
 };
 
 export class DiagnosisInputQualityError extends Error {
@@ -176,6 +208,39 @@ function roundFeature(value: number): number {
 
 function roundQualityMetric(value: number): number {
   return Math.round(value * 1000000) / 1000000;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundBoxValue(value: number): number {
+  return Math.round(clamp(value, 0, 1) * 10000) / 10000;
+}
+
+function normalizeRatioBox(box: RatioBox): RatioBox {
+  const left = clamp(box.left, 0, 1);
+  const top = clamp(box.top, 0, 1);
+  const right = clamp(box.left + box.width, left, 1);
+  const bottom = clamp(box.top + box.height, top, 1);
+
+  return {
+    left: roundBoxValue(left),
+    top: roundBoxValue(top),
+    width: roundBoxValue(right - left),
+    height: roundBoxValue(bottom - top),
+  };
+}
+
+function projectRegionToSourceBox(focusBox: RatioBox, region: FeatureRegion): RatioBox {
+  const [leftRatio, topRatio, rightRatio, bottomRatio] = REGION_BOUNDS[region];
+
+  return normalizeRatioBox({
+    left: focusBox.left + focusBox.width * leftRatio,
+    top: focusBox.top + focusBox.height * topRatio,
+    width: focusBox.width * (rightRatio - leftRatio),
+    height: focusBox.height * (bottomRatio - topRatio),
+  });
 }
 
 function mean(values: number[]): number {
@@ -265,10 +330,10 @@ function expandFocusRange(
   return { start: nextStart, end: nextEnd };
 }
 
-function createFocusedCanvas(
+function createFocusedCanvasResult(
   image: HTMLImageElement,
   focusCrop: FocusCropConfig
-): HTMLCanvasElement {
+): FocusedCanvasResult {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -349,7 +414,15 @@ function createFocusedCanvas(
     sourceHeight
   );
 
-  return focusedCanvas;
+  return {
+    canvas: focusedCanvas,
+    box: normalizeRatioBox({
+      left: sourceLeft / Math.max(1, image.naturalWidth),
+      top: sourceTop / Math.max(1, image.naturalHeight),
+      width: sourceWidth / Math.max(1, image.naturalWidth),
+      height: sourceHeight / Math.max(1, image.naturalHeight),
+    }),
+  };
 }
 
 function createSourceCanvas(image: HTMLImageElement): HTMLCanvasElement {
@@ -712,6 +785,59 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
+function buildSegmentationMaskVisualization(mask: {
+  width: number;
+  height: number;
+  hasFloat32Array: () => boolean;
+  getAsFloat32Array: () => Float32Array;
+  getAsUint8Array: () => Uint8Array;
+}): { dataUrl: string; coverage: number } | null {
+  const width = mask.width;
+  const height = mask.height;
+
+  if (width <= 0 || height <= 0) {
+    return null;
+  }
+
+  const rawMask = mask.hasFloat32Array()
+    ? mask.getAsFloat32Array()
+    : mask.getAsUint8Array();
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return null;
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+
+  const imageData = context.createImageData(width, height);
+  let activePixels = 0;
+
+  for (let index = 0; index < width * height; index += 1) {
+    const rawValue = rawMask[index] ?? 0;
+    const confidence = rawMask instanceof Float32Array ? rawValue : rawValue / 255;
+    const pixelOffset = index * 4;
+
+    if (confidence > 0.08) {
+      activePixels += 1;
+    }
+
+    imageData.data[pixelOffset] = 14;
+    imageData.data[pixelOffset + 1] = 165;
+    imageData.data[pixelOffset + 2] = 233;
+    imageData.data[pixelOffset + 3] = Math.round(clamp(confidence, 0, 1) * 105);
+  }
+
+  context.putImageData(imageData, 0, 0);
+
+  return {
+    dataUrl: canvas.toDataURL("image/png"),
+    coverage: roundQualityMetric(activePixels / Math.max(1, width * height)),
+  };
+}
+
 const POSE_FEATURE_DIM = 12;
 const POSE_ZERO_FEATURES = Array.from({ length: POSE_FEATURE_DIM }, () => 0);
 
@@ -762,9 +888,77 @@ function computePoseFeatures(
   ];
 }
 
-async function extractPoseFeatures(
+function buildChestBoxFromPose(landmarks: PoseLandmark[] | null): RatioBox | null {
+  if (!landmarks) {
+    return null;
+  }
+
+  const leftShoulder = landmarks[11];
+  const rightShoulder = landmarks[12];
+  const leftHip = landmarks[23];
+  const rightHip = landmarks[24];
+
+  if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) {
+    return null;
+  }
+
+  const torsoLandmarks = [leftShoulder, rightShoulder, leftHip, rightHip];
+  const visibility = mean(
+    torsoLandmarks.map((landmark) => landmark.visibility ?? 1)
+  );
+  const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+  const hipY = (leftHip.y + rightHip.y) / 2;
+  const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+  const torsoHeight = hipY - shoulderY;
+
+  if (
+    visibility < 0.2 ||
+    shoulderWidth < 0.04 ||
+    torsoHeight < 0.08 ||
+    !Number.isFinite(shoulderWidth) ||
+    !Number.isFinite(torsoHeight)
+  ) {
+    return null;
+  }
+
+  const shoulderCenterX = (leftShoulder.x + rightShoulder.x) / 2;
+  const hipCenterX = (leftHip.x + rightHip.x) / 2;
+  const centerX = shoulderCenterX * 0.72 + hipCenterX * 0.28;
+  const width = clamp(shoulderWidth * 1.08, 0.16, 0.72);
+  const top = shoulderY + torsoHeight * 0.14;
+  const height = clamp(torsoHeight * 0.38, 0.08, 0.32);
+
+  return normalizeRatioBox({
+    left: centerX - width / 2,
+    top,
+    width,
+    height,
+  });
+}
+
+function buildDiagnosisVisualization(
+  image: HTMLImageElement,
+  focusBox: RatioBox,
+  poseAnalysis: PoseAnalysis
+): DiagnosisVisualizationOverlay {
+  const fallbackChestBox = projectRegionToSourceBox(focusBox, "topCenter");
+  const chestBox = buildChestBoxFromPose(poseAnalysis.landmarks);
+
+  return {
+    imageWidth: image.naturalWidth,
+    imageHeight: image.naturalHeight,
+    focusBox,
+    cupFeatureBox: projectRegionToSourceBox(focusBox, "top"),
+    chestBox: chestBox ?? fallbackChestBox,
+    chestBoxSource: chestBox ? "pose" : "feature-crop",
+    segmentationMaskDataUrl: poseAnalysis.segmentationMaskDataUrl,
+    segmentationMaskCoverage: poseAnalysis.segmentationMaskCoverage,
+  };
+}
+
+async function extractPoseAnalysis(
   image: HTMLImageElement
-): Promise<number[]> {
+): Promise<PoseAnalysis> {
   try {
     const { PoseLandmarker, FilesetResolver } = await import(
       "@mediapipe/tasks-vision"
@@ -779,36 +973,70 @@ async function extractPoseFeatures(
       },
       runningMode: "IMAGE",
       minPoseDetectionConfidence: 0.2,
+      outputSegmentationMasks: true,
     });
 
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
+    try {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
 
-    if (!context) {
-      return POSE_ZERO_FEATURES;
+      if (!context) {
+        return {
+          features: POSE_ZERO_FEATURES,
+          landmarks: null,
+          segmentationMaskDataUrl: null,
+          segmentationMaskCoverage: null,
+        };
+      }
+
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      context.drawImage(image, 0, 0);
+
+      const result = landmarker.detect(canvas);
+
+      try {
+        const landmarks = result.landmarks?.[0] ?? null;
+        const mask = result.segmentationMasks?.[0];
+        const maskVisualization = mask
+          ? buildSegmentationMaskVisualization(mask)
+          : null;
+
+        if (!landmarks) {
+          return {
+            features: POSE_ZERO_FEATURES,
+            landmarks: null,
+            segmentationMaskDataUrl: maskVisualization?.dataUrl ?? null,
+            segmentationMaskCoverage: maskVisualization?.coverage ?? null,
+          };
+        }
+
+        return {
+          features: computePoseFeatures(landmarks),
+          landmarks,
+          segmentationMaskDataUrl: maskVisualization?.dataUrl ?? null,
+          segmentationMaskCoverage: maskVisualization?.coverage ?? null,
+        };
+      } finally {
+        result.close();
+      }
+    } finally {
+      landmarker.close();
     }
-
-    canvas.width = image.naturalWidth;
-    canvas.height = image.naturalHeight;
-    context.drawImage(image, 0, 0);
-
-    const result = landmarker.detect(canvas);
-
-    landmarker.close();
-
-    if (!result.landmarks || result.landmarks.length === 0) {
-      return POSE_ZERO_FEATURES;
-    }
-
-    return computePoseFeatures(result.landmarks[0]);
   } catch {
-    return POSE_ZERO_FEATURES;
+    return {
+      features: POSE_ZERO_FEATURES,
+      landmarks: null,
+      segmentationMaskDataUrl: null,
+      segmentationMaskCoverage: null,
+    };
   }
 }
 
 export type DiagnosisFeatureResult = {
   features: DiagnosisFeatures;
   isLowQuality: boolean;
+  visualization?: DiagnosisVisualizationOverlay;
 };
 
 export async function extractDiagnosisFeatures(
@@ -816,12 +1044,14 @@ export async function extractDiagnosisFeatures(
 ): Promise<DiagnosisFeatureResult> {
   const image = await loadImage(file);
   const sourceImage = createSourceCanvas(image);
-  const focusedImage = createFocusedCanvas(image, DEFAULT_FOCUS_CROP);
+  const focusedImageResult = createFocusedCanvasResult(image, DEFAULT_FOCUS_CROP);
+  const focusedImage = focusedImageResult.canvas;
   const focusedQualityMetrics = buildDiagnosisImageQualityMetrics(focusedImage);
 
   const isLowQuality = isLowInformationDiagnosisImageQuality(focusedQualityMetrics);
 
-  const poseFeatures = await extractPoseFeatures(image);
+  const poseAnalysis = await extractPoseAnalysis(image);
+  const poseFeatures = poseAnalysis.features;
 
   const rawFeatures: DiagnosisFeatures = {
     heightPrimary: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[0]),
@@ -852,15 +1082,25 @@ export async function extractDiagnosisFeatures(
   return {
     features: normalizeFeatures(rawFeatures),
     isLowQuality,
+    visualization: buildDiagnosisVisualization(
+      image,
+      focusedImageResult.box,
+      poseAnalysis
+    ),
   };
 }
 
 export async function extractMaleDiagnosisFeatures(
   file: File
-): Promise<{ features: Record<string, number[]>; isLowQuality: boolean }> {
+): Promise<{
+  features: Record<string, number[]>;
+  isLowQuality: boolean;
+  visualization?: DiagnosisVisualizationOverlay;
+}> {
   const image = await loadImage(file);
   const sourceImage = createSourceCanvas(image);
-  const focusedImage = createFocusedCanvas(image, DEFAULT_FOCUS_CROP);
+  const focusedImageResult = createFocusedCanvasResult(image, DEFAULT_FOCUS_CROP);
+  const focusedImage = focusedImageResult.canvas;
   const focusedQualityMetrics = buildDiagnosisImageQualityMetrics(focusedImage);
   const isLowQuality = isLowInformationDiagnosisImageQuality(focusedQualityMetrics);
 
@@ -890,4 +1130,4 @@ export function diagnose(features: DiagnosisFeatures): DiagnosisResult {
   return diagnoseFromFeatures(features);
 }
 
-export type { DiagnosisFeatures, DiagnosisResult, SilhouetteType };
+export type { DiagnosisFeatures, DiagnosisResult, MaleDiagnosisResult, SilhouetteType };

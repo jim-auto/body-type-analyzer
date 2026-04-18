@@ -11,7 +11,7 @@ import {
   DIAGNOSIS_VALIDATION_LABEL,
   MALE_DIAGNOSIS_MODEL_SUMMARY,
   type DiagnosisResult,
-  type MaleDiagnosisResult,
+  type DiagnosisVisualizationOverlay,
   type SilhouetteType,
   diagnose,
   diagnoseMale,
@@ -50,12 +50,21 @@ function formatErrorBound(value: number): string {
   return Number.isInteger(value) ? `${value}` : value.toFixed(1);
 }
 
-function formatCoverageText(
-  rate: number,
-  maxError: number,
-  unit: string
-): string {
-  return `${Math.round(rate * 10)}割が±${formatErrorBound(maxError)}${unit}以内`;
+function getOverlayBoxStyle(box: DiagnosisVisualizationOverlay["focusBox"]) {
+  return {
+    left: `${box.left * 100}%`,
+    top: `${box.top * 100}%`,
+    width: `${box.width * 100}%`,
+    height: `${box.height * 100}%`,
+  };
+}
+
+function formatMaskCoverage(coverage: number | null): string {
+  if (coverage === null) {
+    return "未取得";
+  }
+
+  return `${Math.round(coverage * 100)}%`;
 }
 
 const PERFORMANCE_SUMMARIES = [
@@ -98,7 +107,8 @@ export default function AnalyzePage() {
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
-  const [maleResult, setMaleResult] = useState<MaleDiagnosisResult | null>(null);
+  const [visualization, setVisualization] =
+    useState<DiagnosisVisualizationOverlay | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLowQuality, setIsLowQuality] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
@@ -167,7 +177,7 @@ export default function AnalyzePage() {
     setSelectedFileName(file.name);
     setErrorMessage(null);
     setResult(null);
-    setMaleResult(null);
+    setVisualization(null);
     setIsLowQuality(false);
     setIsAnalyzing(true);
     setLoadingMessageIndex(0);
@@ -175,15 +185,19 @@ export default function AnalyzePage() {
 
     try {
       if (gender === "male") {
-        const { features, isLowQuality: lowQuality } = await extractMaleDiagnosisFeatures(file);
+        const {
+          features,
+          isLowQuality: lowQuality,
+          visualization: nextVisualization,
+        } = await extractMaleDiagnosisFeatures(file);
 
         if (runId !== analysisRunRef.current) {
           return;
         }
 
         setIsLowQuality(lowQuality);
+        setVisualization(nextVisualization ?? null);
         const maleRes = diagnoseMale(features);
-        setMaleResult(maleRes);
         runLoadingSequence(
           {
             estimatedHeight: maleRes.estimatedHeight,
@@ -198,13 +212,18 @@ export default function AnalyzePage() {
           runId
         );
       } else {
-        const { features, isLowQuality: lowQuality } = await extractDiagnosisFeatures(file);
+        const {
+          features,
+          isLowQuality: lowQuality,
+          visualization: nextVisualization,
+        } = await extractDiagnosisFeatures(file);
 
         if (runId !== analysisRunRef.current) {
           return;
         }
 
         setIsLowQuality(lowQuality);
+        setVisualization(nextVisualization ?? null);
         runLoadingSequence(diagnose(features), runId);
       }
     } catch {
@@ -617,6 +636,115 @@ export default function AnalyzePage() {
             )}
           </div>
         </section>
+
+        {result && previewUrl && visualization && gender === "female" ? (
+          <section
+            aria-label="カップ推定の可視化"
+            className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8"
+          >
+            <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-slate-900">
+                  カップ推定の可視化
+                </h2>
+                <p className="max-w-2xl text-sm leading-6 text-slate-500">
+                  人物セグメンテーション、胸部ROI、実際にカップ特徴量を取る上半身範囲を重ねています。
+                  枠やマスクが大きくずれる画像では推定を参考程度に見てください。
+                </p>
+              </div>
+              <span className="inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                {visualization.chestBoxSource === "pose"
+                  ? "Pose ROI"
+                  : "Crop fallback"}
+              </span>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.38fr)]">
+              <div
+                className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-[1.5rem] bg-slate-100 ring-1 ring-slate-200"
+                style={{
+                  aspectRatio: `${Math.max(1, visualization.imageWidth)} / ${Math.max(
+                    1,
+                    visualization.imageHeight
+                  )}`,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- blob URLs cannot be optimized by next/image */}
+                <img
+                  src={previewUrl}
+                  alt="カップ推定可視化の元画像"
+                  className="absolute inset-0 h-full w-full object-fill"
+                />
+                {visualization.segmentationMaskDataUrl ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- generated data URLs cannot be optimized by next/image */}
+                    <img
+                      src={visualization.segmentationMaskDataUrl}
+                      alt="人物セグメンテーション結果"
+                      className="absolute inset-0 h-full w-full object-fill"
+                    />
+                  </>
+                ) : null}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute border-2 border-dashed border-slate-100/90 shadow-[0_0_0_1px_rgba(15,23,42,0.65)]"
+                  style={getOverlayBoxStyle(visualization.focusBox)}
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute border-2 border-dashed border-rose-400 bg-rose-500/10 shadow-[0_0_0_1px_rgba(255,255,255,0.8)]"
+                  style={getOverlayBoxStyle(visualization.cupFeatureBox)}
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute border-[3px] border-amber-300 bg-amber-300/10 shadow-[0_0_0_1px_rgba(120,53,15,0.75),0_0_24px_rgba(251,191,36,0.5)]"
+                  style={getOverlayBoxStyle(visualization.chestBox)}
+                />
+              </div>
+
+              <div className="grid content-start gap-3 text-sm text-slate-600">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <div className="flex items-center gap-2 font-bold text-amber-900">
+                    <span className="h-3 w-3 rounded-sm border-2 border-amber-300 bg-amber-300/30" />
+                    胸部ROI
+                  </div>
+                  <p className="mt-2 leading-6">
+                    {visualization.chestBoxSource === "pose"
+                      ? "肩と腰のランドマークから胸まわりを推定した枠です。"
+                      : "Poseが安定しないため、上半身クロップから代替表示しています。"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+                  <div className="flex items-center gap-2 font-bold text-rose-900">
+                    <span className="h-3 w-3 rounded-sm border-2 border-dashed border-rose-400 bg-rose-400/20" />
+                    カップ特徴量範囲
+                  </div>
+                  <p className="mt-2 leading-6">
+                    推定モデルがカップ用に参照する、フォーカスクロップ上部の範囲です。
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+                  <div className="flex items-center gap-2 font-bold text-sky-900">
+                    <span className="h-3 w-3 rounded-sm bg-sky-400/70" />
+                    人物セグメンテーション
+                  </div>
+                  <p className="mt-2 leading-6">
+                    マスク面積 {formatMaskCoverage(visualization.segmentationMaskCoverage)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex items-center gap-2 font-bold text-slate-800">
+                    <span className="h-3 w-3 rounded-sm border-2 border-dashed border-slate-400" />
+                    フォーカスクロップ
+                  </div>
+                  <p className="mt-2 leading-6">
+                    輪郭のエッジ量から人物が入りやすい範囲に寄せた前処理です。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {result ? (
           <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
