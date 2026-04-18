@@ -830,6 +830,7 @@ function buildBodyMaskVisualization(
     rightShoulder &&
     leftHip &&
     rightHip &&
+    areTorsoLandmarksInFrame(leftShoulder, rightShoulder, leftHip, rightHip) &&
     mean([leftShoulder, rightShoulder, leftHip, rightHip].map((point) => point.visibility ?? 1)) >= 0.2;
 
   if (hasTorso) {
@@ -931,7 +932,34 @@ function computePoseFeatures(
   ];
 }
 
-function buildChestBoxFromPose(landmarks: PoseLandmark[] | null): RatioBox | null {
+const LANDMARK_FRAME_MIN = 0;
+const LANDMARK_FRAME_MAX = 1;
+
+function isLandmarkInFrame(landmark: PoseLandmark | undefined): boolean {
+  if (!landmark) return false;
+  return (
+    landmark.x >= LANDMARK_FRAME_MIN &&
+    landmark.x <= LANDMARK_FRAME_MAX &&
+    landmark.y >= LANDMARK_FRAME_MIN &&
+    landmark.y <= LANDMARK_FRAME_MAX
+  );
+}
+
+function areTorsoLandmarksInFrame(
+  leftShoulder: PoseLandmark | undefined,
+  rightShoulder: PoseLandmark | undefined,
+  leftHip: PoseLandmark | undefined,
+  rightHip: PoseLandmark | undefined
+): boolean {
+  return (
+    isLandmarkInFrame(leftShoulder) &&
+    isLandmarkInFrame(rightShoulder) &&
+    isLandmarkInFrame(leftHip) &&
+    isLandmarkInFrame(rightHip)
+  );
+}
+
+export function buildChestBoxFromPose(landmarks: PoseLandmark[] | null): RatioBox | null {
   if (!landmarks) {
     return null;
   }
@@ -942,6 +970,10 @@ function buildChestBoxFromPose(landmarks: PoseLandmark[] | null): RatioBox | nul
   const rightHip = landmarks[24];
 
   if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) {
+    return null;
+  }
+
+  if (!areTorsoLandmarksInFrame(leftShoulder, rightShoulder, leftHip, rightHip)) {
     return null;
   }
 

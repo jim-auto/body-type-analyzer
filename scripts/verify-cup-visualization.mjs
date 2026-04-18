@@ -181,6 +181,83 @@ const NOISY_CONSOLE_PATTERNS = [
   /Failed to load resource: the server responded with a status of 404/,
 ];
 
+function isInBounds(value) {
+  return typeof value === "number" && value >= 0 && value <= 100;
+}
+
+function computePoseStats(keypoints) {
+  const flags = [];
+  let inBoundsCount = 0;
+  let totalKeypoints = 0;
+  let lowVisibilityCount = 0;
+  const visibilities = [];
+
+  for (const name of [
+    "nose",
+    "leftShoulder",
+    "rightShoulder",
+    "leftHip",
+    "rightHip",
+  ]) {
+    const point = keypoints?.[name];
+    if (!point) continue;
+    totalKeypoints += 1;
+    const inBounds =
+      isInBounds(point.xPercent) && isInBounds(point.yPercent);
+    if (inBounds) inBoundsCount += 1;
+    if (typeof point.opacity === "number") {
+      visibilities.push(point.opacity);
+      if (point.opacity < 0.5) lowVisibilityCount += 1;
+    }
+    if (!inBounds) flags.push(`${name}-out-of-bounds`);
+  }
+
+  const noseY = keypoints?.nose?.yPercent;
+  const lShoulderY = keypoints?.leftShoulder?.yPercent;
+  const rShoulderY = keypoints?.rightShoulder?.yPercent;
+  const lHipY = keypoints?.leftHip?.yPercent;
+  const rHipY = keypoints?.rightHip?.yPercent;
+
+  const shoulderY =
+    typeof lShoulderY === "number" && typeof rShoulderY === "number"
+      ? (lShoulderY + rShoulderY) / 2
+      : typeof lShoulderY === "number"
+        ? lShoulderY
+        : rShoulderY;
+  const hipY =
+    typeof lHipY === "number" && typeof rHipY === "number"
+      ? (lHipY + rHipY) / 2
+      : typeof lHipY === "number"
+        ? lHipY
+        : rHipY;
+
+  if (typeof noseY === "number" && typeof shoulderY === "number" && noseY > shoulderY) {
+    flags.push("nose-below-shoulder");
+  }
+  if (typeof shoulderY === "number" && typeof hipY === "number" && shoulderY > hipY) {
+    flags.push("shoulder-below-hip");
+  }
+
+  return {
+    totalKeypoints,
+    inBoundsCount,
+    lowVisibilityCount,
+    avgVisibility:
+      visibilities.length > 0
+        ? Number(
+            (
+              visibilities.reduce((sum, value) => sum + value, 0) /
+              visibilities.length
+            ).toFixed(2)
+          )
+        : null,
+    noseYPercent: noseY ?? null,
+    shoulderYPercent: shoulderY ?? null,
+    hipYPercent: hipY ?? null,
+    flags,
+  };
+}
+
 function filterInterestingConsole(messages) {
   return messages.filter((message) => {
     return !NOISY_CONSOLE_PATTERNS.some((pattern) => pattern.test(message));
@@ -280,6 +357,35 @@ async function diagnoseOneImage({ page, sample, sampleIndex, args, imagePath }) 
       .isVisible()
       .catch(() => false);
 
+    const poseKeypoints = await page.evaluate(() => {
+      const names = [
+        "nose",
+        "leftShoulder",
+        "rightShoulder",
+        "leftHip",
+        "rightHip",
+      ];
+      const result = {};
+      for (const name of names) {
+        const element = document.querySelector(`[data-testid='pose-keypoint-${name}']`);
+        if (!(element instanceof HTMLElement)) {
+          result[name] = null;
+          continue;
+        }
+        const left = parseFloat(element.style.left);
+        const top = parseFloat(element.style.top);
+        const opacity = parseFloat(element.style.opacity || "1");
+        result[name] = {
+          xPercent: Number.isFinite(left) ? left : null,
+          yPercent: Number.isFinite(top) ? top : null,
+          opacity: Number.isFinite(opacity) ? opacity : null,
+        };
+      }
+      return result;
+    });
+
+    const poseStats = computePoseStats(poseKeypoints);
+
     const screenshotName = `${pad(sampleIndex + 1, 3)}_${sample.name}.png`;
     const screenshotPath = path.join(args.outDir, "screenshots", screenshotName);
     await page.screenshot({ path: screenshotPath, fullPage: true });
@@ -299,6 +405,8 @@ async function diagnoseOneImage({ page, sample, sampleIndex, args, imagePath }) 
       neighborCupDistribution: summarizeNeighborCupDistribution(similarCelebrities),
       similarCelebrities,
       qualityWarning: qualityWarningVisible,
+      poseKeypoints,
+      poseStats,
       screenshot: path
         .relative(REPO_ROOT, screenshotPath)
         .replace(/\\/g, "/"),
@@ -345,9 +453,16 @@ function summarizeManifest(manifest) {
     confidenceMin: null,
     confidenceMax: null,
     confidenceAvg: null,
+    poseFiveKeypoints: 0,
+    poseAllInBounds: 0,
+    poseHipOutOfBounds: 0,
+    poseNoseBelowShoulder: 0,
+    poseShoulderBelowHip: 0,
+    poseAvgVisibility: null,
   };
   const maskValues = [];
   const confidenceValues = [];
+  const visibilityValues = [];
 
   for (const entry of manifest) {
     if (entry.status === "passed") summary.passed += 1;
@@ -369,6 +484,23 @@ function summarizeManifest(manifest) {
     if (typeof entry.confidencePercent === "number") {
       confidenceValues.push(entry.confidencePercent);
     }
+
+    const stats = entry.poseStats;
+    if (stats) {
+      if (stats.totalKeypoints === 5) summary.poseFiveKeypoints += 1;
+      if (stats.totalKeypoints === stats.inBoundsCount && stats.totalKeypoints > 0) {
+        summary.poseAllInBounds += 1;
+      }
+      if (
+        stats.flags?.includes("leftHip-out-of-bounds") ||
+        stats.flags?.includes("rightHip-out-of-bounds")
+      ) {
+        summary.poseHipOutOfBounds += 1;
+      }
+      if (stats.flags?.includes("nose-below-shoulder")) summary.poseNoseBelowShoulder += 1;
+      if (stats.flags?.includes("shoulder-below-hip")) summary.poseShoulderBelowHip += 1;
+      if (typeof stats.avgVisibility === "number") visibilityValues.push(stats.avgVisibility);
+    }
   }
 
   if (maskValues.length > 0) {
@@ -383,6 +515,13 @@ function summarizeManifest(manifest) {
     summary.confidenceMax = Math.max(...confidenceValues);
     summary.confidenceAvg = Number(
       (confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length).toFixed(1)
+    );
+  }
+  if (visibilityValues.length > 0) {
+    summary.poseAvgVisibility = Number(
+      (
+        visibilityValues.reduce((a, b) => a + b, 0) / visibilityValues.length
+      ).toFixed(2)
     );
   }
 
@@ -426,6 +565,17 @@ function buildReportMarkdown({ args, samples, manifest, summary }) {
         .map(([cup, count]) => `${cup}=${count}`)
         .join(" ")}`
     );
+  }
+  lines.push("");
+  lines.push("### Pose stats");
+  lines.push("");
+  lines.push(`- Images with all 5 keypoints exported: ${summary.poseFiveKeypoints}`);
+  lines.push(`- Images with all keypoints inside frame: ${summary.poseAllInBounds}`);
+  lines.push(`- Images with at least one hip out of bounds: ${summary.poseHipOutOfBounds}`);
+  lines.push(`- Images with nose-below-shoulder anomaly: ${summary.poseNoseBelowShoulder}`);
+  lines.push(`- Images with shoulder-below-hip anomaly: ${summary.poseShoulderBelowHip}`);
+  if (summary.poseAvgVisibility !== null) {
+    lines.push(`- Avg keypoint visibility (opacity proxy): ${summary.poseAvgVisibility}`);
   }
   lines.push("");
   lines.push("## Manual review buckets");

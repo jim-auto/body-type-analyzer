@@ -3,6 +3,7 @@ import {
   DIAGNOSIS_DISCLAIMERS,
   DIAGNOSIS_MODEL_SUMMARY,
   DIAGNOSIS_VALIDATION_LABEL,
+  buildChestBoxFromPose,
   diagnose,
   isLowInformationDiagnosisImageQuality,
 } from "@/lib/image-analyzer";
@@ -64,5 +65,82 @@ describe("image-analyzer", () => {
       })
     ).toBe(false);
     expect(DIAGNOSIS_INPUT_QUALITY_ERROR_MESSAGE).toContain("stable estimate");
+  });
+
+  describe("buildChestBoxFromPose", () => {
+    const makeLandmarks = (overrides: Array<{ index: number; y: number; x?: number }> = []) => {
+      const landmarks = Array.from({ length: 33 }, () => ({
+        x: 0.5,
+        y: 0.5,
+        visibility: 0.9,
+      }));
+      // Default torso shape inside the frame
+      landmarks[11] = { x: 0.4, y: 0.3, visibility: 0.9 }; // left shoulder
+      landmarks[12] = { x: 0.6, y: 0.3, visibility: 0.9 }; // right shoulder
+      landmarks[23] = { x: 0.42, y: 0.7, visibility: 0.9 }; // left hip
+      landmarks[24] = { x: 0.58, y: 0.7, visibility: 0.9 }; // right hip
+      for (const override of overrides) {
+        landmarks[override.index] = {
+          x: override.x ?? landmarks[override.index].x,
+          y: override.y,
+          visibility: landmarks[override.index].visibility,
+        };
+      }
+      return landmarks;
+    };
+
+    test("全torsoランドマークが画像内にあるときは胸枠を返す", () => {
+      const box = buildChestBoxFromPose(makeLandmarks());
+      expect(box).not.toBeNull();
+      expect(box!.left).toBeGreaterThanOrEqual(0);
+      expect(box!.top).toBeGreaterThanOrEqual(0);
+    });
+
+    test("腰が画像外 (y > 1) のときは null を返して fallback を誘発する", () => {
+      const box = buildChestBoxFromPose(
+        makeLandmarks([
+          { index: 23, y: 1.35 },
+          { index: 24, y: 1.35 },
+        ])
+      );
+      expect(box).toBeNull();
+    });
+
+    test("片方の腰だけ画像外でも null を返す", () => {
+      const box = buildChestBoxFromPose(
+        makeLandmarks([{ index: 24, y: 1.5 }])
+      );
+      expect(box).toBeNull();
+    });
+
+    test("肩が画像外のときも null を返す", () => {
+      const box = buildChestBoxFromPose(
+        makeLandmarks([
+          { index: 11, y: 1.1 },
+          { index: 12, y: 1.1 },
+        ])
+      );
+      expect(box).toBeNull();
+    });
+
+    test("腰が画像上端より上 (y < 0) でも null", () => {
+      const box = buildChestBoxFromPose(
+        makeLandmarks([
+          { index: 23, y: -0.2 },
+          { index: 24, y: -0.2 },
+        ])
+      );
+      expect(box).toBeNull();
+    });
+
+    test("landmark が null/欠落なら null", () => {
+      expect(buildChestBoxFromPose(null)).toBeNull();
+      const incomplete = Array.from({ length: 10 }, () => ({
+        x: 0.5,
+        y: 0.5,
+        visibility: 0.9,
+      }));
+      expect(buildChestBoxFromPose(incomplete)).toBeNull();
+    });
   });
 });
