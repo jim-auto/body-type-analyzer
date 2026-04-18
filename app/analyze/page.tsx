@@ -12,6 +12,7 @@ import {
   MALE_DIAGNOSIS_MODEL_SUMMARY,
   type DiagnosisResult,
   type DiagnosisVisualizationOverlay,
+  type PoseKeypointName,
   type SilhouetteType,
   diagnose,
   diagnoseMale,
@@ -71,6 +72,30 @@ const LOW_MASK_THRESHOLD = 0.05;
 
 function isLowBodyMaskCoverage(coverage: number | null): boolean {
   return coverage !== null && coverage <= LOW_MASK_THRESHOLD;
+}
+
+const POSE_KEYPOINT_CLASS: Record<PoseKeypointName, string> = {
+  nose: "bg-emerald-400",
+  leftShoulder: "bg-cyan-400",
+  rightShoulder: "bg-cyan-400",
+  leftHip: "bg-fuchsia-400",
+  rightHip: "bg-fuchsia-400",
+};
+
+const POSE_KEYPOINT_LABEL: Record<PoseKeypointName, string> = {
+  nose: "鼻",
+  leftShoulder: "左肩",
+  rightShoulder: "右肩",
+  leftHip: "左腰",
+  rightHip: "右腰",
+};
+
+function getPoseKeypointClass(name: PoseKeypointName): string {
+  return POSE_KEYPOINT_CLASS[name];
+}
+
+function getPoseKeypointLabel(name: PoseKeypointName): string {
+  return POSE_KEYPOINT_LABEL[name];
 }
 
 function summarizeNeighborCupDistribution(
@@ -748,6 +773,22 @@ export default function AnalyzePage() {
                   className="pointer-events-none absolute border-[3px] border-amber-300 bg-amber-300/10 shadow-[0_0_0_1px_rgba(120,53,15,0.75),0_0_24px_rgba(251,191,36,0.5)]"
                   style={getOverlayBoxStyle(visualization.chestBox)}
                 />
+                {visualization.poseKeypoints?.map((keypoint) => (
+                  <span
+                    key={keypoint.name}
+                    aria-hidden="true"
+                    data-testid={`pose-keypoint-${keypoint.name}`}
+                    className={`pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white/90 shadow-[0_0_0_1px_rgba(15,23,42,0.65)] ${getPoseKeypointClass(
+                      keypoint.name
+                    )}`}
+                    style={{
+                      left: `${keypoint.x * 100}%`,
+                      top: `${keypoint.y * 100}%`,
+                      opacity: Math.max(0.35, Math.min(1, keypoint.visibility ?? 1)),
+                    }}
+                    title={getPoseKeypointLabel(keypoint.name)}
+                  />
+                ))}
               </div>
 
               <div className="grid content-start gap-3 text-sm text-slate-600">
@@ -789,6 +830,31 @@ export default function AnalyzePage() {
                     輪郭のエッジ量から人物が入りやすい範囲に寄せた前処理です。
                   </p>
                 </div>
+                {visualization.poseKeypoints &&
+                visualization.poseKeypoints.length > 0 ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <div className="flex items-center gap-2 font-bold text-emerald-900">
+                      Poseランドマーク
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 ring-1 ring-white" />
+                        鼻
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 ring-1 ring-white" />
+                        肩
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="h-2.5 w-2.5 rounded-full bg-fuchsia-400 ring-1 ring-white" />
+                        腰
+                      </span>
+                    </div>
+                    <p className="mt-2 leading-6">
+                      MediaPipeが検出した骨格点です。腰のドットが画像外や変な位置にあると、胸部ROIもズレます。
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>

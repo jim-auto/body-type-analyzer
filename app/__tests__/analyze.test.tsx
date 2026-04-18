@@ -98,6 +98,13 @@ const mockVisualization = {
   chestBoxSource: "pose" as const,
   bodyMaskDataUrl: "data:image/png;base64,body-mask",
   bodyMaskCoverage: 0.42,
+  poseKeypoints: [
+    { name: "nose" as const, x: 0.5, y: 0.12, visibility: 0.95 },
+    { name: "leftShoulder" as const, x: 0.4, y: 0.22, visibility: 0.9 },
+    { name: "rightShoulder" as const, x: 0.6, y: 0.22, visibility: 0.9 },
+    { name: "leftHip" as const, x: 0.42, y: 0.55, visibility: 0.85 },
+    { name: "rightHip" as const, x: 0.58, y: 0.55, visibility: 0.85 },
+  ],
 };
 
 const mockMaleResult: MaleDiagnosisResult = {
@@ -499,6 +506,50 @@ describe("AnalyzePage", () => {
     await finishAnalysis();
 
     expect(screen.getByText("近傍カップ G:2 / H:1")).toBeInTheDocument();
+  });
+
+  test("Poseランドマークドットが画像に重ねて表示される", async () => {
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(screen.getByTestId("pose-keypoint-nose")).toBeInTheDocument();
+    expect(screen.getByTestId("pose-keypoint-leftShoulder")).toBeInTheDocument();
+    expect(screen.getByTestId("pose-keypoint-rightShoulder")).toBeInTheDocument();
+    expect(screen.getByTestId("pose-keypoint-leftHip")).toBeInTheDocument();
+    expect(screen.getByTestId("pose-keypoint-rightHip")).toBeInTheDocument();
+
+    expect(screen.getByText("Poseランドマーク")).toBeInTheDocument();
+  });
+
+  test("Poseランドマークが取れていないときはドットも凡例も出ない", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: false,
+      visualization: { ...mockVisualization, poseKeypoints: null },
+    });
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(screen.queryByTestId("pose-keypoint-nose")).not.toBeInTheDocument();
+    expect(screen.queryByText("Poseランドマーク")).not.toBeInTheDocument();
+  });
+
+  test("男性モードではPoseランドマークドットは表示されない", async () => {
+    renderPage();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("男性"));
+    });
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(screen.queryByTestId("pose-keypoint-nose")).not.toBeInTheDocument();
+    expect(screen.queryByText("Poseランドマーク")).not.toBeInTheDocument();
   });
 
   test("男性モードでは近傍カップ分布チップは表示されない", async () => {

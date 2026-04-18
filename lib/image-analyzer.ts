@@ -173,6 +173,20 @@ export type DiagnosisImageQualityMetrics = {
   entropy: number;
 };
 
+export type PoseKeypointName =
+  | "nose"
+  | "leftShoulder"
+  | "rightShoulder"
+  | "leftHip"
+  | "rightHip";
+
+export type PoseKeypoint = {
+  name: PoseKeypointName;
+  x: number;
+  y: number;
+  visibility: number;
+};
+
 export type DiagnosisVisualizationOverlay = {
   imageWidth: number;
   imageHeight: number;
@@ -182,6 +196,7 @@ export type DiagnosisVisualizationOverlay = {
   chestBoxSource: "pose" | "feature-crop";
   bodyMaskDataUrl: string | null;
   bodyMaskCoverage: number | null;
+  poseKeypoints: PoseKeypoint[] | null;
 };
 
 export class DiagnosisInputQualityError extends Error {
@@ -964,6 +979,36 @@ function buildChestBoxFromPose(landmarks: PoseLandmark[] | null): RatioBox | nul
   });
 }
 
+const POSE_KEYPOINT_MAP: ReadonlyArray<{ name: PoseKeypointName; index: number }> = [
+  { name: "nose", index: 0 },
+  { name: "leftShoulder", index: 11 },
+  { name: "rightShoulder", index: 12 },
+  { name: "leftHip", index: 23 },
+  { name: "rightHip", index: 24 },
+];
+
+function buildPoseKeypoints(
+  landmarks: PoseLandmark[] | null
+): PoseKeypoint[] | null {
+  if (!landmarks || landmarks.length === 0) {
+    return null;
+  }
+
+  const keypoints: PoseKeypoint[] = [];
+  for (const { name, index } of POSE_KEYPOINT_MAP) {
+    const landmark = landmarks[index];
+    if (!landmark) continue;
+    keypoints.push({
+      name,
+      x: landmark.x,
+      y: landmark.y,
+      visibility: landmark.visibility ?? 1,
+    });
+  }
+
+  return keypoints.length > 0 ? keypoints : null;
+}
+
 function buildDiagnosisVisualization(
   image: HTMLImageElement,
   focusBox: RatioBox,
@@ -986,6 +1031,7 @@ function buildDiagnosisVisualization(
     chestBoxSource: chestBox ? "pose" : "feature-crop",
     bodyMaskDataUrl: bodyMask?.dataUrl ?? null,
     bodyMaskCoverage: bodyMask?.coverage ?? null,
+    poseKeypoints: buildPoseKeypoints(poseAnalysis.landmarks),
   };
 }
 
