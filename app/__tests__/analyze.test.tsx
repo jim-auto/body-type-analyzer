@@ -399,7 +399,9 @@ describe("AnalyzePage", () => {
       mockVisualization.bodyMaskDataUrl
     );
     expect(screen.getByText("胸部ROI")).toBeInTheDocument();
-    expect(screen.getByText("カップ特徴量範囲")).toBeInTheDocument();
+    expect(
+      screen.getByText("カップ特徴量範囲（主領域）")
+    ).toBeInTheDocument();
     expect(screen.getByText("マスク面積 42%")).toBeInTheDocument();
   });
 

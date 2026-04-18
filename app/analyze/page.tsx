@@ -842,10 +842,10 @@ export default function AnalyzePage() {
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
                   <div className="flex items-center gap-2 font-bold text-rose-900">
                     <span className="h-3 w-3 rounded-sm border-2 border-dashed border-rose-400 bg-rose-400/20" />
-                    カップ特徴量範囲
+                    カップ特徴量範囲（主領域）
                   </div>
                   <p className="mt-2 leading-6">
-                    推定モデルがカップ用に参照する、フォーカスクロップ上部の範囲です。
+                    枠はフォーカスクロップ上部 (top) を示します。実際にはここに加えて、中央寄り (topCenter / torsoCenter) と中段 (mid) からも特徴量を抽出して投票しています。
                   </p>
                 </div>
                 <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
