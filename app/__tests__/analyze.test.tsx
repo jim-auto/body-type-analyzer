@@ -395,6 +395,125 @@ describe("AnalyzePage", () => {
     expect(screen.getByText("マスク面積 42%")).toBeInTheDocument();
   });
 
+  test("マスク被覆が通常域なら上半身警告は表示されない", async () => {
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.queryByText("上半身が十分に写っていません")
+    ).not.toBeInTheDocument();
+  });
+
+  test("マスク被覆が5%以下のときは上半身警告を表示する", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: false,
+      visualization: { ...mockVisualization, bodyMaskCoverage: 0.04 },
+    });
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.getByText("上半身が十分に写っていません")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "検出できた人物領域がとても小さいため、カップ推定は参考値です。胸まで写った別の画像でお試しください。"
+      )
+    ).toBeInTheDocument();
+  });
+
+  test("マスク被覆がちょうど5%でも上半身警告を表示する", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: false,
+      visualization: { ...mockVisualization, bodyMaskCoverage: 0.05 },
+    });
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.getByText("上半身が十分に写っていません")
+    ).toBeInTheDocument();
+  });
+
+  test("マスク被覆が未取得 (null) のときは上半身警告を表示しない", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: false,
+      visualization: { ...mockVisualization, bodyMaskCoverage: null },
+    });
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.queryByText("上半身が十分に写っていません")
+    ).not.toBeInTheDocument();
+  });
+
+  test("男性モードではマスクが小さくても上半身警告を表示しない", async () => {
+    renderPage();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("男性"));
+    });
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.queryByText("上半身が十分に写っていません")
+    ).not.toBeInTheDocument();
+  });
+
+  test("カップカードに近傍カップ分布チップが表示される", async () => {
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    // mockResult.similarCelebrities = [D, E, F]
+    expect(screen.getByText("近傍カップ D:1 / E:1 / F:1")).toBeInTheDocument();
+  });
+
+  test("近傍カップが偏っていれば集計後の件数で表示される", async () => {
+    mockedDiagnose.mockReturnValueOnce({
+      ...mockResult,
+      similarCelebrities: [
+        { ...mockResult.similarCelebrities[0], cup: "G" },
+        { ...mockResult.similarCelebrities[1], cup: "G" },
+        { ...mockResult.similarCelebrities[2], cup: "H" },
+      ],
+    });
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(screen.getByText("近傍カップ G:2 / H:1")).toBeInTheDocument();
+  });
+
+  test("男性モードでは近傍カップ分布チップは表示されない", async () => {
+    renderPage();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("男性"));
+    });
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(screen.queryByText(/近傍カップ/)).not.toBeInTheDocument();
+  });
+
   test("似ている有名人が 3 件表示される", async () => {
     renderPage();
 

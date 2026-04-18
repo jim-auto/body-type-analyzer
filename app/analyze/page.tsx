@@ -67,6 +67,30 @@ function formatMaskCoverage(coverage: number | null): string {
   return `${Math.round(coverage * 100)}%`;
 }
 
+const LOW_MASK_THRESHOLD = 0.05;
+
+function isLowBodyMaskCoverage(coverage: number | null): boolean {
+  return coverage !== null && coverage <= LOW_MASK_THRESHOLD;
+}
+
+function summarizeNeighborCupDistribution(
+  similar: DiagnosisResult["similarCelebrities"]
+): string {
+  if (!similar || similar.length === 0) {
+    return "";
+  }
+
+  const counts = new Map<string, number>();
+  for (const entry of similar) {
+    counts.set(entry.cup, (counts.get(entry.cup) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([cup, count]) => `${cup}:${count}`)
+    .join(" / ");
+}
+
 const PERFORMANCE_SUMMARIES = [
   {
     title: "身長",
@@ -528,6 +552,20 @@ export default function AnalyzePage() {
                   </p>
                 </div>
 
+                {gender === "female" &&
+                visualization &&
+                isLowBodyMaskCoverage(visualization.bodyMaskCoverage) ? (
+                  <div
+                    role="status"
+                    className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                  >
+                    <p className="font-semibold">上半身が十分に写っていません</p>
+                    <p className="mt-1 leading-6">
+                      検出できた人物領域がとても小さいため、カップ推定は参考値です。胸まで写った別の画像でお試しください。
+                    </p>
+                  </div>
+                ) : null}
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <article className="rounded-[1.5rem] bg-slate-950 px-5 py-5 text-white">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -555,9 +593,19 @@ export default function AnalyzePage() {
                           カップ
                         </span>
                       </p>
-                      <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-sm font-semibold text-rose-500 ring-1 ring-rose-100">
-                        偏差値 {result.cupDeviation}
-                      </span>
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex rounded-full bg-white px-3 py-1 text-sm font-semibold text-rose-500 ring-1 ring-rose-100">
+                          偏差値 {result.cupDeviation}
+                        </span>
+                        {summarizeNeighborCupDistribution(result.similarCelebrities) ? (
+                          <span
+                            className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200"
+                            title="近傍3件のカップ分布。バラつきが大きいほど推定の自信は弱まります。"
+                          >
+                            近傍カップ {summarizeNeighborCupDistribution(result.similarCelebrities)}
+                          </span>
+                        ) : null}
+                      </div>
                     </article>
                   ) : null}
 
