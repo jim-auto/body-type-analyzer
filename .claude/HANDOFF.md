@@ -105,7 +105,7 @@ node scripts/verify-cup-visualization.mjs \
 
 ## Recommended Next Tasks (priority order)
 
-1. **Fill more lower-rank `ui-avatar` profile images.** PLAN section 9 has the bottom-up generation snippet and the `python scripts/fetch-bing-ranking-profile-images.py` flow. 492 female + 499 male entries still use ui-avatars placeholders. Visible quality win, low risk.
+1. **Refetch flagged low-quality ranking images.** ui-avatars filling is already DONE (0 ui-avatars across 1625 female + 1000 male as of this handoff — PLAN section 9's "492 female / 499 male" count is stale). The remaining quality gap surfaces from `python scripts/generate-ranking-image-qa.py --top-n 500`: 406 of 1401 unique profiles are flagged, mostly for `small-dimension` (396), `tiny-file` (351), or `small-file` (52). Use `python scripts/fetch-bing-ranking-profile-images.py --refresh-existing` to refetch better-quality versions of the worst offenders.
 2. **Add stress-case images to the QA harness.** Current 25-image set is dominated by publicity portraits where the chest is mostly outside the frame. Adding seated, side-facing, multi-person, low-resolution, busy-background cases would test whether A-E predictions ever appear.
 3. **Tune `CUP_PRIOR_EXPONENT`.** Currently 0.5 (sqrt smoothing). If the user complains predictions are now too low for genuinely high-cup gravure samples, try 0.4. If still too H-heavy on average people, try 0.6.
 4. **Re-introduce a milder large-cup boost in `voteCups` if needed.** Removed entirely in `fd628f3`. A small value (e.g., 0.10) could be added back if QA shows under-estimation on genuine gravure inputs.
