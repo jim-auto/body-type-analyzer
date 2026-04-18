@@ -103,4 +103,43 @@ describe("diagnosis-model", () => {
     expect(inferSilhouetteType(168, "B")).toBe("I");
     expect(inferSilhouetteType(162, "D")).toBe("X");
   });
+
+  test("クラス頻度補正により低カップ予測が出ることがある", () => {
+    // 学習データはF以上に強く偏っているため、補正前は全件H付近に張り付く。
+    // 補正後は少なくとも一定数の小カップ予測 (E以下) が現れることを確認する。
+    const cupEntries = DIAGNOSIS_MODEL_ENTRIES.filter(
+      (entry) => entry.availability.cup
+    );
+    const lowCupSet = new Set<string>(["A", "B", "C", "D", "E"]);
+    const lowCupTrue = cupEntries.filter((entry) => lowCupSet.has(entry.cup));
+
+    expect(lowCupTrue.length).toBeGreaterThan(0);
+
+    const lowCupRecovered = lowCupTrue.filter((entry) => {
+      const result = diagnoseFromFeatures(entry.featureSets, {
+        excludeName: entry.name,
+      });
+      return lowCupSet.has(result.estimatedCup);
+    });
+
+    // 真値が小カップの人のうち少なくとも 20% は小カップ域に予測されること。
+    // 補正なしの旧ロジックではほぼ 0% だった。
+    expect(lowCupRecovered.length / lowCupTrue.length).toBeGreaterThanOrEqual(0.2);
+  });
+
+  test("予測カップは A-K の範囲全体にわたって分布する", () => {
+    // 補正後は単一カップに張り付かず、複数カップが出力されることを確認する。
+    const cupEntries = DIAGNOSIS_MODEL_ENTRIES.filter(
+      (entry) => entry.availability.cup
+    );
+    const distinctPredictions = new Set<string>();
+    for (const entry of cupEntries) {
+      const result = diagnoseFromFeatures(entry.featureSets, {
+        excludeName: entry.name,
+      });
+      distinctPredictions.add(result.estimatedCup);
+      if (distinctPredictions.size >= 5) break;
+    }
+    expect(distinctPredictions.size).toBeGreaterThanOrEqual(5);
+  });
 });

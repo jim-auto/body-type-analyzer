@@ -394,6 +394,30 @@ function weightedMean(neighbors: Neighbor[], value: (entry: DiagnosisModelEntry)
   return weightedSum / totalWeight;
 }
 
+const CUP_PRIOR_EXPONENT = 0.5;
+
+const CUP_PRIOR_WEIGHTS: Record<DiagnosisCup, number> = (() => {
+  const counts = new Map<DiagnosisCup, number>(
+    DIAGNOSIS_CUP_ORDER.map((cup) => [cup, 0])
+  );
+  let total = 0;
+  for (const entry of DIAGNOSIS_MODEL_ENTRIES) {
+    if (!entry.availability.cup) continue;
+    counts.set(entry.cup, (counts.get(entry.cup) ?? 0) + 1);
+    total += 1;
+  }
+  const weights = {} as Record<DiagnosisCup, number>;
+  for (const cup of DIAGNOSIS_CUP_ORDER) {
+    const count = counts.get(cup) ?? 0;
+    if (count === 0 || total === 0) {
+      weights[cup] = 1;
+    } else {
+      weights[cup] = Math.pow(total / count, CUP_PRIOR_EXPONENT);
+    }
+  }
+  return weights;
+})();
+
 function weightedCupVote(neighbors: Neighbor[]): {
   cup: DiagnosisCup;
   winningShare: number;
@@ -403,10 +427,12 @@ function weightedCupVote(neighbors: Neighbor[]): {
   );
 
   neighbors.forEach((neighbor) => {
-    scores.set(neighbor.entry.cup, (scores.get(neighbor.entry.cup) ?? 0) + neighbor.weight);
+    const cup = neighbor.entry.cup;
+    const adjusted = neighbor.weight * (CUP_PRIOR_WEIGHTS[cup] ?? 1);
+    scores.set(cup, (scores.get(cup) ?? 0) + adjusted);
   });
 
-  const totalWeight = neighbors.reduce((sum, neighbor) => sum + neighbor.weight, 0);
+  const totalAdjusted = [...scores.values()].reduce((sum, value) => sum + value, 0);
   const cup = DIAGNOSIS_CUP_ORDER.reduce((bestCup, currentCup) => {
     const currentScore = scores.get(currentCup) ?? 0;
     const bestScore = scores.get(bestCup) ?? 0;
@@ -422,7 +448,10 @@ function weightedCupVote(neighbors: Neighbor[]): {
 
   return {
     cup,
-    winningShare: totalWeight <= 1e-12 ? 1 / DIAGNOSIS_CUP_ORDER.length : (scores.get(cup) ?? 0) / totalWeight,
+    winningShare:
+      totalAdjusted <= 1e-12
+        ? 1 / DIAGNOSIS_CUP_ORDER.length
+        : (scores.get(cup) ?? 0) / totalAdjusted,
   };
 }
 
@@ -431,12 +460,7 @@ function voteCups(predictions: DiagnosisCup[]): {
   winningShare: number;
 } {
   const indices = predictions.map((p) => getCupIndex(p));
-  let avg = indices.reduce((sum, i) => sum + i, 0) / indices.length;
-  const maxIdx = Math.max(...indices);
-
-  if (maxIdx >= 5) {
-    avg += (maxIdx - avg) * 0.35;
-  }
+  const avg = indices.reduce((sum, i) => sum + i, 0) / indices.length;
 
   const roundedIndex = clamp(Math.round(avg), 0, DIAGNOSIS_CUP_ORDER.length - 1);
   const cup = DIAGNOSIS_CUP_ORDER[roundedIndex];
