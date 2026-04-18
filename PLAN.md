@@ -1,6 +1,6 @@
 # Copilot Handoff Plan
 
-Updated: 2026-04-18 JST (afternoon session)
+Updated: 2026-04-18 JST (late session, after `d3c7056`)
 
 Repository: `body-type-analyzer`
 
@@ -8,33 +8,69 @@ Public site: `https://jim-auto.github.io/body-type-analyzer/`
 
 Current live analyze page: `https://jim-auto.github.io/body-type-analyzer/analyze`
 
-Latest deployed commit:
+Latest deployed commits (top is newest):
 
 ```text
+d3c7056 Switch low-mask warning to direct shoulder-position signal
+007ebdf Gate Pose ROI on torso landmarks being inside frame
+a3873ee Show pose keypoint dots on cup visualization
+49208cc Refresh 48 lowest-quality ranking profile images
+96adf78 Correct stale ui-avatars count in handoff docs
+2b768d6 Update handoff for cup QA + bias fix session
 fd628f3 Reweight cup voting by inverse class frequency
 fd02fb9 Add low-mask warning and neighbor cup distribution chip
 bc90a08 Add cup visualization QA harness script
-df6b17e Stabilize cup visualization mask
-0698caa Add cup estimate visualization overlay
 ```
 
 Latest GitHub Pages workflow:
 
 ```text
-Run id: 24599547865
+Run id: 24604146453
 Status: success
-Commit: fd628f39f1d0fb40c1dcd1045f07dfc73482aa41
-URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24599547865
+Commit: d3c7056d1704c996a0a02ae58721cb7943a31d1b
+URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24604146453
 ```
 
 Important local state:
 
 - `.claude/settings.local.json` is intentionally ignored and must not be overwritten or reverted.
-- `tmp-playwright-diagnose.mjs` is still untracked local debug material from a previous session. It pre-dates today's work and was not committed.
-- `local-data/cup-visualization-qa/` contains 25 generated screenshots, manifest.json, report.md, and findings.md. All gitignored.
-- `PLAN.md` and `.claude/HANDOFF.md` are kept updated as the running handoff.
+- `local-data/cup-visualization-qa/` contains generated screenshots, manifest.json, report.md, and findings.md. All gitignored.
+- `local-data/__check_sample.mjs` is an ad-hoc Playwright script for running the analyze page on a single user-supplied image. Keep as a scratch tool.
+- `PLAN.md` and `.claude/HANDOFF.md` are kept updated as the running handoff. The `.claude/HANDOFF.md` has the terse top-of-session summary; this file has the longer context.
 
-## 0. Current Status (2026-04-18 afternoon): Cup QA + Bias Fix Shipped
+For the full per-commit narrative of today's work, see `.claude/HANDOFF.md`.
+
+## 0. Current Status (late 2026-04-18): Cup QA + Pose Gate + Warning Rework Shipped
+
+Nine commits shipped this session (ordered earliest first): `bc90a08` cup visualization QA harness → `fd02fb9` low-mask warning + neighbor chip → `fd628f3` class-frequency cup vote reweighting → `2b768d6` + `96adf78` handoff docs refresh (stale ui-avatars count fixed) → `49208cc` 48 lowest-quality ranking images refreshed → `a3873ee` pose keypoint dots → `007ebdf` Pose hip-visibility gate → `d3c7056` shoulder-based upper-body warning.
+
+A history rewrite (`git filter-repo --replace-text`) also stripped a leaked local-machine path that had briefly appeared in an earlier HANDOFF.md commit. Backup tag `backup/before-strip` remains locally if ever needed. Origin was re-added and force-pushed.
+
+Key outcome on the 25 publicity-portrait QA sample:
+
+```text
+Cup histogram:
+  before fd628f3:  G=4 H=16 I=3 J=2               (H = 64%)
+  after  fd628f3:  F=4 G=8 H=8 I=2 J=2 K=1       (H = 32%)
+
+Pose ROI vs Crop fallback:
+  before 007ebdf:  25 / 0   (often extrapolated and wrong)
+  after  007ebdf:   3 / 22  (only when hips actually visible)
+
+Mask coverage avg:
+  before 007ebdf:  ~12%
+  after  007ebdf:  ~74%
+```
+
+Leave-one-out cup MAE moved from 1.276 to 1.420 with `fd628f3`. Accepted as the cost of removing the H-bias on the training distribution.
+
+Verification at this handoff:
+
+```text
+npm run lint   0 errors, 12 warnings (existing baseline only)
+npm test       12 suites, 143 tests passed
+npm run build  Compiled successfully, prerendered /, /analyze, /credits
+```
 
 Three commits shipped this session, in order:
 
@@ -81,21 +117,16 @@ The three NG cases are all face-only crops (`isoyama_sayaka`, `inoue_waka`, `sug
 
 ### Verification Baseline At This Handoff
 
-```text
-npm run lint   0 errors, 12 warnings (existing baseline)
-npm test       12 suites, 131 tests passed
-npm run build  Compiled successfully, prerendered /, /analyze, /credits
-```
-
 `npx tsc --noEmit` still fails on pre-existing unrelated strictness issues in `app/__tests__/cup-data.test.ts`, `lib/diagnosis-model.ts`, `lib/profile-estimates.ts`. The build uses `typescript.ignoreBuildErrors: true` so deploy is unaffected.
 
 ## 0.1 Recommended Next Tasks (priority order)
 
-1. **Refetch flagged low-quality ranking images.** ui-avatars filling is already DONE — 0 ui-avatars across 1625 female + 1000 male in `public/data/ranking.json` as of this handoff. The "492 female / 499 male" count in section 9 below is stale. The actual remaining quality gap surfaces from `python scripts/generate-ranking-image-qa.py --top-n 500`: 406 of 1401 unique profiles flagged, mostly `small-dimension` (396), `tiny-file` (351), or `small-file` (52). Use `python scripts/fetch-bing-ranking-profile-images.py --refresh-existing` against the worst offenders.
-2. **Add stress-case images to the QA harness.** Current 25-image sample is dominated by publicity portraits. Adding seated, side-facing, multi-person, very low-resolution, and busy-background cases would test whether A-E cup predictions ever appear (none did in the current set, but it is also possible none should — most of these celebrities really are F+).
-3. **Tune the class-prior exponent.** Currently `CUP_PRIOR_EXPONENT = 0.5`. If the user complains predictions are now too low, try 0.4. If still too H-heavy, try 0.6. Keep the regenerated `ranking.json` and patched metrics in lockstep with any change.
-4. **Re-introduce a milder large-cup boost in `voteCups` if needed.** The previous `+= 0.35` was removed entirely. A smaller value (e.g., 0.10) could be added back if QA shows under-estimation on genuinely high-cup gravure samples.
-5. **Run `node scripts/evaluate-diagnosis-model-benchmark.mjs`** to formally benchmark the new logic against the previous baseline. Note the script duplicates the inference logic in JS — it may need updating to mirror the new class-prior reweighting before its numbers are comparable.
+1. **Continue the image-quality refresh.** `49208cc` fixed the worst 48 but `ranking-image-qa-top500` still flags 358 profiles, mostly `small-dimension` + `tiny-file`. Next batch of 50: generate a fresh worst-N list from the QA JSON (sort by width × height), feed into `python scripts/fetch-bing-ranking-profile-images.py --only-names-file <list> --refresh-existing --preserve-names-order --gender all --top-n 0 --limit 50 --min-bytes 12000 --min-side 300`. Note `--top-n 0` is required — default 100 limits the scan to top-ranked entries only, which misses the long tail. After fetch, `npm run optimize:images` (jpg → webp), then `node scripts/generate-ranking.mjs`.
+2. **Add stress-case images to the QA harness.** Current 25-image sample is all standard publicity portraits. Adding seated, side-facing, multi-person, very low-resolution, and busy-background cases would test whether A-E predictions ever appear. After `007ebdf`'s hip gate, most publicity portraits correctly fall back to Crop fallback. Stress-case images would test the behavior on harder inputs.
+3. **Tune `CUP_PRIOR_EXPONENT`.** Currently `0.5` (sqrt smoothing). If genuinely high-cup gravure inputs now under-predict, try `0.4`. If average bodies still drift to H+, try `0.6`. Regenerate `public/data/diagnosis-model.json` metrics and `public/data/ranking.json` in lockstep with any change.
+4. **Re-introduce a milder large-cup boost in `voteCups` if tuning (3) doesn't suffice.** Previously `+= 0.35`, now removed. A smaller value like `0.10` could be safe.
+5. **Benchmark formally.** `node scripts/evaluate-diagnosis-model-benchmark.mjs` duplicates inference logic in JS; update it to mirror the class-prior reweight before using its numbers.
+6. **Lint cleanup.** 12 existing warnings, mostly Next `<img>` hints and unused vars. Maintenance, low priority.
 
 ## 0.2 Cup Visualization Section (legacy reference)
 
