@@ -497,6 +497,74 @@ describe("AnalyzePage", () => {
     expect(screen.getByText("Poseランドマーク")).toBeInTheDocument();
   });
 
+  test("全点が枠内ならPoseランドマーク凡例の画像外行は出ない", async () => {
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    const summary = screen.getByTestId("pose-summary");
+    expect(summary.textContent).toContain("5 / 5 点");
+    expect(summary.textContent).toContain("画像内:5 点");
+    expect(summary.textContent).not.toContain("画像外:");
+    for (const name of [
+      "nose",
+      "leftShoulder",
+      "rightShoulder",
+      "leftHip",
+      "rightHip",
+    ]) {
+      expect(
+        screen.getByTestId(`pose-keypoint-${name}`).getAttribute("data-in-frame")
+      ).toBe("true");
+    }
+  });
+
+  test("腰が画像外ならPose凡例の画像外行と data-in-frame=false が出る", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: false,
+      visualization: {
+        ...mockVisualization,
+        chestBoxSource: "feature-crop" as const,
+        poseKeypoints: [
+          { name: "nose" as const, x: 0.5, y: 0.12, visibility: 0.95 },
+          { name: "leftShoulder" as const, x: 0.4, y: 0.22, visibility: 0.9 },
+          { name: "rightShoulder" as const, x: 0.6, y: 0.22, visibility: 0.9 },
+          { name: "leftHip" as const, x: 0.42, y: 1.35, visibility: 0.35 },
+          { name: "rightHip" as const, x: 0.58, y: 1.35, visibility: 0.35 },
+        ],
+      },
+    });
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    const summary = screen.getByTestId("pose-summary");
+    expect(summary.textContent).toContain("5 / 5 点");
+    expect(summary.textContent).toContain("画像内:3 点");
+    expect(summary.textContent).toContain("画像外:2 点");
+    expect(summary.textContent).toContain("左腰");
+    expect(summary.textContent).toContain("右腰");
+
+    expect(
+      screen.getByTestId("pose-keypoint-leftHip").getAttribute("data-in-frame")
+    ).toBe("false");
+    expect(
+      screen.getByTestId("pose-keypoint-rightHip").getAttribute("data-in-frame")
+    ).toBe("false");
+    expect(
+      screen.getByTestId("pose-keypoint-nose").getAttribute("data-in-frame")
+    ).toBe("true");
+
+    expect(
+      screen.getByText(
+        "腰または肩が画像外のため胸部ROIはCrop fallbackに切り替えています。"
+      )
+    ).toBeInTheDocument();
+  });
+
   test("Poseランドマークが取れていないときはドットも凡例も出ない", async () => {
     mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
       features: mockFeatures,

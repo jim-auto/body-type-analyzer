@@ -93,6 +93,31 @@ function getPoseKeypointLabel(name: PoseKeypointName): string {
   return POSE_KEYPOINT_LABEL[name];
 }
 
+function isPoseKeypointInFrame(
+  keypoint: DiagnosisVisualizationOverlay["poseKeypoints"] extends Array<infer T>
+    ? T
+    : never
+): boolean {
+  return (
+    keypoint.x >= 0 && keypoint.x <= 1 && keypoint.y >= 0 && keypoint.y <= 1
+  );
+}
+
+function summarizePoseKeypoints(
+  keypoints: NonNullable<DiagnosisVisualizationOverlay["poseKeypoints"]>
+) {
+  const inFrame: typeof keypoints = [];
+  const outOfFrame: typeof keypoints = [];
+  for (const keypoint of keypoints) {
+    if (isPoseKeypointInFrame(keypoint)) {
+      inFrame.push(keypoint);
+    } else {
+      outOfFrame.push(keypoint);
+    }
+  }
+  return { total: keypoints.length, inFrame, outOfFrame };
+}
+
 function summarizeNeighborCupDistribution(
   similar: DiagnosisResult["similarCelebrities"]
 ): string {
@@ -768,22 +793,38 @@ export default function AnalyzePage() {
                   className="pointer-events-none absolute border-[3px] border-amber-300 bg-amber-300/10 shadow-[0_0_0_1px_rgba(120,53,15,0.75),0_0_24px_rgba(251,191,36,0.5)]"
                   style={getOverlayBoxStyle(visualization.chestBox)}
                 />
-                {visualization.poseKeypoints?.map((keypoint) => (
-                  <span
-                    key={keypoint.name}
-                    aria-hidden="true"
-                    data-testid={`pose-keypoint-${keypoint.name}`}
-                    className={`pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white/90 shadow-[0_0_0_1px_rgba(15,23,42,0.65)] ${getPoseKeypointClass(
-                      keypoint.name
-                    )}`}
-                    style={{
-                      left: `${keypoint.x * 100}%`,
-                      top: `${keypoint.y * 100}%`,
-                      opacity: Math.max(0.35, Math.min(1, keypoint.visibility ?? 1)),
-                    }}
-                    title={getPoseKeypointLabel(keypoint.name)}
-                  />
-                ))}
+                {visualization.poseKeypoints?.map((keypoint) => {
+                  const inFrame = isPoseKeypointInFrame(keypoint);
+                  const displayX = Math.min(0.98, Math.max(0.02, keypoint.x));
+                  const displayY = Math.min(0.98, Math.max(0.02, keypoint.y));
+                  return (
+                    <span
+                      key={keypoint.name}
+                      aria-hidden="true"
+                      data-testid={`pose-keypoint-${keypoint.name}`}
+                      data-in-frame={inFrame ? "true" : "false"}
+                      className={
+                        inFrame
+                          ? `pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white/95 shadow-[0_0_0_1px_rgba(15,23,42,0.75),0_0_12px_rgba(15,23,42,0.25)] ${getPoseKeypointClass(
+                              keypoint.name
+                            )}`
+                          : `pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-white ring-1 ring-slate-900/70 opacity-90 ${getPoseKeypointClass(
+                              keypoint.name
+                            )}`
+                      }
+                      style={{
+                        left: `${displayX * 100}%`,
+                        top: `${displayY * 100}%`,
+                        opacity: inFrame
+                          ? Math.max(0.45, Math.min(1, keypoint.visibility ?? 1))
+                          : 0.9,
+                      }}
+                      title={`${getPoseKeypointLabel(keypoint.name)}${
+                        inFrame ? "" : " (画像外・端にピン留め)"
+                      }`}
+                    />
+                  );
+                })}
               </div>
 
               <div className="grid content-start gap-3 text-sm text-slate-600">
@@ -826,30 +867,71 @@ export default function AnalyzePage() {
                   </p>
                 </div>
                 {visualization.poseKeypoints &&
-                visualization.poseKeypoints.length > 0 ? (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                    <div className="flex items-center gap-2 font-bold text-emerald-900">
-                      Poseランドマーク
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                      <span className="inline-flex items-center gap-1">
-                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 ring-1 ring-white" />
-                        鼻
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 ring-1 ring-white" />
-                        肩
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <span className="h-2.5 w-2.5 rounded-full bg-fuchsia-400 ring-1 ring-white" />
-                        腰
-                      </span>
-                    </div>
-                    <p className="mt-2 leading-6">
-                      MediaPipeが検出した骨格点です。腰のドットが画像外や変な位置にあると、胸部ROIもズレます。
-                    </p>
-                  </div>
-                ) : null}
+                visualization.poseKeypoints.length > 0
+                  ? (() => {
+                      const summary = summarizePoseKeypoints(
+                        visualization.poseKeypoints
+                      );
+                      return (
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                          <div className="flex items-center gap-2 font-bold text-emerald-900">
+                            Poseランドマーク
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            <span className="inline-flex items-center gap-1">
+                              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 ring-1 ring-white" />
+                              鼻
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 ring-1 ring-white" />
+                              肩
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <span className="h-2.5 w-2.5 rounded-full bg-fuchsia-400 ring-1 ring-white" />
+                              腰
+                            </span>
+                          </div>
+                          <dl
+                            className="mt-3 grid gap-1 text-xs text-emerald-900"
+                            data-testid="pose-summary"
+                          >
+                            <div className="flex items-baseline gap-1">
+                              <dt className="font-semibold">検出:</dt>
+                              <dd>{summary.total} / 5 点</dd>
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                              <dt className="font-semibold">画像内:</dt>
+                              <dd>
+                                {summary.inFrame.length} 点
+                                {summary.inFrame.length > 0
+                                  ? ` (${summary.inFrame
+                                      .map((k) => getPoseKeypointLabel(k.name))
+                                      .join("・")})`
+                                  : ""}
+                              </dd>
+                            </div>
+                            {summary.outOfFrame.length > 0 ? (
+                              <div className="flex items-baseline gap-1">
+                                <dt className="font-semibold">画像外:</dt>
+                                <dd>
+                                  {summary.outOfFrame.length} 点 (
+                                  {summary.outOfFrame
+                                    .map((k) => getPoseKeypointLabel(k.name))
+                                    .join("・")}
+                                  ) は画像端にピン留め表示
+                                </dd>
+                              </div>
+                            ) : null}
+                          </dl>
+                          <p className="mt-2 leading-6">
+                            {visualization.chestBoxSource === "pose"
+                              ? "5点すべて枠内で検出できたので胸部ROIにPose推定を使っています。"
+                              : "腰または肩が画像外のため胸部ROIはCrop fallbackに切り替えています。"}
+                          </p>
+                        </div>
+                      );
+                    })()
+                  : null}
               </div>
             </div>
           </section>
