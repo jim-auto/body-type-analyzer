@@ -1,6 +1,6 @@
 # Copilot Handoff Plan
 
-Updated: 2026-04-18 JST (late session, after `d3c7056`)
+Updated: 2026-04-19 JST (after `b1d1fab`)
 
 Repository: `body-type-analyzer`
 
@@ -11,10 +11,16 @@ Current live analyze page: `https://jim-auto.github.io/body-type-analyzer/analyz
 Latest deployed commits (top is newest):
 
 ```text
+b1d1fab Refresh 47 more lowest-quality ranking profile images (batch 3)
+d927dac Fix body mask polygon drawing inward instead of outward
+8e769d3 Record CUP_PRIOR_EXPONENT tuning result in handoff docs
+a3bba51 Surface Pose keypoint state in visualization legend
+cbd5c7f Refresh 47 more lowest-quality ranking profile images (batch 2)
+3b6d45c Refresh handoff docs after pose gate and warning rework
 d3c7056 Switch low-mask warning to direct shoulder-position signal
 007ebdf Gate Pose ROI on torso landmarks being inside frame
 a3873ee Show pose keypoint dots on cup visualization
-49208cc Refresh 48 lowest-quality ranking profile images
+49208cc Refresh 48 lowest-quality ranking profile images (batch 1)
 96adf78 Correct stale ui-avatars count in handoff docs
 2b768d6 Update handoff for cup QA + bias fix session
 fd628f3 Reweight cup voting by inverse class frequency
@@ -25,10 +31,10 @@ bc90a08 Add cup visualization QA harness script
 Latest GitHub Pages workflow:
 
 ```text
-Run id: 24604146453
+Run id: 24615287388
 Status: success
-Commit: d3c7056d1704c996a0a02ae58721cb7943a31d1b
-URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24604146453
+Commit: b1d1fab
+URL: https://github.com/jim-auto/body-type-analyzer/actions/runs/24615287388
 ```
 
 Important local state:
@@ -40,35 +46,31 @@ Important local state:
 
 For the full per-commit narrative of today's work, see `.claude/HANDOFF.md`.
 
-## 0. Current Status (late 2026-04-18): Cup QA + Pose Gate + Warning Rework Shipped
+## 0. Current Status (2026-04-19): Cup QA + Pose Gate + Mask Polygon Fix + 3 Image Batches
 
-Nine commits shipped this session (ordered earliest first): `bc90a08` cup visualization QA harness → `fd02fb9` low-mask warning + neighbor chip → `fd628f3` class-frequency cup vote reweighting → `2b768d6` + `96adf78` handoff docs refresh (stale ui-avatars count fixed) → `49208cc` 48 lowest-quality ranking images refreshed → `a3873ee` pose keypoint dots → `007ebdf` Pose hip-visibility gate → `d3c7056` shoulder-based upper-body warning.
+Full per-commit narrative lives in `.claude/HANDOFF.md`. Fifteen commits shipped in this extended session, grouped:
 
-A history rewrite (`git filter-repo --replace-text`) also stripped a leaked local-machine path that had briefly appeared in an earlier HANDOFF.md commit. Backup tag `backup/before-strip` remains locally if ever needed. Origin was re-added and force-pushed.
+- **Cup estimation pipeline.** `bc90a08` QA harness → `fd02fb9` low-mask warning + neighbor chip → `fd628f3` class-frequency cup vote reweighting (replaces the old `+0.35` boost with `(N/count)^0.5` smoothing; cup MAE 1.276 → 1.420, accepted) → `8e769d3` confirms 0.5 exponent is Pareto-optimal versus 0.3 and 0.7.
+- **Pose pipeline.** `a3873ee` keypoint dots → `007ebdf` hip-visibility gate → `d3c7056` shoulder-based upper-body warning → `a3bba51` dot visibility + legend text summary → `d927dac` mask polygon drawing direction fix (MediaPipe anatomical left/right was being treated as screen left/right, shrinking the polygon to a thin strip down the chest).
+- **Image quality.** Three refresh batches `49208cc` + `cbd5c7f` + `b1d1fab` fetched 48 + 47 + 47 lower-quality ranking thumbnails via Bing, optimized to webp, regenerated `ranking.json`. Total `ranking-image-qa` flag count dropped from 406 → 273 (~35 %).
+- **Handoff hygiene.** `2b768d6` + `96adf78` + `3b6d45c` doc refreshes. A history rewrite via `git filter-repo` also stripped a leaked `C:\Users\<name>\...` path from every reachable commit; `backup/before-strip` tag remains locally.
 
 Key outcome on the 25 publicity-portrait QA sample:
 
 ```text
-Cup histogram:
-  before fd628f3:  G=4 H=16 I=3 J=2               (H = 64%)
-  after  fd628f3:  F=4 G=8 H=8 I=2 J=2 K=1       (H = 32%)
-
-Pose ROI vs Crop fallback:
-  before 007ebdf:  25 / 0   (often extrapolated and wrong)
-  after  007ebdf:   3 / 22  (only when hips actually visible)
-
-Mask coverage avg:
-  before 007ebdf:  ~12%
-  after  007ebdf:  ~74%
+Cup histogram:            G=4 H=16 I=3 J=2          →  F=4 G=8 H=8 I=2 J=2 K=1   (H = 64 % → 32 %)
+Pose ROI vs Crop fallback: 25 / 0                     →  3 / 22                    (only use Pose when hips visible)
+Mask coverage avg:         ~12 %                      →  ~75 %                      (74 % from fallback + d927dac fix)
+Pose ROI mask coverage:    8-10 %                     →  17-22 %                    (polygon drawn outward after d927dac)
 ```
 
-Leave-one-out cup MAE moved from 1.276 to 1.420 with `fd628f3`. Accepted as the cost of removing the H-bias on the training distribution.
+Manual NG rate on the same 25 samples: 3 / 25. All three are face-only crops where `isUpperBodyMissing` now fires the amber warning.
 
 Verification at this handoff:
 
 ```text
-npm run lint   0 errors, 12 warnings (existing baseline only)
-npm test       12 suites, 143 tests passed
+npm run lint   0 errors, 11 warnings (existing baseline only)
+npm test       12 suites, 145 tests passed
 npm run build  Compiled successfully, prerendered /, /analyze, /credits
 ```
 
@@ -121,12 +123,12 @@ The three NG cases are all face-only crops (`isoyama_sayaka`, `inoue_waka`, `sug
 
 ## 0.1 Recommended Next Tasks (priority order)
 
-1. **Continue the image-quality refresh.** `49208cc` fixed the worst 48 but `ranking-image-qa-top500` still flags 358 profiles, mostly `small-dimension` + `tiny-file`. Next batch of 50: generate a fresh worst-N list from the QA JSON (sort by width × height), feed into `python scripts/fetch-bing-ranking-profile-images.py --only-names-file <list> --refresh-existing --preserve-names-order --gender all --top-n 0 --limit 50 --min-bytes 12000 --min-side 300`. Note `--top-n 0` is required — default 100 limits the scan to top-ranked entries only, which misses the long tail. After fetch, `npm run optimize:images` (jpg → webp), then `node scripts/generate-ranking.mjs`.
-2. **Add stress-case images to the QA harness.** Current 25-image sample is all standard publicity portraits. Adding seated, side-facing, multi-person, very low-resolution, and busy-background cases would test whether A-E predictions ever appear. After `007ebdf`'s hip gate, most publicity portraits correctly fall back to Crop fallback. Stress-case images would test the behavior on harder inputs.
-3. **Tune `CUP_PRIOR_EXPONENT`.** 0.3 / 0.5 / 0.7 sweep on the 25-image QA set was run on 2026-04-19. 0.5 kept as Pareto-optimal: 0.3 narrows the output distribution without meaningful accuracy gain, 0.7 adds two rare-class predictions (E=1, L=1) at the cost of ~3 pp leave-one-out accuracy (exactRate 23.4% → 20.9%, within-1 62.7% → 59.2%). Re-tune only if the training distribution or user feedback changes; see `.claude/HANDOFF.md` for the full table.
-4. **Re-introduce a milder large-cup boost in `voteCups` if tuning (3) doesn't suffice.** Previously `+= 0.35`, now removed. A smaller value like `0.10` could be safe.
-5. **Benchmark formally.** `node scripts/evaluate-diagnosis-model-benchmark.mjs` duplicates inference logic in JS; update it to mirror the class-prior reweight before using its numbers.
-6. **Lint cleanup.** 12 existing warnings, mostly Next `<img>` hints and unused vars. Maintenance, low priority.
+1. **Keep refetching flagged low-quality ranking images.** Three batches (141 fetched total) brought `ranking-image-qa-top500` from 406 → 273. Remaining 273 are the same shape as batches 1-3: mostly 125 × 125 `small-dimension` + `tiny-file` thumbnails. Recipe: generate next-50 list from `local-data/qa/ranking-image-qa-top500.json` sorted by `width × height`, then `python scripts/fetch-bing-ranking-profile-images.py --only-names-file <list> --refresh-existing --preserve-names-order --gender all --top-n 0 --limit 50 --min-bytes 12000 --min-side 300`, then `npm run optimize:images`, then `node scripts/generate-ranking.mjs`. `--top-n 0` is mandatory — default 100 silently restricts the scan. 3 names fail every batch (`八木あずさ`, `堀川奈美`, etc.) and need a manual source or a wider `--min-side` floor.
+2. **Add stress-case images to the QA harness.** Current 25-image sample is all standard publicity portraits. Adding seated, side-facing, multi-person, very-low-resolution, and busy-background cases would test whether A-E predictions ever appear in scenes where MediaPipe actually has hip landmarks in-frame. After `007ebdf`'s hip gate most portraits correctly use Crop fallback, so pose-driven cup estimation is now mostly driven by full-body images only.
+3. **Re-introduce a milder large-cup boost in `voteCups` if real-world feedback shows under-prediction.** Previously `+= 0.35`, now removed. A small value like `0.10` could be safe.
+4. **Benchmark formally.** `node scripts/evaluate-diagnosis-model-benchmark.mjs` duplicates inference logic in JS; update it to mirror the class-prior reweight before using its numbers.
+5. **Lint cleanup.** 11 existing warnings, mostly Next `<img>` hints and unused vars. Maintenance, low priority.
+6. **CUP_PRIOR_EXPONENT is Pareto-optimal at 0.5.** 0.3 / 0.5 / 0.7 sweep done this session (see commit `8e769d3`). Re-tune only if the training distribution or user feedback changes.
 
 ## 0.2 Cup Visualization Section (legacy reference)
 
