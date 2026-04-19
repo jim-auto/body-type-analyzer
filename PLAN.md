@@ -56,7 +56,7 @@ Full per-commit narrative lives in `.claude/HANDOFF.md`. Fifteen commits shipped
 - **Cup estimation pipeline.** `bc90a08` QA harness → `fd02fb9` low-mask warning + neighbor chip → `fd628f3` class-frequency cup vote reweighting (replaces the old `+0.35` boost with `(N/count)^0.5` smoothing; cup MAE 1.276 → 1.420, accepted) → `8e769d3` confirms 0.5 exponent is Pareto-optimal versus 0.3 and 0.7.
 - **Pose pipeline.** `a3873ee` keypoint dots → `007ebdf` hip-visibility gate → `d3c7056` shoulder-based upper-body warning → `a3bba51` dot visibility + legend text summary → `d927dac` mask polygon drawing direction fix (MediaPipe anatomical left/right was being treated as screen left/right, shrinking the polygon to a thin strip down the chest).
 - **Image quality.** Three refresh batches `49208cc` + `cbd5c7f` + `b1d1fab` fetched 48 + 47 + 47 lower-quality ranking thumbnails via Bing, optimized to webp, regenerated `ranking.json`. Total `ranking-image-qa` flag count dropped from 406 → 273 (~35 %).
-- **Handoff hygiene.** `2b768d6` + `96adf78` + `3b6d45c` doc refreshes. A history rewrite via `git filter-repo` also stripped a leaked `C:\Users\<name>\...` path from every reachable commit; `backup/before-strip` tag remains locally.
+- **Handoff hygiene.** `2b768d6` + `96adf78` + `3b6d45c` doc refreshes. A history rewrite via `git filter-repo` also stripped a leaked `C:\Users\<redacted>\...` path from every reachable commit.
 
 Key outcome on the 25 publicity-portrait QA sample:
 
