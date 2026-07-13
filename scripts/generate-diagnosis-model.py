@@ -107,14 +107,13 @@ FOCUS_MIN_HEIGHT_RATIO = 0.88
 FOCUS_HORIZONTAL_PADDING_RATIO = 0.1
 FOCUS_VERTICAL_PADDING_RATIO = 0.04
 ROBUST_HEIGHT_MODELS = (
-    ("heightPrimary", 5),
-    ("heightHistFull", 9),
-    ("heightDctFull", 15),
+    ("heightProfile", 13),
+    ("heightHistFull", 15),
+    ("heightPrimary", 15),
 )
 ROBUST_CUP_MODELS = (
-    ("cupSecondary", 3),
-    ("cupHistTop", 13),
-    ("cupPose", 1),
+    ("cupProfile", 11),
+    ("cupSecondary", 11),
 )
 TRUSTED_LOCAL_SOURCES = {
     "talent-databank",
@@ -1230,6 +1229,36 @@ def weighted_vote(neighbors: list[Neighbor]) -> str:
     return max(CUP_ORDER, key=lambda cup: (scores[cup], -abs(CUP_ORDER.index(cup) - 3)))
 
 
+def weighted_cup_index(neighbors: list[Neighbor]) -> float:
+    """Ordinal cup estimate: distance-weighted average of neighbor cup indices.
+
+    Cup sizes are an ordinal scale, so a weighted mean of indices minimizes
+    absolute error far better than picking the modal cup (a plain vote). No
+    class-frequency prior is applied: on the current busty-inclusive training
+    set the prior biases the mean toward rare large cups and inflates MAE.
+    """
+    if not neighbors:
+        return float(CUP_ORDER.index("C"))
+
+    weights = [neighbor_vote_weight(neighbor) for neighbor in neighbors]
+    total_weight = sum(weights)
+
+    if total_weight <= 1e-12:
+        return statistics.fmean(CUP_ORDER.index(str(neighbor.value)) for neighbor in neighbors)
+
+    return sum(
+        weight * CUP_ORDER.index(str(neighbor.value))
+        for weight, neighbor in zip(weights, neighbors, strict=True)
+    ) / total_weight
+
+
+def combine_cup_indices(indices: list[float]) -> str:
+    """Average per-model ordinal cup indices and snap to a cup label."""
+    average = sum(indices) / len(indices)
+    rounded = max(0, min(len(CUP_ORDER) - 1, js_round(average)))
+    return CUP_ORDER[rounded]
+
+
 def get_neighbors(
     feature_sets: list[list[float]],
     values: list[float] | list[str],
@@ -1486,10 +1515,10 @@ def evaluate_cup_models(
 
     for index in cup_indices:
         predictions = [
-            weighted_vote(ranked_neighbors[feature_name][index][:neighbor_count])
+            weighted_cup_index(ranked_neighbors[feature_name][index][:neighbor_count])
             for feature_name, neighbor_count in models
         ]
-        prediction = vote_cups(predictions)
+        prediction = combine_cup_indices(predictions)
         errors.append(abs(CUP_ORDER.index(prediction) - CUP_ORDER.index(cups[index])))
 
     return {
@@ -1616,7 +1645,7 @@ def predict_cup_for_index(
     models: tuple[tuple[str, int], ...],
 ) -> tuple[str, list[tuple[str, list[Neighbor]]]]:
     model_neighbors: list[tuple[str, list[Neighbor]]] = []
-    predictions: list[str] = []
+    predictions: list[float] = []
 
     for feature_name, neighbor_count in models:
         neighbors = get_neighbors(
@@ -1629,9 +1658,9 @@ def predict_cup_for_index(
             candidate_indices,
         )
         model_neighbors.append((feature_name, neighbors))
-        predictions.append(weighted_vote(neighbors))
+        predictions.append(weighted_cup_index(neighbors))
 
-    return vote_cups(predictions), model_neighbors
+    return combine_cup_indices(predictions), model_neighbors
 
 
 def build_neighbor_preview(

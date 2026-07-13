@@ -394,82 +394,66 @@ function weightedMean(neighbors: Neighbor[], value: (entry: DiagnosisModelEntry)
   return weightedSum / totalWeight;
 }
 
-const CUP_PRIOR_EXPONENT = 0.5;
-
-const CUP_PRIOR_WEIGHTS: Record<DiagnosisCup, number> = (() => {
-  const counts = new Map<DiagnosisCup, number>(
-    DIAGNOSIS_CUP_ORDER.map((cup) => [cup, 0])
-  );
-  let total = 0;
-  for (const entry of DIAGNOSIS_MODEL_ENTRIES) {
-    if (!entry.availability.cup) continue;
-    counts.set(entry.cup, (counts.get(entry.cup) ?? 0) + 1);
-    total += 1;
+// Cup sizes form an ordinal scale, so each model contributes a distance-
+// weighted average of its neighbours' cup indices (an ordinal estimate) rather
+// than a hard modal vote. No class-frequency prior is applied: on the current
+// busty-inclusive training set the prior biases the mean toward rare large cups
+// and inflates error. This keeps runtime inference consistent with the metrics
+// produced by scripts/generate-diagnosis-model.py.
+function weightedCupIndex(neighbors: Neighbor[]): number {
+  if (neighbors.length === 0) {
+    return getCupIndex("C");
   }
-  const weights = {} as Record<DiagnosisCup, number>;
-  for (const cup of DIAGNOSIS_CUP_ORDER) {
-    const count = counts.get(cup) ?? 0;
-    if (count === 0 || total === 0) {
-      weights[cup] = 1;
-    } else {
-      weights[cup] = Math.pow(total / count, CUP_PRIOR_EXPONENT);
-    }
+
+  const totalWeight = neighbors.reduce((sum, neighbor) => sum + neighbor.weight, 0);
+
+  if (totalWeight <= 1e-12) {
+    return (
+      neighbors.reduce((sum, neighbor) => sum + getCupIndex(neighbor.entry.cup), 0) /
+      neighbors.length
+    );
   }
-  return weights;
-})();
 
-function weightedCupVote(neighbors: Neighbor[]): {
-  cup: DiagnosisCup;
-  winningShare: number;
-} {
-  const scores = new Map<DiagnosisCup, number>(
-    DIAGNOSIS_CUP_ORDER.map((cup) => [cup, 0])
+  return (
+    neighbors.reduce(
+      (sum, neighbor) => sum + neighbor.weight * getCupIndex(neighbor.entry.cup),
+      0
+    ) / totalWeight
   );
-
-  neighbors.forEach((neighbor) => {
-    const cup = neighbor.entry.cup;
-    const adjusted = neighbor.weight * (CUP_PRIOR_WEIGHTS[cup] ?? 1);
-    scores.set(cup, (scores.get(cup) ?? 0) + adjusted);
-  });
-
-  const totalAdjusted = [...scores.values()].reduce((sum, value) => sum + value, 0);
-  const cup = DIAGNOSIS_CUP_ORDER.reduce((bestCup, currentCup) => {
-    const currentScore = scores.get(currentCup) ?? 0;
-    const bestScore = scores.get(bestCup) ?? 0;
-
-    if (currentScore !== bestScore) {
-      return currentScore > bestScore ? currentCup : bestCup;
-    }
-
-    return Math.abs(getCupIndex(currentCup) - 3) < Math.abs(getCupIndex(bestCup) - 3)
-      ? currentCup
-      : bestCup;
-  }, DIAGNOSIS_CUP_ORDER[0]);
-
-  return {
-    cup,
-    winningShare:
-      totalAdjusted <= 1e-12
-        ? 1 / DIAGNOSIS_CUP_ORDER.length
-        : (scores.get(cup) ?? 0) / totalAdjusted,
-  };
 }
 
-function voteCups(predictions: DiagnosisCup[]): {
-  cup: DiagnosisCup;
-  winningShare: number;
-} {
-  const indices = predictions.map((p) => getCupIndex(p));
-  const avg = indices.reduce((sum, i) => sum + i, 0) / indices.length;
+function combineCupIndices(indices: number[]): DiagnosisCup {
+  const average = indices.reduce((sum, index) => sum + index, 0) / indices.length;
+  const roundedIndex = clamp(Math.round(average), 0, DIAGNOSIS_CUP_ORDER.length - 1);
 
-  const roundedIndex = clamp(Math.round(avg), 0, DIAGNOSIS_CUP_ORDER.length - 1);
-  const cup = DIAGNOSIS_CUP_ORDER[roundedIndex];
-  const matching = predictions.filter((p) => p === cup).length;
+  return DIAGNOSIS_CUP_ORDER[roundedIndex];
+}
 
-  return {
-    cup,
-    winningShare: matching / predictions.length,
-  };
+// Confidence proxy: share of cup-neighbour weight whose cup sits within one cup
+// of the estimate. High when neighbours cluster tightly around the answer.
+function cupNeighborAgreement(
+  neighbors: Neighbor[],
+  estimatedIndex: number
+): number {
+  const totalWeight = neighbors.reduce((sum, neighbor) => sum + neighbor.weight, 0);
+
+  if (totalWeight <= 1e-12) {
+    return neighbors.length === 0
+      ? 1 / DIAGNOSIS_CUP_ORDER.length
+      : neighbors.filter(
+          (neighbor) => Math.abs(getCupIndex(neighbor.entry.cup) - estimatedIndex) <= 1
+        ).length / neighbors.length;
+  }
+
+  const agreeingWeight = neighbors.reduce(
+    (sum, neighbor) =>
+      Math.abs(getCupIndex(neighbor.entry.cup) - estimatedIndex) <= 1
+        ? sum + neighbor.weight
+        : sum,
+    0
+  );
+
+  return agreeingWeight / totalWeight;
 }
 
 export function inferSilhouetteType(
@@ -531,20 +515,19 @@ function predictCup(
       undefined,
       options?.excludeName
     );
-    const prediction = weightedCupVote(neighbors);
 
     return {
       neighbors,
-      prediction: prediction.cup,
+      index: weightedCupIndex(neighbors),
     };
   });
-  const { cup, winningShare } = voteCups(
-    modelPredictions.map((model) => model.prediction)
-  );
+  const cup = combineCupIndices(modelPredictions.map((model) => model.index));
+  const neighbors = modelPredictions.flatMap((model) => model.neighbors);
+  const winningShare = cupNeighborAgreement(neighbors, getCupIndex(cup));
 
   return {
     estimatedCup: cup,
-    neighbors: modelPredictions.flatMap((model) => model.neighbors),
+    neighbors,
     winningShare,
   };
 }

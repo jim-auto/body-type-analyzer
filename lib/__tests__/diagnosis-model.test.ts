@@ -104,9 +104,10 @@ describe("diagnosis-model", () => {
     expect(inferSilhouetteType(162, "D")).toBe("X");
   });
 
-  test("クラス頻度補正により低カップ予測が出ることがある", () => {
-    // 学習データはF以上に強く偏っているため、補正前は全件H付近に張り付く。
-    // 補正後は少なくとも一定数の小カップ予測 (E以下) が現れることを確認する。
+  test("順序回帰により低カップ予測が出ることがある", () => {
+    // 学習データはF以上に強く偏っている。近傍のカップ指標を距離重み平均する
+    // 順序回帰では、真値が小カップの人には小カップの近傍が効くため、少なくとも
+    // 一定数の小カップ予測 (E以下) が現れることを確認する。
     const cupEntries = DIAGNOSIS_MODEL_ENTRIES.filter(
       (entry) => entry.availability.cup
     );
@@ -128,7 +129,7 @@ describe("diagnosis-model", () => {
   });
 
   test("予測カップは A-K の範囲全体にわたって分布する", () => {
-    // 補正後は単一カップに張り付かず、複数カップが出力されることを確認する。
+    // 順序回帰では単一カップに張り付かず、複数カップが出力されることを確認する。
     const cupEntries = DIAGNOSIS_MODEL_ENTRIES.filter(
       (entry) => entry.availability.cup
     );
