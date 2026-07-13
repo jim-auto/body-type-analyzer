@@ -18,6 +18,16 @@ POSE_MODEL_PATH = Path(__file__).resolve().parents[1] / "local-data" / "pose_lan
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = REPO_ROOT / "public" / "data" / "diagnosis-model.json"
+EMBEDDER_MODEL_PATH = REPO_ROOT / "local-data" / "mobilenet_v3_small_embedder.tflite"
+EMBEDDER_MODEL_URL = (
+    "https://storage.googleapis.com/mediapipe-models/image_embedder/"
+    "mobilenet_v3_small/float32/1/mobilenet_v3_small.tflite"
+)
+# MobileNetV3 image-embedding feature sets (heightEmbed = full frame,
+# cupEmbed = top crop) reduced to EMBED_PCA_DIM via a PCA projection stored in
+# the model so the browser can reproduce the exact same reduced vectors.
+EMBED_PCA_DIM = 64
+EMBED_TOP_RATIO = 0.45
 LOCAL_TRAINING_DATA_PATH = REPO_ROOT / "local-data" / "training-profiles.json"
 IMAGE_CREDITS_PATH = REPO_ROOT / "public" / "data" / "image-credits.json"
 
@@ -45,6 +55,7 @@ FEATURE_SETS = {
     "heightDctFull": [("full", 12, "dct")],
     "heightHogFull": [("full", 8, "hog"), ("fullCenter", 8, "hog")],
     "heightPose": [],
+    "heightEmbed": [],
     "cupPrimary": [("top", 8, "gray"), ("top", 12, "gray")],
     "cupSecondary": [("top", 8, "gray"), ("mid", 6, "gray")],
     "cupCenter": [("topCenter", 10, "gray"), ("torsoCenter", 8, "gray")],
@@ -55,6 +66,7 @@ FEATURE_SETS = {
     "cupDctTop": [("top", 12, "dct")],
     "cupHogTop": [("top", 8, "hog"), ("topCenter", 8, "hog")],
     "cupPose": [],
+    "cupEmbed": [],
     "similarity": [("full", 8, "gray"), ("top", 8, "gray")],
 }
 ORICON_HEIGHT_ALLOWLIST = {
@@ -79,6 +91,7 @@ HEIGHT_FEATURE_CANDIDATES = (
     "heightDctFull",
     "heightHogFull",
     "heightPose",
+    "heightEmbed",
 )
 CUP_FEATURE_CANDIDATES = (
     "cupPrimary",
@@ -91,6 +104,7 @@ CUP_FEATURE_CANDIDATES = (
     "cupDctTop",
     "cupHogTop",
     "cupPose",
+    "cupEmbed",
 )
 K_CANDIDATES = (1, 3, 5, 7, 9, 11, 13, 15)
 MAX_ENSEMBLE_SIZE = 3
@@ -107,11 +121,12 @@ FOCUS_MIN_HEIGHT_RATIO = 0.88
 FOCUS_HORIZONTAL_PADDING_RATIO = 0.1
 FOCUS_VERTICAL_PADDING_RATIO = 0.04
 ROBUST_HEIGHT_MODELS = (
+    ("heightEmbed", 15),
     ("heightProfile", 13),
     ("heightHistFull", 15),
-    ("heightPrimary", 15),
 )
 ROBUST_CUP_MODELS = (
+    ("cupEmbed", 15),
     ("cupProfile", 11),
     ("cupSecondary", 11),
 )
@@ -759,6 +774,113 @@ def feature_group_for_name(feature_name: str) -> str:
         return "cup"
 
     return "similarity"
+
+
+def ensure_embedder_model() -> None:
+    if EMBEDDER_MODEL_PATH.exists():
+        return
+
+    import urllib.request
+
+    EMBEDDER_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Downloading image embedder model -> {EMBEDDER_MODEL_PATH}", flush=True)
+    urllib.request.urlretrieve(EMBEDDER_MODEL_URL, EMBEDDER_MODEL_PATH)
+
+
+def compute_raw_embeddings(
+    rgb_images: list[Image.Image],
+) -> tuple[np.ndarray, np.ndarray]:
+    """L2-normalized MobileNetV3 embeddings for the full frame and the top crop.
+
+    The top crop mirrors the browser: the top EMBED_TOP_RATIO of the raw image,
+    which frames the chest for cup estimation. Kept identical in image-analyzer.ts.
+    """
+    ensure_embedder_model()
+
+    import mediapipe as mp
+    from mediapipe.tasks.python.core.base_options import BaseOptions
+    from mediapipe.tasks.python.vision import ImageEmbedder, ImageEmbedderOptions
+    from mediapipe.tasks.python.vision.core.vision_task_running_mode import (
+        VisionTaskRunningMode,
+    )
+
+    options = ImageEmbedderOptions(
+        base_options=BaseOptions(model_asset_path=str(EMBEDDER_MODEL_PATH)),
+        l2_normalize=True,
+        quantize=False,
+        running_mode=VisionTaskRunningMode.IMAGE,
+    )
+    full_rows: list[np.ndarray] = []
+    top_rows: list[np.ndarray] = []
+
+    with ImageEmbedder.create_from_options(options) as embedder:
+        for image in rgb_images:
+            rgb = image.convert("RGB")
+            full_arr = np.ascontiguousarray(np.asarray(rgb, dtype=np.uint8))
+            full_embedding = embedder.embed(
+                mp.Image(image_format=mp.ImageFormat.SRGB, data=full_arr)
+            ).embeddings[0].embedding
+            top_height = max(1, int(rgb.height * EMBED_TOP_RATIO))
+            top_arr = np.ascontiguousarray(
+                np.asarray(rgb.crop((0, 0, rgb.width, top_height)), dtype=np.uint8)
+            )
+            top_embedding = embedder.embed(
+                mp.Image(image_format=mp.ImageFormat.SRGB, data=top_arr)
+            ).embeddings[0].embedding
+            full_rows.append(np.asarray(full_embedding, dtype=np.float64))
+            top_rows.append(np.asarray(top_embedding, dtype=np.float64))
+
+    return np.stack(full_rows), np.stack(top_rows)
+
+
+def fit_embedding_pca(matrix: np.ndarray, dim: int) -> tuple[np.ndarray, np.ndarray]:
+    mean = matrix.mean(axis=0)
+    _, _, vt = np.linalg.svd(matrix - mean, full_matrices=False)
+    components = vt[: min(dim, vt.shape[0])]
+    return mean, components
+
+
+def project_embeddings(
+    matrix: np.ndarray, mean: np.ndarray, components: np.ndarray
+) -> list[list[float]]:
+    projected = (matrix - mean) @ components.T
+    return [[round(float(value), 4) for value in row] for row in projected]
+
+
+def build_embedding_feature_sets(
+    rgb_images: list[Image.Image],
+) -> tuple[dict[str, list[list[float]]], dict[str, object]]:
+    raw_full, raw_top = compute_raw_embeddings(rgb_images)
+    full_mean, full_components = fit_embedding_pca(raw_full, EMBED_PCA_DIM)
+    top_mean, top_components = fit_embedding_pca(raw_top, EMBED_PCA_DIM)
+
+    feature_sets = {
+        "heightEmbed": project_embeddings(raw_full, full_mean, full_components),
+        "cupEmbed": project_embeddings(raw_top, top_mean, top_components),
+    }
+    params = {
+        "model": "mobilenet_v3_small",
+        "l2Normalize": True,
+        "topRatio": EMBED_TOP_RATIO,
+        "dim": int(full_components.shape[0]),
+        "heightEmbed": {
+            "featureSet": "heightEmbed",
+            "region": "full",
+            "mean": [round(float(value), 6) for value in full_mean],
+            "components": [
+                [round(float(value), 6) for value in row] for row in full_components
+            ],
+        },
+        "cupEmbed": {
+            "featureSet": "cupEmbed",
+            "region": "top",
+            "mean": [round(float(value), 6) for value in top_mean],
+            "components": [
+                [round(float(value), 6) for value in row] for row in top_components
+            ],
+        },
+    }
+    return feature_sets, params
 
 
 def average_feature_vectors(feature_vectors: list[list[float]]) -> list[float]:
@@ -2401,7 +2523,16 @@ def prepare_model_inputs(
     pose_features, pose_detected = build_pose_features(rgb_images)
     raw_feature_sets["heightPose"] = pose_features
     raw_feature_sets["cupPose"] = pose_features
+    embedding_feature_sets, embedding_params = build_embedding_feature_sets(rgb_images)
+    raw_feature_sets["heightEmbed"] = embedding_feature_sets["heightEmbed"]
+    raw_feature_sets["cupEmbed"] = embedding_feature_sets["cupEmbed"]
     normalization_stats = compute_normalization_stats(raw_feature_sets)
+    # PCA embeddings are already decorrelated + variance-ordered; per-dim
+    # standardization would whiten them and amplify noise dimensions (measured
+    # to wreck cup accuracy), so keep them raw via identity normalization.
+    for embed_name in ("heightEmbed", "cupEmbed"):
+        dim = len(raw_feature_sets[embed_name][0]) if raw_feature_sets[embed_name] else 0
+        normalization_stats[embed_name] = {"mean": [0.0] * dim, "stddev": [1.0] * dim}
     feature_sets = normalize_feature_sets(raw_feature_sets, normalization_stats)
     profile_source_weights = [
         get_profile_source_weights(profile, source_weight_preset)
@@ -2440,6 +2571,7 @@ def prepare_model_inputs(
         "cups": cups,
         "names": names,
         "feature_weight_sets": feature_weight_sets,
+        "embedding_params": embedding_params,
     }
 
 
@@ -2493,6 +2625,7 @@ def build_model(
         "version": 2,
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "normalization": normalization_stats,
+        "embedding": model_inputs["embedding_params"],
         "metrics": {
             "trainingCount": len(active_indices),
             "height": {

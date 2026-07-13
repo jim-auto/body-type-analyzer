@@ -1,4 +1,5 @@
 import {
+  DIAGNOSIS_MODEL_EMBEDDING,
   DIAGNOSIS_MODEL_METRICS,
   MALE_DIAGNOSIS_MODEL_METRICS,
   diagnoseMaleFromFeatures,
@@ -7,9 +8,13 @@ import {
   normalizeMaleFeatures,
   type DiagnosisFeatures,
   type DiagnosisResult,
+  type EmbeddingProjection,
   type MaleDiagnosisResult,
   type SilhouetteType,
 } from "./diagnosis-model.ts";
+
+const EMBEDDER_MODEL_URL =
+  "https://storage.googleapis.com/mediapipe-models/image_embedder/mobilenet_v3_small/float32/1/mobilenet_v3_small.tflite";
 
 const REGION_BOUNDS = {
   full: [0, 0, 1, 1],
@@ -1178,6 +1183,91 @@ async function extractPoseAnalysis(
   }
 }
 
+function projectEmbedding(raw: number[], projection: EmbeddingProjection): number[] {
+  const { mean, components } = projection;
+  const centered = raw.map((value, index) => value - (mean[index] ?? 0));
+
+  return components.map((row) => {
+    let sum = 0;
+
+    for (let index = 0; index < row.length; index += 1) {
+      sum += (row[index] ?? 0) * (centered[index] ?? 0);
+    }
+
+    return roundFeature(sum);
+  });
+}
+
+type EmbeddingFeatures = { heightEmbed: number[]; cupEmbed: number[] };
+
+const EMPTY_EMBEDDING_FEATURES: EmbeddingFeatures = { heightEmbed: [], cupEmbed: [] };
+
+// Same MobileNetV3 embedding + PCA projection the model was built with, run in
+// the browser so uploaded photos land in the identical reduced feature space.
+// Full frame drives height, the top crop (topRatio) frames the chest for cup.
+async function extractEmbeddingFeatures(
+  image: HTMLImageElement
+): Promise<EmbeddingFeatures> {
+  const params = DIAGNOSIS_MODEL_EMBEDDING;
+
+  if (!params) {
+    return EMPTY_EMBEDDING_FEATURES;
+  }
+
+  try {
+    const { ImageEmbedder, FilesetResolver } = await import("@mediapipe/tasks-vision");
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+    const embedder = await ImageEmbedder.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: EMBEDDER_MODEL_URL },
+      runningMode: "IMAGE",
+      l2Normalize: true,
+      quantize: false,
+    });
+
+    try {
+      const fullCanvas = createSourceCanvas(image);
+      const fullRaw = embedder.embed(fullCanvas).embeddings[0]?.floatEmbedding;
+      const topHeight = Math.max(1, Math.floor(image.naturalHeight * params.topRatio));
+      const topCanvas = document.createElement("canvas");
+      const topContext = topCanvas.getContext("2d", { willReadFrequently: true });
+
+      if (!topContext || !fullRaw) {
+        return EMPTY_EMBEDDING_FEATURES;
+      }
+
+      topCanvas.width = image.naturalWidth;
+      topCanvas.height = topHeight;
+      topContext.drawImage(
+        image,
+        0,
+        0,
+        image.naturalWidth,
+        topHeight,
+        0,
+        0,
+        image.naturalWidth,
+        topHeight
+      );
+      const topRaw = embedder.embed(topCanvas).embeddings[0]?.floatEmbedding;
+
+      if (!topRaw) {
+        return EMPTY_EMBEDDING_FEATURES;
+      }
+
+      return {
+        heightEmbed: projectEmbedding(Array.from(fullRaw), params.heightEmbed),
+        cupEmbed: projectEmbedding(Array.from(topRaw), params.cupEmbed),
+      };
+    } finally {
+      embedder.close();
+    }
+  } catch {
+    return EMPTY_EMBEDDING_FEATURES;
+  }
+}
+
 export type DiagnosisFeatureResult = {
   features: DiagnosisFeatures;
   isLowQuality: boolean;
@@ -1197,6 +1287,7 @@ export async function extractDiagnosisFeatures(
 
   const poseAnalysis = await extractPoseAnalysis(image);
   const poseFeatures = poseAnalysis.features;
+  const embeddingFeatures = await extractEmbeddingFeatures(image);
 
   const rawFeatures: DiagnosisFeatures = {
     heightPrimary: extractEnsembleFeatures([sourceImage, focusedImage], HEIGHT_FEATURE_SPECS[0]),
@@ -1221,6 +1312,8 @@ export async function extractDiagnosisFeatures(
     cupDctTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[7]),
     cupHogTop: extractFeatures(focusedImage, CUP_FEATURE_SPECS[8]),
     cupPose: poseFeatures,
+    cupEmbed: embeddingFeatures.cupEmbed,
+    heightEmbed: embeddingFeatures.heightEmbed,
     similarity: extractFeatures(focusedImage, SIMILARITY_FEATURE_SPECS),
   };
 

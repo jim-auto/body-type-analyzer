@@ -48,7 +48,25 @@ export type DiagnosisFeatures = {
   cupDctTop: number[];
   cupHogTop: number[];
   cupPose: number[];
+  cupEmbed: number[];
+  heightEmbed: number[];
   similarity: number[];
+};
+
+export type EmbeddingProjection = {
+  featureSet: keyof DiagnosisFeatures;
+  region: "full" | "top";
+  mean: number[];
+  components: number[][];
+};
+
+export type EmbeddingParams = {
+  model: string;
+  l2Normalize: boolean;
+  topRatio: number;
+  dim: number;
+  heightEmbed: EmbeddingProjection;
+  cupEmbed: EmbeddingProjection;
 };
 
 export type NormalizationStats = {
@@ -197,6 +215,7 @@ export type DiagnosisModel = {
   version: number;
   generatedAt: string;
   normalization?: NormalizationStats;
+  embedding?: EmbeddingParams;
   metrics: {
     trainingCount: number;
     height: HeightMetrics;
@@ -257,6 +276,7 @@ export const DIAGNOSIS_MODEL = diagnosisModel;
 export const DIAGNOSIS_MODEL_ENTRIES = diagnosisModel.entries;
 export const DIAGNOSIS_MODEL_METRICS = diagnosisModel.metrics;
 export const DIAGNOSIS_MODEL_NORMALIZATION = diagnosisModel.normalization;
+export const DIAGNOSIS_MODEL_EMBEDDING = diagnosisModel.embedding;
 export const MALE_DIAGNOSIS_MODEL = maleDiagnosisModel;
 export const MALE_DIAGNOSIS_MODEL_ENTRIES = maleDiagnosisModel.entries;
 export const MALE_DIAGNOSIS_MODEL_METRICS = maleDiagnosisModel.metrics;
@@ -477,20 +497,22 @@ function predictHeight(
   features: DiagnosisFeatures,
   options?: DiagnoseOptions
 ): { estimatedHeight: number; neighbors: Neighbor[] } {
-  const modelPredictions = DIAGNOSIS_MODEL_METRICS.height.models.map((model) => {
-    const neighbors = getNeighbors(
-      features[model.featureSet],
-      model.featureSet,
-      model.k,
-      undefined,
-      options?.excludeName
-    );
+  const modelPredictions = DIAGNOSIS_MODEL_METRICS.height.models
+    .filter((model) => (features[model.featureSet]?.length ?? 0) > 0)
+    .map((model) => {
+      const neighbors = getNeighbors(
+        features[model.featureSet],
+        model.featureSet,
+        model.k,
+        undefined,
+        options?.excludeName
+      );
 
-    return {
-      neighbors,
-      prediction: weightedMean(neighbors, (entry) => entry.actualHeight ?? HEIGHT_MIN),
-    };
-  });
+      return {
+        neighbors,
+        prediction: weightedMean(neighbors, (entry) => entry.actualHeight ?? HEIGHT_MIN),
+      };
+    });
   const predictions = modelPredictions.map((model) => model.prediction).sort((a, b) => a - b);
   const median =
     predictions.length % 2 === 1
@@ -507,20 +529,22 @@ function predictCup(
   features: DiagnosisFeatures,
   options?: DiagnoseOptions
 ): { estimatedCup: DiagnosisCup; neighbors: Neighbor[]; winningShare: number } {
-  const modelPredictions = DIAGNOSIS_MODEL_METRICS.cup.models.map((model) => {
-    const neighbors = getNeighbors(
-      features[model.featureSet],
-      model.featureSet,
-      model.k,
-      undefined,
-      options?.excludeName
-    );
+  const modelPredictions = DIAGNOSIS_MODEL_METRICS.cup.models
+    .filter((model) => (features[model.featureSet]?.length ?? 0) > 0)
+    .map((model) => {
+      const neighbors = getNeighbors(
+        features[model.featureSet],
+        model.featureSet,
+        model.k,
+        undefined,
+        options?.excludeName
+      );
 
-    return {
-      neighbors,
-      index: weightedCupIndex(neighbors),
-    };
-  });
+      return {
+        neighbors,
+        index: weightedCupIndex(neighbors),
+      };
+    });
   const cup = combineCupIndices(modelPredictions.map((model) => model.index));
   const neighbors = modelPredictions.flatMap((model) => model.neighbors);
   const winningShare = cupNeighborAgreement(neighbors, getCupIndex(cup));
