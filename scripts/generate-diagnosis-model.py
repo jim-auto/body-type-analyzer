@@ -130,6 +130,17 @@ ROBUST_CUP_MODELS = (
     ("cupProfile", 11),
     ("cupSecondary", 11),
 )
+# Only the feature sets actually consumed at inference (the kNN models plus
+# similarity) are written into each shipped entry. The other ~15 candidate
+# feature sets are used only during offline model selection/experiments, so
+# shipping them just bloats the client download (~9.9MB of dead weight).
+SHIPPED_FEATURE_SETS = tuple(
+    dict.fromkeys(
+        [feature_name for feature_name, _ in ROBUST_HEIGHT_MODELS]
+        + [feature_name for feature_name, _ in ROBUST_CUP_MODELS]
+        + ["similarity"]
+    )
+)
 TRUSTED_LOCAL_SOURCES = {
     "talent-databank",
     "idolprof",
@@ -2624,7 +2635,11 @@ def build_model(
     return {
         "version": 2,
         "generatedAt": datetime.now(timezone.utc).isoformat(),
-        "normalization": normalization_stats,
+        "normalization": {
+            feature_name: normalization_stats[feature_name]
+            for feature_name in SHIPPED_FEATURE_SETS
+            if feature_name in normalization_stats
+        },
         "embedding": model_inputs["embedding_params"],
         "metrics": {
             "trainingCount": len(active_indices),
@@ -2674,7 +2689,7 @@ def build_model(
                 },
                 "featureSets": {
                     feature_name: feature_sets[feature_name][index]
-                    for feature_name in FEATURE_SETS
+                    for feature_name in SHIPPED_FEATURE_SETS
                 },
                 "sourceWeights": {
                     "height": profile_source_weights[index].height,
@@ -2683,7 +2698,7 @@ def build_model(
                 },
                 "featureWeights": {
                     feature_name: feature_weight_sets[feature_name][index]
-                    for feature_name in FEATURE_SETS
+                    for feature_name in SHIPPED_FEATURE_SETS
                 },
             }
             for index, profile in enumerate(profiles)

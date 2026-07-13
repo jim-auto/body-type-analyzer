@@ -463,10 +463,23 @@ def build_model() -> tuple[dict[str, object], dict[str, object]]:
         },
     }
 
+    # Only ship feature sets the inference kNN actually reads (the selected
+    # height models plus similarity); the rest are offline-selection only and
+    # would just bloat the client download.
+    shipped_feature_sets = list(
+        dict.fromkeys(
+            [model["featureSet"] for model in metrics["models"]] + ["similarity"]
+        )
+    )
+
     diagnosis_model = {
         "version": 2,
         "generatedAt": datetime.now(timezone.utc).isoformat(),
-        "normalization": normalization_stats,
+        "normalization": {
+            feature_name: normalization_stats[feature_name]
+            for feature_name in shipped_feature_sets
+            if feature_name in normalization_stats
+        },
         "metrics": {
             "trainingCount": len(profiles),
             "height": {
@@ -486,7 +499,7 @@ def build_model() -> tuple[dict[str, object], dict[str, object]]:
                 "actualHeight": float(profile["actualHeight"]),
                 "featureSets": {
                     feature_name: feature_sets[feature_name][index]
-                    for feature_name in feature_sets
+                    for feature_name in shipped_feature_sets
                 },
             }
             for index, profile in enumerate(profiles)

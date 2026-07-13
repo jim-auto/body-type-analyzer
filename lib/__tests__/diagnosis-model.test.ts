@@ -82,19 +82,23 @@ describe("diagnosis-model", () => {
     expect(DIAGNOSIS_MODEL_METRICS.cup.generalization.mae).toBeLessThanOrEqual(3.0);
   });
 
-  test("featureSets は必要な全ての特徴量を持つ", () => {
-    expect(sampleEntry.featureSets.heightPrimary.length).toBe(100);
-    expect(sampleEntry.featureSets.heightBalanced.length).toBe(108);
-    expect(sampleEntry.featureSets.heightWide.length).toBe(196);
-    expect(sampleEntry.featureSets.heightCenter.length).toBe(128);
-    expect(sampleEntry.featureSets.heightProfile.length).toBe(44);
-    expect(sampleEntry.featureSets.heightEdgeFull.length).toBe(64);
-    expect(sampleEntry.featureSets.heightEdgeCenter.length).toBe(128);
-    expect(sampleEntry.featureSets.cupPrimary.length).toBe(208);
-    expect(sampleEntry.featureSets.cupSecondary.length).toBe(100);
-    expect(sampleEntry.featureSets.cupCenter.length).toBe(164);
-    expect(sampleEntry.featureSets.cupProfile.length).toBe(44);
-    expect(sampleEntry.featureSets.cupEdgeTop.length).toBe(100);
+  test("featureSets は推論に使う特徴量のみを持つ (配信サイズ削減)", () => {
+    // 出荷エントリは kNN モデル + similarity が参照する特徴量だけを持つ。
+    // 未使用の候補特徴量はオフラインのモデル選択専用で、配信されない。
+    const shipped = DIAGNOSIS_MODEL_METRICS.height.models
+      .map((model) => model.featureSet)
+      .concat(DIAGNOSIS_MODEL_METRICS.cup.models.map((model) => model.featureSet))
+      .concat(["similarity"]);
+
+    for (const featureSet of shipped) {
+      expect(sampleEntry.featureSets[featureSet]?.length ?? 0).toBeGreaterThan(0);
+    }
+    // 未使用特徴量は出荷エントリから除去されている。
+    expect(sampleEntry.featureSets.heightPrimary).toBeUndefined();
+    expect(sampleEntry.featureSets.cupPrimary).toBeUndefined();
+
+    expect(sampleEntry.featureSets.heightEmbed.length).toBe(64);
+    expect(sampleEntry.featureSets.cupEmbed.length).toBe(64);
     expect(sampleEntry.featureSets.similarity.length).toBe(128);
   });
 
