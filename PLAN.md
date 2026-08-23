@@ -1,6 +1,6 @@
 # Copilot Handoff Plan
 
-Updated: 2026-08-23 JST (uncommitted working tree, image batch + stress cases)
+Updated: 2026-08-23 JST (deployed: `0b38a48` images + `217d9fa` stress cases)
 
 Repository: `body-type-analyzer`
 
@@ -8,10 +8,13 @@ Public site: `https://jim-auto.github.io/body-type-analyzer/`
 
 Current live analyze page: `https://jim-auto.github.io/body-type-analyzer/analyze`
 
-## 0.0 Session Snapshot (2026-08-23): Image Batch 4+5 + Stress Cases (UNCOMMITTED)
+## 0.0 Session Snapshot (2026-08-23): Image Batch 4+5 + Stress Cases (DEPLOYED)
 
-Working tree has the following completed but uncommitted work. Verify with
-`npm test` / `npm run lint` / `npm run build` (all green at handoff), then commit.
+Working tree state at handoff: both commits pushed, Pages workflow run
+32647743215 succeeded for `217d9fa`. Public smoke verified: `/analyze` 200,
+upgraded webp served (46,488 B), Playwright full-body stress case passed on
+production with Pose ROI engaged. The commit-split suggestion below is kept
+for reference only — it was already executed.
 
 ### What was done
 
