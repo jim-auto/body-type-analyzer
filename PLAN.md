@@ -1,5 +1,79 @@
 # Copilot Handoff Plan
 
+Updated: 2026-08-23 JST (uncommitted working tree, image batch + stress cases)
+
+Repository: `body-type-analyzer`
+
+Public site: `https://jim-auto.github.io/body-type-analyzer/`
+
+Current live analyze page: `https://jim-auto.github.io/body-type-analyzer/analyze`
+
+## 0.0 Session Snapshot (2026-08-23): Image Batch 4+5 + Stress Cases (UNCOMMITTED)
+
+Working tree has the following completed but uncommitted work. Verify with
+`npm test` / `npm run lint` / `npm run build` (all green at handoff), then commit.
+
+### What was done
+
+1. **Low-quality ranking image refresh (~98 images upgraded in place).**
+   Generated next-50 target list from `local-data/qa/ranking-image-qa-top500.json`
+   sorted by `width × height`, ran the standard Bing fetch recipe
+   (`--only-names-file ... --refresh-existing --preserve-names-order --gender all --top-n 0 --limit 50 --min-bytes 12000 --min-side 300`),
+   then `optimize:images`. A second concurrent batch of ~50 more names landed in
+   the same working tree from a parallel session (same script, provider=bing credits).
+   Net effect: `ranking-image-qa-top500` flagged profiles **226 → 135 (-40%)**.
+   All modified images verified valid webp, ≥200px, strictly larger than before.
+2. **Wrong-person / unusable replacement audit.** All ~98 replaced images were
+   visually audited (old vs new). Five replacements were reverted to the
+   committed versions and their `image-credits.json` entries restored:
+   - `jp_e8889ee5b2a1_d6d290b8.webp` 舞岡結希 — explicit nudity (must not ship)
+   - `jp_e69c89e5a588_964956c0.webp` 有奈めぐみ — male photo, wrong gender
+   - `jp_e69dbee5b68b_6ee8432f.webp` 松嶋まりな — near-explicit latex shot
+   - `jp_e4bd90e38085_61beebe2.webp` 佐々木しのぶ — CD back cover text scan
+   - `jp_e5af8ce6b2a2_52057451.webp` 富沢みすず — two-person DVD cover
+   手塚真由美 was also attempted twice (Chesley Bonestell Mars painting, then a
+   Squirtle sticker) and remains on its original DMM thumbnail — known-fail name,
+   needs a manual source.
+3. **Stress cases added to `scripts/verify-cup-visualization.mjs`.** Five real
+   curated images appended under `stress-*` categories: full-body standing with
+   hips visible (`jp_e6b1a0e794b0_e80ae42a` 池田ゆり), seated side-facing busy
+   beach (`jp_e69e97e38286_33a126e1`), slight-angle portrait
+   (`jp_e7afa0e794b0_ac67e6e5` 篠田麻里子), 125px low-res (`cocolo_ddee2511`),
+   no-person flower close-up (`ov_e6a2a8e88ab1_2f1e9745`). Note: a parallel
+   session added a complementary `--stress` flag + `scripts/generate-stress-case-images.py`
+   that synthesizes multi-person/low-res/busy variants into gitignored
+   `local-data/cup-visualization-qa/stress/`; both designs coexist.
+4. **Playwright run of the stress set against production passed 5/5.** Key findings:
+   - Full-body hips-in-frame DOES engage Pose ROI (cup=G conf=66% mask=19%).
+   - Seated/side-facing falls back to Crop fallback with mask only 7% — graceful.
+   - The no-person flower image still "completes" confidently (cup=G conf=62%):
+     there is NO person-detection guard. Candidate future fix: warn when no pose
+     landmarks and mask coverage is implausible for a human subject.
+
+### Verification at this snapshot
+
+```text
+npm test   12 suites, 145 tests passed
+npm run lint    0 errors, 11 warnings (existing baseline only)
+npm run build   success (/, /_not-found, /analyze, /credits)
+```
+
+### Suggested commit split
+
+```text
+git add public/images public/data/ranking.json public/data/image-credits.json
+git commit -m "Refresh low-quality ranking profile images and revert bad fetches"
+# then separately:
+git add scripts/verify-cup-visualization.mjs scripts/generate-stress-case-images.py PLAN.md
+git commit -m "Add stress cases to cup visualization QA harness"
+```
+
+Do NOT stage `.claude/settings.local.json` or `local-data/`.
+
+Previous status below (2026-04-19) is retained for context.
+
+---
+
 Updated: 2026-04-19 JST (after `b1d1fab`)
 
 Repository: `body-type-analyzer`

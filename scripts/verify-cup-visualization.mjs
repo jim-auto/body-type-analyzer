@@ -8,13 +8,22 @@
 // The script is read-only against the deployed app and does not push or modify
 // anything in the repository besides the local-data/ outputs.
 //
+// Stress cases: generated variants (multi-person, low-resolution,
+// busy-background, face-crop, tilted, off-center) are produced by
+// scripts/generate-stress-case-images.py into
+// local-data/cup-visualization-qa/stress/. This harness auto-discovers files
+// named stress_<category>_<nn>.jpg|png|webp there and appends them after the
+// base samples. Real seated / side-facing photos can be dropped into the same
+// folder manually using the same naming pattern. Use --no-stress to skip them.
+//
 // Usage examples:
 //   node scripts/verify-cup-visualization.mjs --url http://localhost:3001/body-type-analyzer/analyze
 //   node scripts/verify-cup-visualization.mjs --url https://jim-auto.github.io/body-type-analyzer/analyze --limit 10
 //   node scripts/verify-cup-visualization.mjs --only fukada_kyoko,hamabe_minami
+//   node scripts/verify-cup-visualization.mjs --only stress_multi-person_01,stress_low-resolution_01
 
 import { chromium } from "playwright";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -22,6 +31,8 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
+const STRESS_DIR = path.join(REPO_ROOT, "local-data", "cup-visualization-qa", "stress");
+const STRESS_FILE_PATTERN = /^stress_([a-z0-9-]+)_\d+\.(?:jpe?g|png|webp)$/i;
 
 // Curated sample set. Names refer to public/images/<name>.webp files that
 // exist at the time of writing. The script skips any missing file and reports
@@ -57,6 +68,14 @@ const SAMPLE_IMAGES = [
   { category: "variety", name: "nanao" },
   { category: "variety", name: "kashiwagi_yuki" },
   { category: "variety", name: "shiraishi_mai" },
+  // Stress cases: poses and scenes outside standard publicity portraits.
+  // Goal per PLAN.md: check whether Pose ROI engages when hips are in frame,
+  // and whether the pipeline degrades gracefully on hostile inputs.
+  { category: "stress-full-body", name: "jp_e6b1a0e794b0_e80ae42a" }, // 池田ゆり full-body standing frontal, hips visible
+  { category: "stress-seated-side", name: "jp_e69e97e38286_33a126e1" }, // seated, side-facing, busy beach background
+  { category: "stress-slight-angle", name: "jp_e7afa0e794b0_ac67e6e5" }, // 篠田麻里子 tilted head upper body
+  { category: "stress-low-res", name: "cocolo_ddee2511" }, // 125x125 thumbnail
+  { category: "stress-no-person", name: "ov_e6a2a8e88ab1_2f1e9745" }, // flower close-up, no human subject
 ];
 
 function parseArgs(argv) {
@@ -68,6 +87,7 @@ function parseArgs(argv) {
     headless: true,
     failFast: false,
     timeoutMs: 90_000,
+    stress: true,
   };
 
   for (let index = 2; index < argv.length; index += 1) {
@@ -91,6 +111,8 @@ function parseArgs(argv) {
       args.failFast = true;
     } else if (arg === "--timeout-ms") {
       args.timeoutMs = Number(next());
+    } else if (arg === "--no-stress") {
+      args.stress = false;
     } else if (arg === "--help" || arg === "-h") {
       console.log(
         [
@@ -101,7 +123,8 @@ function parseArgs(argv) {
           "  --url <url>          analyze page URL (default localhost dev server)",
           "  --out <dir>          output directory (default local-data/cup-visualization-qa)",
           "  --limit <n>          process only the first <n> sample entries",
-          "  --only <a,b,c>       process only the listed names (matches without .webp)",
+          "  --only <a,b,c>       process only the listed names (matches without extension)",
+          "  --no-stress          skip auto-discovered stress-case images",
           "  --headed             run browser with a visible window",
           "  --fail-fast          stop on first per-image failure",
           "  --timeout-ms <n>     per-image diagnosis timeout (default 90000)",
@@ -116,8 +139,25 @@ function parseArgs(argv) {
   return args;
 }
 
-function selectSamples(args) {
-  let samples = SAMPLE_IMAGES;
+async function discoverStressSamples() {
+  if (!existsSync(STRESS_DIR)) return [];
+  const files = await readdir(STRESS_DIR);
+  return files
+    .map((file) => {
+      const match = STRESS_FILE_PATTERN.exec(file);
+      if (!match) return null;
+      return {
+        category: `stress-${match[1]}`,
+        name: file.replace(/\.(jpe?g|png|webp)$/i, ""),
+        stressFile: file,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function selectSamples(args, stressSamples) {
+  let samples = args.stress ? [...SAMPLE_IMAGES, ...stressSamples] : [...SAMPLE_IMAGES];
   if (args.only) {
     const wanted = new Set(args.only);
     samples = samples.filter((sample) => wanted.has(sample.name));
@@ -287,7 +327,9 @@ async function diagnoseOneImage({ page, sample, sampleIndex, args, imagePath }) 
   page.on("requestfailed", requestFailedHandler);
 
   const result = {
-    image: `public/images/${sample.name}.webp`,
+    image: sample.stressFile
+      ? `local-data/cup-visualization-qa/stress/${sample.stressFile}`
+      : `public/images/${sample.name}.webp`,
     name: sample.name,
     category: sample.category,
     status: "unknown",
@@ -622,15 +664,22 @@ function buildReportMarkdown({ args, samples, manifest, summary }) {
   lines.push(
     "- If `Crop fallback` rate is high, MediaPipe Pose did not produce stable landmarks for those images."
   );
+  lines.push(
+    "- `stress-*` categories are derived variants (multi-person, low-resolution, busy-background, face-crop, tilted, off-center) generated by `scripts/generate-stress-case-images.py`, plus any real seated / side-facing photos dropped into the same folder. They intentionally include inputs where cup estimation should be treated as unreliable; expect more warnings and Crop fallback here than in the base set."
+  );
   return lines.join("\n");
 }
 
 async function main() {
   const args = parseArgs(process.argv);
-  const samples = selectSamples(args);
+  const stressSamples = args.stress ? await discoverStressSamples() : [];
+  const samples = selectSamples(args, stressSamples);
 
   console.log(`[info] target URL: ${args.url}`);
   console.log(`[info] samples: ${samples.length}`);
+  if (stressSamples.length > 0) {
+    console.log(`[info] stress cases discovered: ${stressSamples.length} in ${path.relative(REPO_ROOT, STRESS_DIR)}`);
+  }
   console.log(`[info] output: ${args.outDir}`);
 
   await ensureOutputDirs(args.outDir);
@@ -642,7 +691,9 @@ async function main() {
 
   for (let index = 0; index < samples.length; index += 1) {
     const sample = samples[index];
-    const imagePath = path.join(REPO_ROOT, "public", "images", `${sample.name}.webp`);
+    const imagePath = sample.stressFile
+      ? path.join(STRESS_DIR, sample.stressFile)
+      : path.join(REPO_ROOT, "public", "images", `${sample.name}.webp`);
 
     console.log(
       `\n[${pad(index + 1, 3)}/${pad(samples.length, 3)}] ${sample.category} :: ${sample.name}`
@@ -651,7 +702,9 @@ async function main() {
     if (!existsSync(imagePath)) {
       console.warn(`  skipped — file not found at ${imagePath}`);
       manifest.push({
-        image: `public/images/${sample.name}.webp`,
+        image: sample.stressFile
+          ? `local-data/cup-visualization-qa/stress/${sample.stressFile}`
+          : `public/images/${sample.name}.webp`,
         name: sample.name,
         category: sample.category,
         status: "skipped",
