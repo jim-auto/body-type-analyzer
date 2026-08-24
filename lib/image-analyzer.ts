@@ -203,6 +203,7 @@ export type DiagnosisVisualizationOverlay = {
   bodyMaskCoverage: number | null;
   poseKeypoints: PoseKeypoint[] | null;
   isUpperBodyMissing: boolean;
+  isPersonMissing: boolean;
 };
 
 export class DiagnosisInputQualityError extends Error {
@@ -1092,6 +1093,16 @@ export function detectUpperBodyMissing(
   return shoulderY > SHOULDER_LOWER_BOUND_FOR_UPPER_BODY;
 }
 
+// True when MediaPipe Pose found no person at all (no landmarks). Face-only
+// crops still yield nose/shoulder landmarks, so this only fires for images
+// where the pipeline could not locate a human subject (e.g. scenery, objects,
+// illustrations). Advisory only: inference still completes with crop features.
+export function detectPersonMissing(
+  landmarks: PoseLandmark[] | null
+): boolean {
+  return !landmarks || landmarks.length === 0;
+}
+
 function buildDiagnosisVisualization(
   image: HTMLImageElement,
   focusBox: RatioBox,
@@ -1116,6 +1127,7 @@ function buildDiagnosisVisualization(
     bodyMaskCoverage: bodyMask?.coverage ?? null,
     poseKeypoints: buildPoseKeypoints(poseAnalysis.landmarks),
     isUpperBodyMissing: detectUpperBodyMissing(poseAnalysis.landmarks),
+    isPersonMissing: detectPersonMissing(poseAnalysis.landmarks),
   };
 }
 

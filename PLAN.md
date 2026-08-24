@@ -1,12 +1,84 @@
 # Copilot Handoff Plan
 
-Updated: 2026-08-23 JST (deployed: `0b38a48` images + `217d9fa` stress cases)
+Updated: 2026-08-23 JST (session 2: G-bias analysis + person-missing guard + known-fail names, uncommitted)
 
 Repository: `body-type-analyzer`
 
 Public site: `https://jim-auto.github.io/body-type-analyzer/`
 
 Current live analyze page: `https://jim-auto.github.io/body-type-analyzer/analyze`
+
+## 0.-1 Session Snapshot (2026-08-23, later): G-bias + No-Person Guard + Known-Fail Names (UNCOMMITTED)
+
+Follow-up session on top of `3686962`. Three tasks completed.
+
+### 1. Cup G-bias analysis (finding, no code change)
+
+The 39-sample QA run predicted G for ~28/39 (~72%). Root cause is structural,
+not a bug:
+
+- Training cup distribution is centered: F=20.1%, G=24.4%, H=24.2% (F-H = 69%).
+  Training mean index 6.02 = G; median = G.
+- Current inference (lib/diagnosis-model.ts) uses a distance-weighted ORDINAL
+  mean per model + median across models (no class prior — the prior was removed
+  in `6cb3dbb` because it inflated error). Any mixture of F/G/H neighbors
+  averages to an index that rounds to G: {F,F,H}→5.67→G, {F,H,H}→6.33→G.
+  G is therefore an attractor for the entire F-H mass, not just the prior center.
+- Model metrics: cup MAE 1.059, exact 30.5%, within-1 80.0% — consistent with
+  "usually right within a cup, rarely exact".
+- Honest framing: single-letter output overstates precision. The existing
+  近傍カップ chip already surfaces the spread. Possible future product change:
+  show a cup RANGE (e.g. F〜H) when neighbor spread ≥ 2. Requires product
+  decision + metric regen; do NOT change rounding without re-running
+  evaluateDiagnosisModel.
+
+### 2. No-person warning guard (shipped, tested)
+
+- `lib/image-analyzer.ts`: new `detectPersonMissing(landmarks)` (true when
+  MediaPipe Pose returns no landmarks at all) + `isPersonMissing` field on
+  `DiagnosisVisualizationOverlay`. Face-only crops still detect
+  nose/shoulders, so this only fires for scenery/object/illustration inputs.
+- `app/analyze/page.tsx`: amber panel 「人物が検出できませんでした」 shown for
+  female analysis when `isPersonMissing` (mirrors the existing upper-body
+  warning; hidden in male mode which has no visualization).
+- 6 new Jest tests (3 page, 3 helper). Full suite: 12 suites / 151 tests green.
+- Playwright-verified on local dev (`local-data/__check_person_guard.mjs`,
+  scratch tool, gitignored): flower image → warning shown; full-body portrait
+  → not shown. PASS.
+
+### 3. Known-fail image names (manual sources required)
+
+Refetched the worst 15 remaining flagged names. 11 upgraded and visually
+audited OK. 4 deterministically return unusable images from Bing and were
+REVERTED to their committed DMM/previous thumbnails; do not blindly re-fetch
+them:
+
+```text
+手塚真由美  — Bing returns fitness/male/space-art garbage; only safe source is the 125px DMM thumb
+佐々木しのぶ — only finds a CD back-cover text scan (organist)
+富沢みすず  — only finds a two-person drama DVD cover
+舞岡結希   — top hit is an explicit lovekoala URL (must not ship)
+```
+
+Also reverted 水咲カレン back to her DMM thumb: her new t-powers official photo
+is byte-identical to 楪カレン's existing image (same person, old/new stage
+names), which fails the 別人画像使い回し Jest guard.
+
+`ranking-image-qa-top500` flagged profiles now **127** (was 226 at session start).
+
+### Verification baseline
+
+```text
+npm test   12 suites, 151 tests passed
+npm run lint    0 errors, 11 warnings (existing baseline only)
+npm run build   success
+```
+
+Suggested commit: `git add lib/image-analyzer.ts app/analyze/page.tsx app/__tests__/analyze.test.tsx lib/__tests__/image-analyzer.test.ts public/images public/data/ranking.json public/data/image-credits.json PLAN.md` in one commit, e.g.
+"Add person-missing warning, refresh worst ranking images, document G-bias".
+Do NOT stage `.claude/settings.local.json`, `local-data/`, `scripts/__pycache__/`.
+
+---
 
 ## 0.0 Session Snapshot (2026-08-23): Image Batch 4+5 + Stress Cases (DEPLOYED)
 

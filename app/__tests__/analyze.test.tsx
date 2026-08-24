@@ -106,6 +106,7 @@ const mockVisualization = {
     { name: "rightHip" as const, x: 0.58, y: 0.55, visibility: 0.85 },
   ],
   isUpperBodyMissing: false,
+  isPersonMissing: false,
 };
 
 const mockMaleResult: MaleDiagnosisResult = {
@@ -454,6 +455,58 @@ describe("AnalyzePage", () => {
 
     expect(
       screen.queryByText("上半身が十分に写っていません")
+    ).not.toBeInTheDocument();
+  });
+
+  test("通常画像 (isPersonMissing=false) では人物未検出警告は表示されない", async () => {
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.queryByText("人物が検出できませんでした")
+    ).not.toBeInTheDocument();
+  });
+
+  test("isPersonMissing=true のときは人物未検出警告を表示する", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: false,
+      visualization: { ...mockVisualization, isPersonMissing: true },
+    });
+    renderPage();
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.getByText("人物が検出できませんでした")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "写真から人物のポーズを検出できませんでした。風景や物のみの画像では推定値が大きく外れる可能性があります。人物が写った画像でお試しください。"
+      )
+    ).toBeInTheDocument();
+  });
+
+  test("男性モードでは isPersonMissing=true でも人物未検出警告を表示しない", async () => {
+    mockedExtractDiagnosisFeatures.mockResolvedValueOnce({
+      features: mockFeatures,
+      isLowQuality: false,
+      visualization: { ...mockVisualization, isPersonMissing: true },
+    });
+    renderPage();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("男性"));
+    });
+
+    await uploadImage();
+    await finishAnalysis();
+
+    expect(
+      screen.queryByText("人物が検出できませんでした")
     ).not.toBeInTheDocument();
   });
 

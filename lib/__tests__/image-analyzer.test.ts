@@ -5,6 +5,7 @@ import {
   DIAGNOSIS_VALIDATION_LABEL,
   buildChestBoxFromPose,
   detectUpperBodyMissing,
+  detectPersonMissing,
   diagnose,
   isLowInformationDiagnosisImageQuality,
 } from "@/lib/image-analyzer";
@@ -182,6 +183,23 @@ describe("image-analyzer", () => {
           Array.from({ length: 5 }, () => ({ x: 0.5, y: 0.5, visibility: 0.9 }))
         )
       ).toBe(false);
+    });
+  });
+
+  describe("detectPersonMissing", () => {
+    const makeLandmarks = () =>
+      Array.from({ length: 33 }, () => ({ x: 0.5, y: 0.5, visibility: 0.9 }));
+
+    test("landmarks=null なら true (人物未検出)", () => {
+      expect(detectPersonMissing(null)).toBe(true);
+    });
+
+    test("landmarks が空配列なら true", () => {
+      expect(detectPersonMissing([])).toBe(true);
+    });
+
+    test("landmarks があれば false", () => {
+      expect(detectPersonMissing(makeLandmarks())).toBe(false);
     });
   });
 });

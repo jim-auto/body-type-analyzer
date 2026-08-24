@@ -599,6 +599,20 @@ export default function AnalyzePage() {
 
                 {gender === "female" &&
                 visualization &&
+                visualization.isPersonMissing ? (
+                  <div
+                    role="status"
+                    className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                  >
+                    <p className="font-semibold">人物が検出できませんでした</p>
+                    <p className="mt-1 leading-6">
+                      写真から人物のポーズを検出できませんでした。風景や物のみの画像では推定値が大きく外れる可能性があります。人物が写った画像でお試しください。
+                    </p>
+                  </div>
+                ) : null}
+
+                {gender === "female" &&
+                visualization &&
                 visualization.isUpperBodyMissing ? (
                   <div
                     role="status"
