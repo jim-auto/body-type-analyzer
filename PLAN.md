@@ -1,6 +1,6 @@
 # Copilot Handoff Plan
 
-Updated: 2026-08-23 JST (session 2: G-bias analysis + person-missing guard + known-fail names, uncommitted)
+Updated: 2026-08-23 JST (session 3: benchmark synced to runtime, exact match; uncommitted)
 
 Repository: `body-type-analyzer`
 
@@ -8,7 +8,32 @@ Public site: `https://jim-auto.github.io/body-type-analyzer/`
 
 Current live analyze page: `https://jim-auto.github.io/body-type-analyzer/analyze`
 
-## 0.-1 Session Snapshot (2026-08-23, later): G-bias + No-Person Guard + Known-Fail Names (UNCOMMITTED)
+## 0.-2 Session Snapshot (2026-08-23, session 3): Benchmark ↔ Runtime Sync (UNCOMMITTED)
+
+Task 4 from the old recommended list ("benchmark formally") is now DONE.
+
+- `scripts/evaluate-diagnosis-model-benchmark.mjs` still implemented the
+  pre-`6cb3dbb` cup pipeline (modal vote + tie-break toward D + `+0.35`
+  large-cup boost) and used `localeCompare` for the distance tie-break sort.
+  Its numbers were silently wrong: cupMae 1.234 / within1 71.1% versus the
+  runtime's real 1.059 / 80.0%.
+- Replaced `weightedCupVote` + `voteCups` with `weightedCupIndex` +
+  `combineCupIndices` mirroring `lib/diagnosis-model.ts` (ordinal weighted
+  mean per model, median across models, no prior, no boost), added the same
+  per-model feature-availability filter, and switched the sort tie-break to
+  codepoint comparison to match the runtime.
+- Verification: `node scripts/evaluate-diagnosis-model-benchmark.mjs` now
+  reports EXACTLY the same numbers as runtime `evaluateDiagnosisModel()` —
+  heightMae 4.617723, cupMae 1.05948, within1Rate 0.800496 on all 807 entries.
+  The benchmark can now be trusted for A/B-ing model JSON candidates.
+- `npm run lint`: 0 errors, 11 warnings (baseline unchanged).
+
+Suggested commit: `git add scripts/evaluate-diagnosis-model-benchmark.mjs PLAN.md`
+→ "Sync cup benchmark with ordinal runtime inference".
+
+---
+
+## 0.-1 Session Snapshot (2026-08-23, later): G-bias + No-Person Guard + Known-Fail Names (DEPLOYED `850424b`)
 
 Follow-up session on top of `3686962`. Three tasks completed.
 

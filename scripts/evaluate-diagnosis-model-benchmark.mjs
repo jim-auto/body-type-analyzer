@@ -82,51 +82,39 @@ function weightedMean(neighbors, selectValue) {
   return weightedSum / totalWeight;
 }
 
-function weightedCupVote(neighbors) {
-  const scores = new Map(CUP_ORDER.map((cup) => [cup, 0]));
-
-  for (const neighbor of neighbors) {
-    scores.set(neighbor.entry.cup, (scores.get(neighbor.entry.cup) ?? 0) + neighbor.weight);
+// Mirrors weightedCupIndex in lib/diagnosis-model.ts: cup sizes are ordinal,
+// so each model contributes a distance-weighted mean of its neighbours' cup
+// indices. No class-frequency prior and no large-cup boost: the runtime
+// removed both (see 6cb3dbb) and this benchmark must stay in sync with it.
+function weightedCupIndex(neighbors) {
+  if (neighbors.length === 0) {
+    return getCupIndex("C");
   }
 
   const totalWeight = neighbors.reduce((sum, neighbor) => sum + neighbor.weight, 0);
-  const cup = CUP_ORDER.reduce((bestCup, currentCup) => {
-    const currentScore = scores.get(currentCup) ?? 0;
-    const bestScore = scores.get(bestCup) ?? 0;
 
-    if (currentScore !== bestScore) {
-      return currentScore > bestScore ? currentCup : bestCup;
-    }
-
-    return Math.abs(getCupIndex(currentCup) - 3) < Math.abs(getCupIndex(bestCup) - 3)
-      ? currentCup
-      : bestCup;
-  }, CUP_ORDER[0]);
-
-  return {
-    cup,
-    winningShare:
-      totalWeight <= 1e-12 ? 1 / CUP_ORDER.length : (scores.get(cup) ?? 0) / totalWeight,
-  };
-}
-
-function voteCups(predictions) {
-  const indices = predictions.map(getCupIndex);
-  let average = indices.reduce((sum, value) => sum + value, 0) / indices.length;
-  const maxIndex = Math.max(...indices);
-
-  if (maxIndex >= 5) {
-    average += (maxIndex - average) * 0.35;
+  if (totalWeight <= 1e-12) {
+    return (
+      neighbors.reduce((sum, neighbor) => sum + getCupIndex(neighbor.entry.cup), 0) /
+      neighbors.length
+    );
   }
 
-  const roundedIndex = clamp(Math.round(average), 0, CUP_ORDER.length - 1);
-  const cup = CUP_ORDER[roundedIndex];
-  const matching = predictions.filter((prediction) => prediction === cup).length;
+  return (
+    neighbors.reduce(
+      (sum, neighbor) => sum + neighbor.weight * getCupIndex(neighbor.entry.cup),
+      0,
+    ) / totalWeight
+  );
+}
 
-  return {
-    cup,
-    winningShare: matching / predictions.length,
-  };
+// Mirrors combineCupIndices in lib/diagnosis-model.ts: median across models,
+// rounded and clamped onto the cup order.
+function combineCupIndices(indices) {
+  const average = indices.reduce((sum, value) => sum + value, 0) / indices.length;
+  const roundedIndex = clamp(Math.round(average), 0, CUP_ORDER.length - 1);
+
+  return CUP_ORDER[roundedIndex];
 }
 
 function getNeighbors(model, targetFeatures, featureSetName, neighborCount, excludeName) {
@@ -161,7 +149,12 @@ function getNeighbors(model, targetFeatures, featureSetName, neighborCount, excl
     })
     .sort(
       (left, right) =>
-        left.distance - right.distance || left.entry.name.localeCompare(right.entry.name),
+        left.distance - right.distance ||
+        (left.entry.name < right.entry.name
+          ? -1
+          : left.entry.name > right.entry.name
+            ? 1
+            : 0),
     )
     .slice(0, neighborCount);
 }
@@ -190,19 +183,21 @@ function predictHeight(model, entry) {
 }
 
 function predictCup(model, entry) {
-  const predictions = model.metrics.cup.models.map((spec) => {
-    const neighbors = getNeighbors(
-      model,
-      entry.featureSets[spec.featureSet],
-      spec.featureSet,
-      spec.k,
-      entry.name,
-    );
+  const indices = model.metrics.cup.models
+    .filter((spec) => (entry.featureSets[spec.featureSet]?.length ?? 0) > 0)
+    .map((spec) => {
+      const neighbors = getNeighbors(
+        model,
+        entry.featureSets[spec.featureSet],
+        spec.featureSet,
+        spec.k,
+        entry.name,
+      );
 
-    return weightedCupVote(neighbors).cup;
-  });
+      return weightedCupIndex(neighbors);
+    });
 
-  return voteCups(predictions).cup;
+  return combineCupIndices(indices);
 }
 
 function mean(values) {
