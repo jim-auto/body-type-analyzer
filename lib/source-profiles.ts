@@ -16,6 +16,15 @@ export type MaleProfileSource = {
 
 export const femaleProfilePool: FemaleProfileSource[] = [
   {
+    name: "瀬戸瓰奈",
+    image: "/images/jp_e780ace688b8_eecb33ce.webp",
+    actualHeight: 170,
+    actualWeight: null,
+    bust: 101,
+    cup: "J",
+    displayCup: "J",
+  },
+  {
     name: "渡辺麻友",
     image: "/images/jp_e6b8a1e8beba_fa03a65f.webp",
     actualHeight: 156,

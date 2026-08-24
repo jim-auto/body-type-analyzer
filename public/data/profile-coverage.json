@@ -1,69 +1,69 @@
 {
-  "generatedAt": "2026-04-15T12:50:24.089Z",
+  "generatedAt": "2026-08-24T13:48:22.206Z",
   "female": {
-    "total": 1625,
-    "tagged": 1556,
-    "untagged": 69,
+    "total": 1626,
+    "tagged": 1519,
+    "untagged": 107,
     "occupations": [
       {
         "occupation": "gravure",
         "label": "グラビア",
-        "count": 712,
-        "percentage": 43.8
+        "count": 669,
+        "percentage": 41.1
       },
       {
         "occupation": "av",
         "label": "AV女優",
-        "count": 500,
-        "percentage": 30.8
+        "count": 469,
+        "percentage": 28.8
       },
       {
         "occupation": "actress",
         "label": "女優",
-        "count": 886,
-        "percentage": 54.5
+        "count": 862,
+        "percentage": 53
       },
       {
         "occupation": "model",
         "label": "モデル",
-        "count": 241,
-        "percentage": 14.8
+        "count": 224,
+        "percentage": 13.8
       },
       {
         "occupation": "talent",
         "label": "タレント",
-        "count": 585,
-        "percentage": 36
+        "count": 541,
+        "percentage": 33.3
       },
       {
         "occupation": "idol",
         "label": "アイドル",
-        "count": 682,
-        "percentage": 42
+        "count": 625,
+        "percentage": 38.4
       },
       {
         "occupation": "racequeen",
         "label": "レースクイーン",
-        "count": 73,
-        "percentage": 4.5
+        "count": 66,
+        "percentage": 4.1
       },
       {
         "occupation": "cosplayer",
         "label": "コスプレイヤー",
-        "count": 18,
-        "percentage": 1.1
+        "count": 16,
+        "percentage": 1
       },
       {
         "occupation": "announcer",
         "label": "アナウンサー",
-        "count": 17,
-        "percentage": 1
+        "count": 15,
+        "percentage": 0.9
       },
       {
         "occupation": "singer",
         "label": "歌手",
-        "count": 112,
-        "percentage": 6.9
+        "count": 97,
+        "percentage": 6
       },
       {
         "occupation": "wrestler",

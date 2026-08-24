@@ -42,6 +42,7 @@ const PROFILE_OCCUPATION_LABELS = {
   wrestler: "プロレスラー",
 };
 const FEMALE_OCCUPATION_OVERRIDES = {
+  瀬戸瓰奈: ["av", "gravure"],
   Hitomi: ["av"],
   JULIA: ["av"],
   みひろ: ["av", "actress", "talent", "singer"],
